@@ -61,12 +61,20 @@ FLEET_EVENT_TYPES: frozenset[str] = frozenset(
     }
 )
 
+# docs/03 sketches four jury types; three of them survived contact with docs/12
+# (D-061). `jury.nominate` is gone because selection lives inside `dispute.open`:
+# a separate nomination event lets the opener re-seat the jury after seeing how
+# the votes are going, which is the one thing this layer must make impossible.
+# `jury.verdict` is gone because docs/03 allows "a deterministic result from
+# valid votes" and that is what `resolve_dispute` computes -- a signed verdict
+# alongside it would be a second source of truth for the same question.
+# `jury.disclose` is here because docs/12 requires conflict disclosure and
+# docs/03 never named the event that carries it.
 JURY_EVENT_TYPES: frozenset[str] = frozenset(
     {
         "dispute.open",
-        "jury.nominate",
+        "jury.disclose",
         "jury.vote",
-        "jury.verdict",
     }
 )
 

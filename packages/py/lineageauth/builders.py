@@ -937,3 +937,230 @@ def build_impact_attest(
     if evidence_refs:
         payload["evidenceRefs"] = sorted(set(evidence_refs))
     return payload
+
+
+DISPUTE_OPEN = "dispute.open"
+JURY_DISCLOSE = "jury.disclose"
+JURY_VOTE = "jury.vote"
+
+MAX_JURORS = 32
+
+# docs/12 leaves selection open and names two MVP modes. Both are here, and the
+# second is labelled honestly rather than described as random (D-061).
+NAMED_SELECTION = "named"
+DECLARED_POOL_SELECTION = "declared-pool"
+
+# The juror's finding is about the *result*, never about who is disputing it.
+# "Upholds" or "overturns" would only make sense relative to a prior verdict,
+# which inverts every time somebody disputes a rejection.
+MEETS_CRITERIA = "result-meets-criteria"
+FAILS_CRITERIA = "result-fails-criteria"
+ABSTAIN = "abstain"
+FINDINGS = (MEETS_CRITERIA, FAILS_CRITERIA, ABSTAIN)
+
+CONFLICT_CODES = (
+    "same-fleet",
+    "prior-role-in-task",
+    "repeat-counterparty",
+    "other",
+)
+
+
+def _check_policy(*, seats: int, quorum: int, threshold: int) -> None:
+    """Refuse a policy that could declare both sides winners, at draft time.
+
+    A threshold at or below half the seats lets a 5-seat jury split 2/2 and
+    satisfy a threshold of 2 on both sides at once. Rather than resolve that at
+    tally time -- where the tie-break would be somebody deciding -- the builder
+    refuses to draft it.
+    """
+    if seats < 1:
+        raise MalformedEventError("a jury needs at least one seat")
+    if seats > MAX_JURORS:
+        raise MalformedEventError(f"a jury is limited to {MAX_JURORS} seats")
+    if threshold < 1:
+        raise MalformedEventError("threshold must be at least 1")
+    if threshold <= seats // 2:
+        raise MalformedEventError(
+            f"threshold must be a strict majority of the {seats} seats "
+            f"(more than {seats // 2}); anything less can be met by both sides at once"
+        )
+    if threshold > seats:
+        raise MalformedEventError("threshold must not exceed the number of seats")
+    if quorum < threshold:
+        raise MalformedEventError(
+            "quorum must be at least the threshold, or a verdict could be reached "
+            "by fewer jurors than the policy says are needed to reach it"
+        )
+    if quorum > seats:
+        raise MalformedEventError("quorum must not exceed the number of seats")
+
+
+def _check_juror_dids(label: str, dids: list[str]) -> tuple[str, ...]:
+    if not dids:
+        raise MalformedEventError(f"{label} must not be empty")
+    for did in dids:
+        public_key_from_did_key(did)
+    unique = tuple(sorted(set(dids)))
+    if len(unique) != len(dids):
+        raise MalformedEventError(f"{label} must not repeat a DID")
+    return unique
+
+
+def build_dispute_open(
+    *,
+    lineage: str,
+    opener: str,
+    task: str,
+    result: str,
+    reason_code: str,
+    statement: str,
+    quorum: int,
+    threshold: int,
+    jurors: list[str] | None = None,
+    pool: list[str] | None = None,
+    seats: int | None = None,
+    seed: str | None = None,
+    disputed_verification: str | None = None,
+    evidence_refs: list[str] | None = None,
+    issued_at: datetime,
+) -> dict[str, Any]:
+    """Draft a `dispute.open`: a signed objection carrying its own decision policy.
+
+    The policy travels with the case on purpose. Deciding the quorum after the
+    votes are in is the oldest way to arrange an outcome, so `docs/12` has
+    seats, quorum and threshold fixed before anyone votes -- and this builder
+    refuses a policy that both sides could satisfy at once (`_check_policy`).
+
+    Two selection modes, both from `docs/12`. `jurors=` names them outright.
+    `pool=` with `seats=` and `seed=` records a deterministic draw anybody can
+    recompute. Neither is claimed to be unbiased: the opener chooses the seed,
+    so the draw is reproducible rather than fair, and every reader of the
+    resolved case is told exactly that.
+    """
+    public_key_from_did_key(opener)
+    for label, ref in (("task", task), ("result", result)):
+        if not is_event_id(ref):
+            raise MalformedEventError(f"{label} must be an event id")
+    if disputed_verification is not None and not is_event_id(disputed_verification):
+        raise MalformedEventError("disputedVerification must be an event id")
+    _check_display_text("reasonCode", reason_code, 64)
+    _check_display_text("statement", statement, MAX_SUMMARY)
+    for ref in evidence_refs or []:
+        if not is_event_id(ref):
+            raise MalformedEventError("every evidenceRef must be a sha256:<64 hex> reference")
+
+    if (jurors is None) == (pool is None):
+        raise MalformedEventError("give either jurors= (named) or pool= (declared draw), not both")
+
+    selection: dict[str, Any]
+    if jurors is not None:
+        seated = _check_juror_dids("jurors", jurors)
+        if seats is not None and seats != len(seated):
+            raise MalformedEventError("seats must match the number of named jurors")
+        seat_count = len(seated)
+        selection = {"mode": NAMED_SELECTION, "jurors": list(seated)}
+    else:
+        candidates = _check_juror_dids("pool", pool or [])
+        if seats is None:
+            raise MalformedEventError("a declared draw needs seats=")
+        if not seed:
+            raise MalformedEventError("a declared draw needs a recorded seed")
+        _check_display_text("seed", seed, 128)
+        if seats > len(candidates):
+            raise MalformedEventError("seats must not exceed the size of the pool")
+        seat_count = seats
+        selection = {
+            "mode": DECLARED_POOL_SELECTION,
+            "pool": list(candidates),
+            "seats": seats,
+            "seed": seed,
+        }
+
+    _check_policy(seats=seat_count, quorum=quorum, threshold=threshold)
+
+    payload = _common(DISPUTE_OPEN, lineage, issued_at) | {
+        "opener": opener,
+        "task": task,
+        "result": result,
+        "reasonCode": reason_code,
+        "statement": statement,
+        "selection": selection,
+        "policy": {"seats": seat_count, "quorum": quorum, "threshold": threshold},
+    }
+    if disputed_verification is not None:
+        payload["disputedVerification"] = disputed_verification
+    if evidence_refs:
+        payload["evidenceRefs"] = sorted(set(evidence_refs))
+    return payload
+
+
+def build_jury_disclose(
+    *,
+    lineage: str,
+    case: str,
+    juror: str,
+    conflicts: list[str],
+    note: str | None = None,
+    issued_at: datetime,
+) -> dict[str, Any]:
+    """Draft a `jury.disclose`: a juror naming their own conflicts before voting.
+
+    Disclosure is evidence, not identity truth (`docs/12`). It never voids the
+    vote -- a disclosed conflict is reported beside the tally, and the resolved
+    case states whether the outcome would survive without the conflicted votes.
+    """
+    public_key_from_did_key(juror)
+    if not is_event_id(case):
+        raise MalformedEventError("case must be the event id of a dispute.open")
+    if not conflicts:
+        raise MalformedEventError(
+            "disclose at least one conflict code; a juror with nothing to declare "
+            "simply does not publish a jury.disclose"
+        )
+    for code in conflicts:
+        if code not in CONFLICT_CODES:
+            raise MalformedEventError(
+                f"conflict must be one of {list(CONFLICT_CODES)}, got {code!r}"
+            )
+    payload = _common(JURY_DISCLOSE, lineage, issued_at) | {
+        "case": case,
+        "juror": juror,
+        "conflicts": sorted(set(conflicts)),
+    }
+    if note is not None:
+        _check_display_text("note", note, MAX_SUMMARY)
+        payload["note"] = note
+    return payload
+
+
+def build_jury_vote(
+    *,
+    lineage: str,
+    case: str,
+    juror: str,
+    finding: str,
+    reason_code: str,
+    evidence_refs: list[str] | None = None,
+    issued_at: datetime,
+) -> dict[str, Any]:
+    """Draft a `jury.vote`: one seated juror's signed finding on the result."""
+    public_key_from_did_key(juror)
+    if not is_event_id(case):
+        raise MalformedEventError("case must be the event id of a dispute.open")
+    if finding not in FINDINGS:
+        raise MalformedEventError(f"finding must be one of {list(FINDINGS)}, got {finding!r}")
+    _check_display_text("reasonCode", reason_code, 64)
+    for ref in evidence_refs or []:
+        if not is_event_id(ref):
+            raise MalformedEventError("every evidenceRef must be a sha256:<64 hex> reference")
+
+    payload = _common(JURY_VOTE, lineage, issued_at) | {
+        "case": case,
+        "juror": juror,
+        "finding": finding,
+        "reasonCode": reason_code,
+    }
+    if evidence_refs:
+        payload["evidenceRefs"] = sorted(set(evidence_refs))
+    return payload

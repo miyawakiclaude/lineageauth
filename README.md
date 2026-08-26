@@ -118,6 +118,8 @@ real authority behind it yet.
 - [x] Impact graph — signed downstream use, counted by distinct key rather
       than by edge, with no score attached
 - [x] Agent passport — four claim categories, deliberately never merged
+- [x] Disputes — a stated procedure, a derived outcome, and an undecided
+      case when the jury splits
 - [x] MCP adapter — tools for verification, authority, and unsigned drafts
 - [x] Technocore adapter — GET-write classification, single-line sweep,
       dry-run write preparation. It cannot publish.

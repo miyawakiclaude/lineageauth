@@ -60,11 +60,40 @@ services:
 
 # Not selected. Listed so that "we already decided this" is never assumed.
 # Each would need a free-tier verification date and human approval first.
+#
+# Free tiers checked 2026-08-27. Numbers here are a snapshot, not architecture:
+# re-check before selecting anything (docs/SOURCE_NOTES.md).
+#
+# NOTHING BELOW IS NEEDED YET. The trigger is a single question -- does somebody
+# other than the author need to fetch a verification without cloning the repo?
+# Until then the local API and the event store answer everything, at zero yen.
+# And when that day comes, step 1 of the deployment decision tree in
+# docs/31 still applies first: a passport or an event bundle is a static JSON
+# file, and static files are already free on the GitHub repository that exists.
+# The genuine trigger for compute is narrower than "we want to deploy": it is a
+# public *dynamic* read endpoint -- somebody POSTing an arbitrary bundle to
+# /v1/verify/event and getting a verdict back.
 candidates_not_selected:
-  - cloudflare-pages       # Explorer hosting, phase 4
-  - cloudflare-workers     # small read API, phase 4
-  - cloudflare-d1          # shared derived index, phase 4
+  - cloudflare-pages       # Explorer hosting. 500 builds/month; static requests
+                           # unmetered. Pages Functions are Workers and share the
+                           # Workers cap below.
+  - cloudflare-workers     # small read API. 100,000 requests/day and 10 ms CPU
+                           # per invocation on the free plan. The CPU ceiling is
+                           # the real constraint, not the request count: Ed25519
+                           # verification plus JCS over a whole bundle has to be
+                           # measured against 10 ms before this is chosen, and if
+                           # it does not fit, the zero-cost answer is to
+                           # precompute static bundles rather than to pay.
+  - cloudflare-d1          # shared derived index. 5 GB and 5M reads/writes per
+                           # month. Only needed if the index must be shared; it
+                           # is rebuildable from events by design, so a local
+                           # SQLite plus an export is the cheaper default.
   - cloudflare-r2          # optional immutable mirror, only if hash-only receipts prove insufficient
+#
+# The paid plan starts at $5/month, which is a budget decision requiring
+# explicit approval recorded in docs/29_DECISIONS.md -- not a fallback to slip
+# into when a free limit is hit. on_free_limit_exceeded above says stop or
+# degrade, and it means it.
 
 # Documentation-only. Never provision without explicit approval (CLAUDE.md 2.7.5).
 paid_scale_targets:

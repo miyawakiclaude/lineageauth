@@ -877,6 +877,61 @@ Git/GitHub writes require confirmation of active account + repository owner + re
   observation and never as an accusation (D-059).
 - **Migration:** Pre-1.0.
 
+## D-061: a jury outcome is a procedure's output, and a split jury is an answer
+
+- **Date:** 2026-08-27
+- **Problem:** `docs/12` wants technical dispute resolution and spends most of
+  its length on what that must not become: not legal arbitration, not a claim
+  of unbiased random selection, not a rule that turns disclosure into grounds
+  for voiding a vote.
+- **Decision:**
+  - `dispute.open` -- `opener`, `task`, `result`, `reasonCode`, `statement`,
+    `selection`, `policy`, `disputedVerification?`; signed by the opener
+  - `jury.disclose` -- `case`, `juror`, `conflicts`, `note?`; signed by the juror
+  - `jury.vote` -- `case`, `juror`, `finding`, `reasonCode`; signed by the juror
+  The verdict is **derived** by `resolve_dispute`, never signed as an event.
+- **The policy travels inside `dispute.open`.** Seats, quorum and threshold are
+  fixed before any vote exists. Choosing the quorum once the tally is visible is
+  the oldest way to arrange an outcome, and no amount of signing fixes it after
+  the fact.
+- **A threshold must be a strict majority of the seats**, refused at draft time
+  by the builder and again at parse time by the reader. A threshold of 2 on 4
+  seats lets a 2/2 split satisfy *both* sides, and the alternative -- resolving
+  that at tally time -- is a tie-break by somebody's judgement.
+- **A split jury is `UNDECIDED`, not a verdict.** Nothing breaks the tie, and in
+  particular nothing breaks it by `issuedAt` -- the same refusal the succession
+  layer makes (D-034). Abstentions count toward quorum, because the juror did
+  turn up, and toward neither side.
+- **Conflicts are reported, never used to void a vote.** `docs/12` calls
+  disclosure evidence rather than identity truth, so a conflicted juror still
+  counts and the resolved case additionally reports
+  `outcomeWithoutConflictedJurors`. A reader who cares can see whether the
+  outcome needed those votes, instead of trusting this module to have excluded
+  the right people silently.
+- **Detection is deliberately narrow:** shared disclosed fleet membership, and a
+  prior role in the disputed task. Those are the two a bundle can actually show.
+  An empty detected list is stated to be no clean bill.
+- **The draw is reproducible, not fair.** Declared-pool selection orders the pool
+  by `sha256(seed || "
+" || did)`. The opener picks the seed and could grind
+  it, so every resolved case drawn this way says so -- `docs/12` forbids
+  claiming unbiased selection that is not verifiably implemented, and
+  "deterministic" reads as "unbiased" to most people unless contradicted.
+- **The verdict does not overwrite the task status.** `resolve_task` still reads
+  the status off the verifications; the jury outcome sits beside it. Merging
+  them would let a jury rewrite work history, and would collapse two facts a
+  reader should be able to compare.
+- **Two catalog types from `docs/03` were dropped.** `jury.nominate` is gone
+  because a separate nomination event lets the opener re-seat the jury after
+  seeing the votes; selection lives in `dispute.open` instead, which `docs/03`
+  permits ("selection evidence"). `jury.verdict` is gone because `docs/03`
+  equally permits "a deterministic result from valid votes", and a signed
+  verdict beside the derived one would be a second source of truth. Registering
+  a type nothing gives semantics to is worse than rejecting it: an admitted
+  event reads as a counted one. `jury.disclose` was added because `docs/12`
+  requires conflict disclosure and `docs/03` never named its event.
+- **Migration:** Pre-1.0.
+
 ### Pending decision template
 
 - ID:

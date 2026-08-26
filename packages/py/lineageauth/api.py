@@ -38,6 +38,7 @@ from lineageauth.envelope import Envelope
 from lineageauth.errors import LineageAuthError
 from lineageauth.graph import build_graph
 from lineageauth.index import EventIndex
+from lineageauth.jury import UnknownCaseError, resolve_dispute
 from lineageauth.lineage import resolve_lineage
 from lineageauth.passport import build_passport
 from lineageauth.router import Query, Requirement, search
@@ -287,6 +288,25 @@ def create_app(index: EventIndex, *, title: str = "LineageAuth") -> FastAPI:
             return build_passport(
                 index.bundle(lineage=lineage), lineage=lineage, did=did, at=moment
             ).to_dict()
+        except LineageAuthError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    @app.get(f"/{API_VERSION}/disputes/{{case_id}}")
+    def get_dispute(case_id: str, lineage: str, at: str | None = None) -> dict[str, Any]:
+        """Resolve one dispute into its outcome, its tally and its caveats.
+
+        The response carries the seats, every juror's disclosed and detected
+        conflicts, and what the outcome would have been without the conflicted
+        jurors -- so a reader can check the procedure rather than take the
+        outcome on faith. It is a technical result, not arbitration.
+        """
+        moment = _moment(at)
+        try:
+            return resolve_dispute(
+                index.bundle(lineage=lineage), lineage=lineage, case_id=case_id, at=moment
+            ).to_dict()
+        except UnknownCaseError as exc:
+            raise HTTPException(status_code=404, detail=str(exc)) from exc
         except LineageAuthError as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
 

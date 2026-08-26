@@ -190,13 +190,18 @@ depend on the indexer or the Explorer.)*
 - [ ] independent-agent test
 
 ## P12 Jury
-- [ ] dispute
-- [ ] juror nomination/selection mode
-- [ ] conflict disclosure
-- [ ] vote
-- [ ] verdict
+- [x] `dispute.open` — carries its own policy, so the quorum cannot be chosen
+      after the tally is visible (D-061)
+- [x] selection — named jurors, or a deterministic draw from a declared pool
+      that is labelled reproducible rather than unbiased
+- [x] `jury.disclose` — conflicts disclosed by the juror; detected conflicts
+      computed alongside, and neither voids a vote
+- [x] `jury.vote` — signed by the juror; one seat, one counted finding
+- [x] verdict — derived; a split jury is UNDECIDED and nothing breaks the tie
+- [x] passport display — beside the four claim categories, never inside one
+- [x] `GET /v1/disputes/{case}` — the procedure served with the outcome
 - [ ] UI
-- [ ] tests
+- [x] tests
 
 ## P13 Fleet
 - [x] fleet.create — signed by the controller

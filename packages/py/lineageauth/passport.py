@@ -50,12 +50,21 @@ from lineageauth.evidence import (
 from lineageauth.evidence import read_receipt as read_artifact_receipt
 from lineageauth.fleet import resolve_fleets
 from lineageauth.impact import collect_impact
+from lineageauth.jury import disputes_involving
 from lineageauth.lineage import resolve_lineage
 from lineageauth.timeutil import format_instant
 from lineageauth.work import TASK_REQUEST, TaskStatus, build_work_receipt, read_task
 
 PROFILE_STATEMENT = "profile.statement"
 SKILL_CLAIM = "skill.claim"
+
+DISPUTE_NOTE = (
+    "Disputes sit outside the four claim sections because they are not a claim. "
+    "Nobody asserted them about this agent; they are the recorded outcome of a "
+    "stated procedure, and an outcome is displayed with its procedure or not at "
+    "all. A dispute appearing here says a case was opened, never that the agent "
+    "did anything wrong."
+)
 
 PASSPORT_NOTE = (
     "A passport is a projection of signed events, not an identity and not a score. "
@@ -176,6 +185,24 @@ class SkillEvidence:
 
 
 @dataclass(frozen=True, slots=True)
+class DisputeRecord:
+    """One case this DID was part of, flattened to what a reader needs.
+
+    `roles` is a tuple because the same key is often more than one thing at
+    once -- the worker who opened the case, a juror who also verified the task.
+    Collapsing that to a single role would hide the conflict rather than show
+    it.
+    """
+
+    case: str
+    task: str
+    roles: tuple[str, ...]
+    outcome: str
+    detail: str
+    depends_on_conflicted_jurors: bool
+
+
+@dataclass(frozen=True, slots=True)
 class Passport:
     """The projection. Four sections, deliberately never combined."""
 
@@ -211,6 +238,9 @@ class Passport:
 
     # third-party attested
     attestations: tuple[ThirdPartyClaim, ...] = ()
+
+    # neither claimed nor attested: the record of a procedure
+    disputes: tuple[DisputeRecord, ...] = ()
 
     warnings: tuple[str, ...] = field(default_factory=tuple)
 
@@ -322,6 +352,20 @@ class Passport:
                 ],
                 "independentCounterparties": list(self.independent_counterparties),
             },
+            "disputes": {
+                "cases": [
+                    {
+                        "case": d.case,
+                        "task": d.task,
+                        "roles": list(d.roles),
+                        "outcome": d.outcome,
+                        "detail": d.detail,
+                        "dependsOnConflictedJurors": d.depends_on_conflicted_jurors,
+                    }
+                    for d in self.disputes
+                ],
+                "note": DISPUTE_NOTE,
+            },
             # Absent because unbuilt, not because the agent has none.
             "notIncluded": [
                 {"section": name, "reason": reason} for name, reason in NOT_IMPLEMENTED
@@ -329,6 +373,31 @@ class Passport:
             "warnings": list(self.warnings),
             "note": self.note,
         }
+
+
+def _disputes_for(
+    bundle: EventBundle, *, lineage: str, did: str, at: datetime
+) -> tuple[DisputeRecord, ...]:
+    records: list[DisputeRecord] = []
+    for resolved in disputes_involving(bundle, lineage=lineage, did=did, at=at):
+        roles: list[str] = []
+        if resolved.case.opener == did:
+            roles.append("opener")
+        if any(r.juror == did for r in resolved.jurors):
+            roles.append("juror")
+        if not roles:
+            roles.append("party-to-the-task")
+        records.append(
+            DisputeRecord(
+                case=resolved.case.event_id,
+                task=resolved.case.task,
+                roles=tuple(roles),
+                outcome=str(resolved.outcome),
+                detail=resolved.detail,
+                depends_on_conflicted_jurors=resolved.outcome_depends_on_conflicted_jurors,
+            )
+        )
+    return tuple(records)
 
 
 def _read_profile(event: AdmittedEvent, *, did: str) -> SelfClaim | None:
@@ -538,6 +607,7 @@ def build_passport(bundle: EventBundle, *, lineage: str, did: str, at: datetime)
         produced=tuple(sorted(produced, key=lambda p: p.receipt_id)),
         tasks=tuple(sorted(tasks, key=lambda t: t.task_id)),
         downstream_use=tuple(downstream),
+        disputes=_disputes_for(bundle, lineage=lineage, did=did, at=at),
         skills=tuple(sorted(skills, key=lambda s: s.skill)),
         attestations=tuple(sorted(attestations, key=lambda a: a.event_id)),
         warnings=tuple(warnings),
@@ -546,10 +616,12 @@ def build_passport(bundle: EventBundle, *, lineage: str, did: str, at: datetime)
 
 __all__ = [
     "DELEGATION_GRANT",
+    "DISPUTE_NOTE",
     "NOT_IMPLEMENTED",
     "PASSPORT_NOTE",
     "PROFILE_STATEMENT",
     "SKILL_CLAIM",
+    "DisputeRecord",
     "Passport",
     "ProducedArtifact",
     "SelfClaim",
