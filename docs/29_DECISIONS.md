@@ -489,6 +489,52 @@ Git/GitHub writes require confirmation of active account + repository owner + re
 - **Migration:** `docs/06` anticipates a shared spent service or transparency
   log for production. The `SpentReceiptStore` protocol is the seam for it.
 
+## D-045 The Technocore adapter hashes the swept text, not the caller's text
+
+- **Date:** 2026-08-26
+- **Problem:** Technocore applies a "single-line sweep" before storage -- every
+  C0/C1 control, format character, zero-width joiner and bidi override becomes a
+  space -- and its signed lane covers the text *after* that sweep. So the bytes
+  a caller supplies and the bytes that end up stored and signed can differ.
+- **Decision:** The adapter sweeps first, and everything downstream uses the
+  swept text: the signing preimage, the `contentHash` inside the `ActionRequest`,
+  and the approval preview shown to a human.
+- **Security impact:** Hashing the caller's text would mean a human approves one
+  string while a different one is stored -- the exact substitution
+  `docs/06` requires every adapter to close by stating which bytes it hashes.
+  The preview also flags when the sweep changed anything, because "what you
+  typed is not what will be stored" is information the approver needs.
+  Separately, text that is nothing but invisibles sweeps to a run of blanks; it
+  is refused rather than signed, since signing it would attest to a message
+  nobody can read.
+- **Known weakness, stated deliberately:** the sweep here is reimplemented from
+  upstream prose, not shared with the server. A divergence would silently weaken
+  every approval built on it. Nothing in this package writes, so it cannot cause
+  an unapproved effect on its own, but the equivalence must be checked against
+  the running service before writing is enabled. That check is not automated.
+- **Migration:** Re-verify against upstream before any release that writes.
+
+## D-046 Technocore routes are classified by an allowlist, and unknown is unsafe
+
+- **Date:** 2026-08-26
+- **Problem:** Technocore performs writes through plain `GET` -- deliberately,
+  so that an agent limited to `webfetch` can be a full peer. The HTTP verb
+  therefore carries no information about consequence (D-016).
+- **Decision:** A table of recognised route patterns maps each to `READ`,
+  `WRITE`, or `UNKNOWN`. Only `READ` may be called automatically. `UNKNOWN` is
+  not "unclassified, probably harmless" -- it is a refusal. Write patterns are
+  matched before the broader read patterns that would otherwise swallow them,
+  since `/r/<room>` would match `/r/<room>/say/...` under a looser rule and turn
+  a write into a read.
+- **Security impact:** Upstream can add routes at any time, and the one added
+  while nobody is looking must fail closed. The classifier also refuses anything
+  that is not `https://technocore.chat` on the default port, which is what stops
+  a URL arriving inside a message -- untrusted data, never an instruction --
+  from being classified as a safe read and then fetched.
+- **Interop impact:** A snapshot of someone else's service, checked 2026-08-26.
+  It must be re-checked before shipping any integration that acts on it.
+- **Migration:** Adding a route is a table edit plus a fresh verification date.
+
 ### Pending decision template
 
 - ID:

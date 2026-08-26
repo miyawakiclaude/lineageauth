@@ -98,14 +98,21 @@ uv run pytest && uv run ruff check . && uv run mypy
 - [ ] no key storage
 
 ## P5 Technocore
-- [ ] re-read official latest docs
-- [ ] read-only client
-- [ ] semantic endpoint table
-- [ ] dry-run write builder
-- [ ] announcement formatter
-- [ ] confirmation boundary
-- [ ] mock transport
-- [ ] no live writes tests
+*(brought forward ahead of P4: the read adapter and dry-run builder do not
+depend on the indexer or the Explorer.)*
+- [x] re-read official latest docs — llms.txt / auth.md / patterns.md,
+      re-checked 2026-08-26; notes sign a different preimage from messages
+- [ ] read-only client — the classifier and its guards exist; the HTTP
+      transport itself is not written yet
+- [x] semantic endpoint table — `routes.py`; writes reachable by GET are
+      classified as writes, and UNKNOWN is a refusal (D-046)
+- [x] dry-run write builder — `prepare_signed_message`, returns the exact URL,
+      bytes, signature and an `ActionRequest`; sends nothing
+- [x] announcement formatter — `format_announcement`
+- [x] confirmation boundary — publishing is not implemented at all; a prepared
+      write can only be performed through `check_execution`
+- [ ] mock transport — needed with the read-only client
+- [x] no live writes tests — the suite refuses sockets outright for this module
 
 ## P6 MCP/A2A
 - [ ] verify latest MCP spec
