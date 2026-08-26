@@ -106,8 +106,15 @@ class TestServiceShape:
             for path, method in routes
             if method in {"POST", "PUT", "PATCH", "DELETE"}
         }
-        # The only POSTs are the two that compute an answer and store nothing.
-        assert writes == {("/v1/verify/event", "POST"), ("/v1/check-permission", "POST")}
+        # POST is used for endpoints that take a structured query, not for
+        # ingest. Each one here computes an answer and stores nothing; a new
+        # entry has to be added deliberately, which is the point of pinning the
+        # set rather than counting it.
+        assert writes == {
+            ("/v1/verify/event", "POST"),
+            ("/v1/check-permission", "POST"),
+            ("/v1/router/search", "POST"),
+        }
 
     def test_verifying_an_event_does_not_index_it(self, client: TestClient) -> None:
         before = client.get("/v1/meta").json()["indexedEvents"]
@@ -324,3 +331,47 @@ class TestPassportEndpoint:
     def test_a_malformed_did_is_a_client_error(self, client: TestClient) -> None:
         response = client.get("/v1/passports/not-a-did", params={"lineage": LINEAGE, "at": AT_TEXT})
         assert response.status_code == 400
+
+
+class TestRouterEndpoint:
+    def test_it_ranks_and_shows_its_working(self, client: TestClient) -> None:
+        body = client.post("/v1/router/search", json={"lineage": LINEAGE, "at": AT_TEXT}).json()
+        assert body["candidates"]
+        first = body["candidates"][0]
+        assert first["relevance"] == sum(c["value"] for c in first["contributions"])
+        # The weights travel with the answer; buried ones are the hidden score.
+        assert body["weights"]
+        assert body["rankingVersion"]
+
+    def test_a_result_says_it_is_not_authorization(self, client: TestClient) -> None:
+        body = client.post("/v1/router/search", json={"lineage": LINEAGE, "at": AT_TEXT}).json()
+        assert "not authorization" in body["note"]
+
+    def test_an_authority_requirement_filters(self, client: TestClient) -> None:
+        matching = client.post(
+            "/v1/router/search",
+            json={
+                "lineage": LINEAGE,
+                "at": AT_TEXT,
+                "requires": [
+                    {"namespace": "technocore", "resource": "room:lobby", "action": "write"}
+                ],
+            },
+        ).json()
+        assert [c["did"] for c in matching["candidates"]] == [AGENT.did]
+
+        elsewhere = client.post(
+            "/v1/router/search",
+            json={
+                "lineage": LINEAGE,
+                "at": AT_TEXT,
+                "requires": [
+                    {"namespace": "technocore", "resource": "room:ops", "action": "write"}
+                ],
+            },
+        ).json()
+        assert elsewhere["candidates"] == []
+
+    def test_an_unknown_field_is_refused(self, client: TestClient) -> None:
+        response = client.post("/v1/router/search", json={"lineage": LINEAGE, "sortBy": "trust"})
+        assert response.status_code == 422

@@ -169,13 +169,16 @@ depend on the indexer or the Explorer.)*
 - [ ] passport UI
 
 ## P10 Router
-- [ ] query schema
-- [ ] skill index
-- [ ] authority index
-- [ ] availability
-- [ ] explainable ranking v1
-- [ ] fleet independence signals
-- [ ] search API
+- [x] query schema — skills, authority requirements, approval ceiling, availability
+- [x] skill index — claimed vs evidence-supported kept apart
+- [x] authority index — every requirement re-checked through `check_permission`
+- [x] availability — `availability.statement`, capped at 7 days; stale is
+      reported, not dropped (D-058)
+- [x] explainable ranking v1 — `explainable-v1`; contributions sum to the
+      relevance and the weights ship with the response (D-057)
+- [x] fleet independence signals — independent counterparties, attestation
+      concentration, reciprocal verifier pairs; reported, never a Sybil verdict
+- [x] search API — `POST /v1/router/search`
 - [ ] search UI
 
 ## P11 Task Exchange

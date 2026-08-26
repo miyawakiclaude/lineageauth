@@ -40,6 +40,8 @@ from lineageauth.graph import build_graph
 from lineageauth.index import EventIndex
 from lineageauth.lineage import resolve_lineage
 from lineageauth.passport import build_passport
+from lineageauth.router import Query, Requirement, search
+from lineageauth.scopes import ApprovalMode
 from lineageauth.timeutil import format_instant, parse_instant
 from lineageauth.verify import verify_event
 
@@ -79,6 +81,18 @@ class PermissionRequest(BaseModel):
     action: str
     at: str | None = None
     external: bool = True
+
+
+class SearchRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    lineage: str
+    skills: list[str] = Field(default_factory=list)
+    requires: list[dict[str, str]] = Field(default_factory=list)
+    approval_mode: str | None = None
+    require_available: bool = False
+    at: str | None = None
+    limit: int = 20
 
 
 def _moment(value: str | None) -> datetime:
@@ -274,6 +288,44 @@ def create_app(index: EventIndex, *, title: str = "LineageAuth") -> FastAPI:
                 index.bundle(lineage=lineage), lineage=lineage, did=did, at=moment
             ).to_dict()
         except LineageAuthError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    @app.post(f"/{API_VERSION}/router/search")
+    def router_search(body: SearchRequest) -> dict[str, Any]:
+        """Rank agents by how well they fit a query.
+
+        The response carries the weights and every contribution, so a caller can
+        recompute the ranking. It is not authorization: `docs/10` is explicit
+        that a search result does not permit an action, and a grant can be
+        revoked between finding an agent and asking it to act.
+        """
+        moment = _moment(body.at)
+        try:
+            query = Query(
+                skills=tuple(body.skills),
+                requires=tuple(
+                    Requirement(
+                        namespace=item["namespace"],
+                        resource=item["resource"],
+                        action=item["action"],
+                    )
+                    for item in body.requires
+                ),
+                approval_mode=(
+                    ApprovalMode.parse(body.approval_mode)
+                    if body.approval_mode is not None
+                    else None
+                ),
+                require_available=body.require_available,
+            )
+            return search(
+                index.bundle(lineage=body.lineage),
+                lineage=body.lineage,
+                query=query,
+                at=moment,
+                limit=body.limit,
+            ).to_dict()
+        except (LineageAuthError, KeyError, TypeError) as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     @app.get(f"/{API_VERSION}/dids/{{did}}")

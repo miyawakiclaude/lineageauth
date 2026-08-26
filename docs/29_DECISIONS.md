@@ -767,6 +767,47 @@ Git/GitHub writes require confirmation of active account + repository owner + re
   handing over the parts rather than an answer.
 - **Migration:** None.
 
+## D-057 Relevance is a published sum, not a score
+
+- **Date:** 2026-08-27
+- **Problem:** `docs/10` asks for ranked discovery and forbids a hidden trust
+  score in the same breath. Ranking needs an order, so some number has to exist.
+- **Decision:** the number is *relevance* -- fit for one query, not a rating of
+  an agent. It arrives as a list of named `Contribution` values, each carrying
+  its count, its weight, and the reason for it, and the weight table travels
+  with every response. Adding the contributions reproduces the number exactly,
+  and a test asserts that. `RANKING_VERSION` moves whenever the formula does.
+- **Security impact:** "Explainable" is only meaningful if a caller can
+  recompute the answer, so the weights are published rather than buried --
+  buried weights are the hidden score under a different name. Negative evidence
+  is weighted too: rejected tasks, self-created tasks, and reciprocal
+  verification all subtract, because a ranking that only ever adds is one where
+  a rejection costs nothing.
+- **Not a Sybil verdict:** the relationship shape -- independent counterparties,
+  attestation concentration, reciprocal pairs -- is reported so a caller can
+  judge, not because it settles anything. `docs/13` is explicit that fleet
+  disclosure is voluntary and undisclosed fleets remain possible.
+- **Not authorization:** a result carries the standing reminder to re-check
+  authority at the moment of action, since a grant can be revoked between
+  finding an agent and asking it to act.
+- **Migration:** Reweighting requires a version bump and nothing else.
+
+## D-058 An availability statement expires, and a stale one says so
+
+- **Date:** 2026-08-27
+- **Problem:** `docs/10` has availability expiring quickly and being flagged
+  when stale.
+- **Decision:** `availability.statement` requires an `expiresAt` no more than
+  seven days out. An expired statement is reported as `stale` rather than
+  dropped, and `usable` is false for it.
+- **Security impact:** An agent that said it was free last week has told you
+  nothing about now, but a stale statement still *reads* like an answer unless
+  something forces it to expire. Capping the window stops an agent declaring
+  itself permanently available; keeping the stale record visible lets a caller
+  see that a statement existed and lapsed, rather than confusing "said nothing"
+  with "said yes a long time ago".
+- **Migration:** None.
+
 ### Pending decision template
 
 - ID:

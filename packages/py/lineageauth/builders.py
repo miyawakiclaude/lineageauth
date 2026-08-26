@@ -12,7 +12,7 @@ the events but leaves their exact payload shape open.
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any
 
 from lineageauth import catalog
@@ -706,4 +706,49 @@ def build_task_verify(
         payload["criteriaResults"] = {k: bool(v) for k, v in sorted(criteria_results.items())}
     if evidence_refs:
         payload["evidenceRefs"] = sorted(set(evidence_refs))
+    return payload
+
+
+AVAILABILITY_STATEMENT = "availability.statement"
+
+# docs/10: "Availability expires quickly." A statement that outlived its
+# usefulness is worse than none, because a stale one still looks like an answer.
+MAX_AVAILABILITY_WINDOW = timedelta(days=7)
+
+
+def build_availability_statement(
+    *,
+    lineage: str,
+    subject: str,
+    available: bool,
+    expires_at: datetime,
+    capacity: int | None = None,
+    issued_at: datetime,
+) -> dict[str, Any]:
+    """Draft an `availability.statement`: a short-lived offer to take work.
+
+    Deliberately short-lived. `docs/10` has availability expiring quickly and
+    being flagged when stale, because an agent that said it was free a week ago
+    has told you nothing about now -- and a stale statement still reads like an
+    answer unless something forces it to expire.
+    """
+    public_key_from_did_key(subject)
+    if expires_at <= issued_at:
+        raise MalformedEventError("expiresAt must be after issuedAt")
+    if expires_at - issued_at > MAX_AVAILABILITY_WINDOW:
+        raise MalformedEventError(
+            f"an availability statement may not claim more than "
+            f"{MAX_AVAILABILITY_WINDOW.days} days; availability that far out is a "
+            "guess, and a guess that does not expire is treated as a fact"
+        )
+    if capacity is not None and capacity < 0:
+        raise MalformedEventError("capacity must not be negative")
+
+    payload = _common(AVAILABILITY_STATEMENT, lineage, issued_at) | {
+        "subject": subject,
+        "available": available,
+        "expiresAt": format_instant(expires_at),
+    }
+    if capacity is not None:
+        payload["capacity"] = capacity
     return payload

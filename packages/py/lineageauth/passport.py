@@ -19,8 +19,8 @@ the caveats.
     third-party         what other keys have said about those artifacts
       attested
 
-Some absences are reported rather than left blank. Fleet bindings, impact
-edges, and availability belong to phases that are not built yet, and an empty
+Some absences are reported rather than left blank. Fleet bindings and impact
+edges belong to phases that are not built yet, and an empty
 list reads as "this agent has none" when the truth is "this system does not
 track that". The `notIncluded` section names each one and why, and entries leave
 it as their phases land -- completed tasks moved out of it when Phase 8 shipped.
@@ -68,7 +68,6 @@ PASSPORT_NOTE = (
 NOT_IMPLEMENTED: tuple[tuple[str, str], ...] = (
     ("fleetBindings", "fleet disclosure is Phase 13 and is not built"),
     ("impact", "the impact graph is Phase 14 and is not built"),
-    ("availability", "availability statements are Phase 10 and are not built"),
 )
 
 

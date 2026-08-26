@@ -113,6 +113,7 @@ real authority behind it yet.
 - [x] Event store, rebuildable SQLite index, and a read-and-verify REST API
 - [x] Evidence — artifacts, signed authorship receipts, attestations
 - [x] Useful work — task lifecycle, derived state, anti-gaming signals
+- [x] Router — discovery by capability, authority, evidence, and availability
 - [x] Agent passport — four claim categories, deliberately never merged
 - [x] MCP adapter — tools for verification, authority, and unsigned drafts
 - [x] Technocore adapter — GET-write classification, single-line sweep,
