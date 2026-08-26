@@ -133,6 +133,247 @@ Git/GitHub writes require confirmation of active account + repository owner + re
   vectors.
 - **Migration:** None.
 
+## D-028 Duplicate copies of one event are not merged in Phase 1  — **SUPERSEDED by D-036**
+
+> Withdrawn 2026-08-26. The security impact recorded below is wrong: it treats
+> "can only ever deny" as conservative, but denial *is* the attack when the
+> thing denied is a legitimate root recovery. See D-036.
+
+- **Date:** 2026-08-26
+- **Problem:** A bundle may contain the same `event_id` twice with different
+  proof sets (one envelope holding recovery signer 1, another holding signer
+  2). Should a quorum count the union of their verified signers?
+- **Options:** (a) union the verified signers across copies; (b) treat one
+  envelope as the unit of quorum and admit a single copy.
+- **Decision:** (b) for Phase 1. `docs/02_LAP_CORE.md` and
+  `packages/py/lineageauth/envelope.py` describe the intended shape as *one*
+  envelope carrying several proofs, which is exactly what a recovery quorum
+  needs. Merging split copies is a distribution concern, not a protocol one,
+  and is deferred to its own decision.
+- **Security impact:** Conservative. Unioning signers across copies can only
+  ever raise a signer count, so declining to union can only ever deny -- never
+  admit -- a succession. Duplicate copies are admitted deterministically (the
+  copy that sorts first by `(event_id, sorted verified signers)`) and a warning
+  names them, so a caller is never silently short a quorum.
+- **Interop impact:** An implementation that unions would accept bundles this
+  one denies. Bundles should carry one envelope per event.
+- **Migration:** A later decision may add unioning; it is a strict relaxation.
+
+## D-029 `root.create` must be signed by the root it declares
+
+- **Date:** 2026-08-26
+- **Problem:** `root.create` names the epoch-0 root DID. Nothing in
+  `docs/03_EVENT_CATALOG.md` says who must sign it.
+- **Options:** (a) accept any signer; (b) require the declared `root`.
+- **Decision:** (b). The genesis event must carry a proof from the DID it
+  installs as root.
+- **Security impact:** Without this, anyone could open a lineage naming a key
+  they do not control. `lineage` is derived from that DID (D-025), so the
+  attacker could not steal an existing lineage -- but they could publish a
+  plausible-looking genesis for someone else's key and seed confusion. Proof of
+  control at genesis costs nothing and removes the ambiguity.
+- **Interop impact:** Genesis events signed only by a third party are rejected.
+- **Migration:** None; no vectors are published yet.
+
+## D-030 A recovery succession must name the policy active at its `fromEpoch`
+
+- **Date:** 2026-08-26
+- **Problem:** `recoveryPolicyRef` is mandatory (D-026), but a succession could
+  name a superseded policy whose membership has since been rotated.
+- **Options:** (a) accept any policy the bundle contains; (b) require the
+  reference to equal the policy active at `fromEpoch`.
+- **Decision:** (b). A reference to a resolvable but non-active policy is
+  denied with `SUPERSEDED`; a reference that resolves to nothing in the bundle
+  is denied with `UNRESOLVED_PARENT`; a recovery succession with no active
+  policy at all is denied with `DENIED`.
+- **Security impact:** This is the whole point of policy rotation. If an old
+  policy still authorized successions, removing a compromised recovery member
+  would be cosmetic -- the attacker would simply cite the policy that still
+  names them.
+- **Interop impact:** Bundles must include the policy chain, not just the
+  policy a succession happens to cite.
+- **Migration:** None.
+
+## D-031 A recovery policy stays active across epochs until replaced
+
+- **Date:** 2026-08-26
+- **Problem:** `recovery.policy` carries an `epoch` (D-026). Does a policy stop
+  applying the moment a succession moves the lineage to `epoch + 1`?
+- **Options:** (a) a policy applies only to its own epoch; (b) a policy stays
+  active until a later policy replaces it.
+- **Decision:** (b). `epoch` records when the policy was installed, not a
+  window in which it applies.
+- **Security impact:** Under (a) a normal succession would silently destroy the
+  lineage's recovery capability: between the succession and the new root
+  publishing a fresh policy, losing the root key would be unrecoverable. That
+  is an availability hole, not a safety margin -- and
+  `docs/05_RECOVERY_SUCCESSION.md` exists precisely to prevent unrecoverable
+  key loss. Rotation stays explicit and ordered (`policySeq`,
+  `previousPolicy`), so a stale policy is replaceable at any time.
+- **Interop impact:** An implementation applying (a) would deny recovery
+  successions this one admits.
+- **Migration:** None.
+
+## D-032 A succession is bound to the root it claims to leave
+
+- **Date:** 2026-08-26
+- **Problem:** `fromEpoch` alone identifies a position in the chain, but not
+  which root occupied it.
+- **Decision:** A `root.succession` is a candidate only when its `fromRoot`
+  equals the resolved root at `fromEpoch`, and only when
+  `toEpoch == fromEpoch + 1`.
+- **Security impact:** Prevents a stale or fabricated succession that names the
+  right epoch number but the wrong outgoing root from being considered at all
+  -- including as a manufactured conflict.
+- **Interop impact:** None beyond stricter candidate selection.
+- **Migration:** None.
+
+## D-033 The evaluation time `at` takes no part in Phase 1 epoch resolution
+
+- **Date:** 2026-08-26
+- **Problem:** `resolve_lineage` takes an explicit evaluation time so results
+  are reproducible (`docs/02_LAP_CORE.md`). The tempting next step is to drop
+  events whose `issuedAt` lies in the future of `at` as `NOT_YET_VALID`.
+- **Options:** (a) filter events by `issuedAt` against `at`; (b) use `at` only
+  for reporting, and record a warning for future-dated events.
+- **Decision:** (b). No Phase 1 payload has a `notBefore` or `expiresAt` field
+  (D-026), so `issuedAt` is a claim about when a signature was made, not a
+  protocol validity window. `at` stays in the signature for the Phase 2 events
+  that will carry real validity windows.
+- **Security impact:** This is the load-bearing part of
+  `docs/05_RECOVERY_SUCCESSION.md`'s "do not choose based only on timestamp".
+  Filtering by `issuedAt` is that same timestamp tiebreak wearing a disguise:
+  given two incompatible successions from one `fromEpoch`, a filter that
+  removes one of them lets the survivor advance alone, with no CONFLICTED
+  status -- so an attacker who back-dates, or a victim whose clock skews,
+  decides the winner. Refusing to filter means both candidates always meet, and
+  the conflict is seen. `tests/test_lineage.py::test_issued_at_never_breaks_ties`
+  is the regression guard.
+- **Interop impact:** An implementation that filters would resolve a current
+  root where this one reports CONFLICTED. That divergence is fail-open on their
+  side, so this is the safe direction.
+- **Migration:** When Phase 2 adds explicit validity windows, `at` gains meaning
+  against those fields only, never against `issuedAt`.
+
+## D-034 Lineage-wide fail-closed states require an authorized signature
+
+- **Date:** 2026-08-26
+- **Problem:** Fail-closed is correct, but a status anyone can trigger from
+  outside is a denial-of-service switch. A stranger can always mint a
+  syntactically valid, correctly signed event naming someone else's lineage.
+- **Decision:** A condition halts resolution for the whole lineage only when
+  producing it required a signature the protocol already trusts -- the current
+  root, or a satisfied recovery quorum. Everything an outsider can author is
+  evaluated as a candidate and denied individually, with its reason code
+  recorded, without stopping the resolver.
+- **Security impact:** Competing root-signed successions still yield
+  `CONFLICTED` (`docs/05_RECOVERY_SUCCESSION.md`), and competing root-signed
+  policies sharing one `policySeq` still fail closed. But a succession citing a
+  dangling `recoveryPolicyRef`, which any stranger can sign, is merely denied,
+  so no third party can freeze a lineage by publishing junk. Denying a
+  candidate is itself fail-closed: a denied candidate never moves authority.
+- **Interop impact:** Implementations must not escalate outsider-authored
+  defects to a lineage-level status.
+- **Migration:** None.
+
+## D-035 An unresolved lineage reports its reason code, never a standing
+
+- **Date:** 2026-08-26
+- **Problem:** `LineageState.standing_of(did)` answers "is this DID the current
+  root?". When resolution failed (CONFLICTED, or no genesis), what does it say?
+- **Options:** (a) add an `UNDETERMINED` reason code; (b) return the state's own
+  failure reason.
+- **Decision:** (b). `errors.py` fixes the reason vocabulary and states that
+  additions require a protocol version bump, and `CONFLICTED` /
+  `UNRESOLVED_PARENT` already say precisely why nothing is determined.
+- **Security impact:** The important property is that an unresolved lineage
+  never returns `DENIED` or `SUPERSEDED` for any DID -- those read as settled
+  answers. It returns the failure instead, so a caller that treats any
+  non-`VALID_AUTHORITY_CHAIN` result as "do not proceed" is correct by default
+  (CLAUDE.md 2.6: never a bare boolean).
+- **Interop impact:** None; the code set is unchanged.
+- **Migration:** None.
+
+## D-036 Duplicate copies of one event id merge by union of verified signers
+
+- **Date:** 2026-08-26
+- **Supersedes:** D-028
+- **Problem:** D-028 admitted a single copy per `event_id`, choosing the one
+  that sorted first by `(event_id, sorted verified signers)`. An adversarial
+  review of the resolver found this exploitable **with no private key at all**.
+- **How it failed:** One `event_id` is one payload, so anyone can take a
+  published envelope and republish a copy with proofs removed. A shorter tuple
+  that shares a prefix with a longer one sorts first in Python, so the stripped
+  copy deterministically won the selection. An observer could therefore reduce a
+  genuine 2-of-3 recovery succession to one signature, and the resolver denied
+  it with `INSUFFICIENT_RECOVERY_PROOFS` -- freezing the lineage at an epoch it
+  had already left. Republishing a copy signed only by the attacker's own key
+  had the same effect. D-028's reasoning that "declining to union can only ever
+  deny" mistook denial for safety; against recovery, denial is the objective.
+- **Options:** (a) union the verified signers across copies; (b) keep selecting
+  one copy under a different total order; (c) treat differing copies as
+  ambiguous and fail closed.
+- **Decision:** (a). Options (b) and (c) both leave a keyless third party in
+  control of the outcome -- (c) merely converts suppression into a lineage-wide
+  denial that anyone can trigger by injecting one copy.
+- **Security impact:** Union is the only merge rule that is simultaneously
+  order-independent and monotone: nothing an attacker adds can subtract. It
+  cannot inflate authority either, because a forged copy can only carry
+  signatures the forger can actually produce, and a signer who is neither the
+  current root nor a member of the referenced recovery policy contributes
+  nothing to any decision the resolver makes.
+- **Interop impact:** A strict relaxation of D-028 -- every bundle D-028
+  resolved, D-036 resolves identically. Regression vectors:
+  `tests/test_bundle.py::test_a_keyless_attacker_cannot_strip_proofs_from_a_published_event`.
+- **Migration:** None.
+
+## D-037 Payload fields that name a key or an event are validated at the parse boundary
+
+- **Date:** 2026-08-26
+- **Problem:** The resolver read `fromRoot`, `toRoot`, `recoveryPolicyRef`,
+  `previousPolicy`, and recovery `members` with an `isinstance(value, str)`
+  check only. Genesis, by contrast, ran its `root` through
+  `derive_lineage_id`, which validates the `did:key` strictly. The asymmetry was
+  not deliberate.
+- **Consequences of the gap:** A succession could install a `toRoot` that is not
+  a parseable `did:key`, so a lineage could resolve to a "current root" no
+  verifier can ever check a signature against. Separately, those unvalidated
+  strings were interpolated into human-readable reasons and printed by the CLI,
+  which let arbitrary payload bytes -- including terminal escape sequences --
+  reach a terminal and dress up a denial as an approval.
+- **Decision:** Validate at the point of parsing. A field that names a key must
+  be a canonical Ed25519 `did:key`; a field that names an event must match
+  `sha256:<64 lowercase hex>`. Anything else makes the event `MALFORMED`.
+- **Security impact:** Fixes both problems at the source rather than escaping at
+  each output site, which would have to be repeated correctly forever. `did:key`
+  and event ids have strict alphabets, so a validated field is also a safe one
+  to display.
+- **Interop impact:** Events that were previously parsed and then denied on
+  other grounds are now rejected earlier, with a clearer reason code.
+- **Migration:** None. `builders.py` has always emitted valid values.
+
+## D-038 Events the resolver never evaluated must be reported, not dropped
+
+- **Date:** 2026-08-26
+- **Problem:** The walk visits epoch 0 through the last epoch it can resolve, so
+  a `recovery.policy` stamped with any other epoch was skipped with no entry in
+  `denied` and no warning. Integrity-rejected envelopes were likewise absent
+  from the CLI's output entirely.
+- **Why it matters:** Rotating a recovery policy to drop a compromised member is
+  exactly the operation where a mistyped `epoch` is plausible, and the result
+  was a clean-looking resolution in which the old membership -- still naming the
+  compromised key -- remained active, with the replacement nowhere in the
+  output. Silence read as success. Equally, "somebody sent us a tampered event"
+  is the single most important thing a bundle can tell an operator, and it was
+  being discarded before display.
+- **Decision:** Report both. Policies outside the resolved epoch range produce a
+  warning naming them; `EventBundle.rejected` appears in the CLI's JSON and
+  human output.
+- **Security impact:** Failing closed is necessary but not sufficient -- an
+  operator who cannot see *what* was excluded cannot tell a typo from an attack.
+- **Interop impact:** Additive output only; no verdict changes.
+- **Migration:** None.
+
 ### Pending decision template
 
 - ID:

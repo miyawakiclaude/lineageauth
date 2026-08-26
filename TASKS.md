@@ -42,8 +42,13 @@ uv run pytest && uv run ruff check . && uv run mypy
 - [x] root.create — draft builder + lineage derivation (D-025, D-026)
 - [x] recovery.policy — draft builder, distinct members, ordered replacement
 - [x] succession — draft builder, normal and recovery modes
-- [ ] epoch — **next**: resolve the current root across an event set
-- [ ] conflict status — competing successions must report `CONFLICTED`, fail closed
+- [x] epoch — `bundle.py` (admission) + `lineage.py` (`resolve_lineage`).
+      `at` takes no part in the decision (D-033); duplicate event copies merge
+      by union of verified signers (D-036)
+- [x] conflict status — competing successions, unorderable policies, and forked
+      policy chains all report `CONFLICTED` and fail closed. Never tie-broken
+      by `issuedAt`; regression-guarded
+- [x] CLI — `la lineage show BUNDLE [--lineage] [--at] [--json]`
 - [~] vectors — 5 deterministic examples published; the full conformance
       package (query + expected result + evidence path) is still to come
 

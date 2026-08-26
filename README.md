@@ -103,7 +103,7 @@ real authority behind it yet.
 - [x] Ed25519 `did:key` encode/decode, strict and canonical
 - [x] Envelope model, strict JSON loading, strict RFC3339 UTC
 - [x] Event integrity verification with reason codes — `la verify`
-- [ ] Root creation, recovery policy, succession, epoch resolution
+- [x] Root creation, recovery policy, succession, epoch resolution — `la lineage show`
 - [ ] Delegation, attenuation, revocation, authority resolver
 - [ ] Exact-action human approval and replay protection
 - [ ] Everything after that — see [MASTER_PLAN.md](MASTER_PLAN.md)
