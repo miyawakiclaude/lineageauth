@@ -24,6 +24,11 @@ api = [
     "fastapi>=0.115",
     "uvicorn>=0.30",
 ]
+# Also optional. The tool layer in `adapters/mcp/tools.py` is deliberately
+# SDK-independent, so the protocol work does not move when the SDK does.
+mcp = [
+    "mcp>=1.0",
+]
 dev = [
     "pytest>=8",
     "pytest-cov>=5",

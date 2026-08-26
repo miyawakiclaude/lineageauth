@@ -120,13 +120,18 @@ depend on the indexer or the Explorer.)*
 - [x] no live writes tests — the suite refuses sockets outright for this module
 
 ## P6 MCP/A2A
-- [ ] verify latest MCP spec
-- [ ] MCP server package
-- [ ] verify/check tools
-- [ ] draft tools
+- [x] verify latest MCP spec — 2026-07-28 re-read 2026-08-27; stateless core,
+      opt-in extensions, and tool descriptions declared untrusted upstream
+- [x] MCP server package — `adapters/mcp`; tool layer imports no SDK (D-049)
+- [x] verify/check tools — verify_event, resolve_lineage, resolve_did,
+      check_permission, check_mcp_invocation, list_grants, authority_graph,
+      verify_approval
+- [x] draft tools — build_delegation, build_approval; both return unsigned
+      drafts, and no tool can sign
 - [ ] latest A2A mapping
 - [ ] namespaced extension
-- [ ] native auth coexistence tests
+- [x] native auth coexistence tests — every permission answer states that the
+      target system's own authorization still applies
 
 ## P7 Evidence
 - [ ] artifact.register

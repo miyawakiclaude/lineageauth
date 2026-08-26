@@ -581,6 +581,51 @@ Git/GitHub writes require confirmation of active account + repository owner + re
 - **Interop impact:** none; this is implementation conduct.
 - **Migration:** none.
 
+## D-049 The MCP tool layer does not import the MCP SDK
+
+- **Date:** 2026-08-27
+- **Problem:** `docs/19_MCP.md` asks for an `lineageauth-mcp` package. The SDK
+  was reworked for the 2026-07-28 specification -- `FastMCP` became
+  `MCPServer`, model fields moved to snake_case -- so binding the protocol work
+  directly to it means the protocol work moves whenever the transport does.
+- **Decision:** `adapters/mcp/tools.py` implements and declares every tool
+  without importing the SDK. `server.py` binds it, behind the optional
+  `lineageauth[mcp]` extra. The tool tests run with no SDK installed; only the
+  five binding tests skip.
+- **Security impact:** No signing tool exists, so the server has nowhere to put
+  a private key -- `build_delegation` and `build_approval` return unsigned
+  drafts, and a test asserts no declared tool mentions a key or a seed. Nothing
+  writes to the index, so an MCP client cannot add an event and therefore cannot
+  manufacture authority. Every permission answer carries the note that the
+  target system's own authorization still applies.
+- **Verified rather than reasoned about:** the first binding used a `**kwargs`
+  closure. The SDK derives a tool's input schema from the registered function's
+  signature and offers no hook for supplying one, so every tool published a
+  single required argument called `arguments` and the declared schema never
+  reached the client. Running it found that; reading it had not. The binding now
+  synthesises a real signature from each declaration, and a test compares what
+  the SDK publishes against what the declaration says.
+- **Interop impact:** A client sees the declared schemas. Adding a JSON type to
+  the mapping is a deliberate edit, not an implicit `Any`.
+- **Migration:** A future SDK rework touches `server.py` only.
+
+## D-050 An MCP invocation resource must name one concrete tool
+
+- **Date:** 2026-08-27
+- **Problem:** `mcp_resource_for` formats `server:<id>/tool:<name>` from values
+  that arrive from outside. MCP's own guidance is that what a server says about
+  itself is untrusted.
+- **Decision:** The result goes through the scope grammar, and a wildcard is
+  refused outright.
+- **Security impact:** A wildcard is legitimate in a *scope*, where `tool:*`
+  means "any tool on this server". It is wrong when mapping an invocation that
+  is about to happen: the question would be asked, and answered, about far more
+  than the caller intended. Names carrying a slash, a space, a dot segment, or a
+  control character are refused by the grammar for the same reason -- a resource
+  that can be widened by its own name is not a resource.
+- **Interop impact:** None.
+- **Migration:** None.
+
 ### Pending decision template
 
 - ID:

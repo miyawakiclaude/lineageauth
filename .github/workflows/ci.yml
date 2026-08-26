@@ -40,7 +40,10 @@ jobs:
         run: uv python install 3.12
 
       - name: Install dependencies
-        run: uv sync --extra dev --frozen
+        # Optional extras included so the API and MCP bindings are exercised.
+        # They stay optional for users: a separate step below checks the core
+        # still passes without them.
+        run: uv sync --extra dev --extra api --extra mcp --frozen
 
       - name: Lint
         run: uv run ruff check .
@@ -53,6 +56,14 @@ jobs:
 
       - name: Tests
         run: uv run pytest
+
+      - name: Core passes without the optional extras
+        # CLAUDE.md 2.7.2: nothing needed to verify an event, resolve a lineage,
+        # or check a permission may live behind an optional dependency.
+        run: |
+          uv sync --extra dev --frozen
+          uv run pytest -q
+          uv sync --extra dev --extra api --extra mcp --frozen
 
       - name: Examples are deterministic
         # Regeneration must be byte-identical. A diff here means the protocol
