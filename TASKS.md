@@ -95,7 +95,8 @@ uv run pytest && uv run ruff check . && uv run mypy
       both compute an answer and store nothing
 - [x] REST read — events, lineages, DIDs; every assertion carries the event ids
       behind it so a client can reach its own verdict
-- [ ] graph projection
+- [x] graph projection — `graph.py`, `la graph`, `GET /v1/lineages/{id}/graph`;
+      every status read off the resolver so the picture cannot disagree with it
 - [ ] Next.js explorer
 - [x] security headers — CSP, nosniff, DENY, no-referrer on every response
 - [x] no key storage — asserted: no private key material reaches the index

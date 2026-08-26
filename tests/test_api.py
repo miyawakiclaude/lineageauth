@@ -261,3 +261,40 @@ class TestApiMatchesTheLibrary:
         assert body["allowed"] == direct.allowed
         assert body["reason"] == str(direct.reason)
         assert body["path"] == list(direct.path)
+
+
+class TestGraphEndpoint:
+    def test_it_projects_the_lineage(self, client: TestClient) -> None:
+        body = client.get(f"/v1/lineages/{LINEAGE}/graph", params={"at": AT_TEXT}).json()
+        assert body["resolved"] is True
+        assert {n["did"] for n in body["nodes"]} == {ROOT.did, AGENT.did}
+        assert [e["kind"] for e in body["edges"]] == ["delegated"]
+        assert body["edges"][0]["live"] is True
+
+    def test_the_drawing_agrees_with_the_permission_endpoint(self, client: TestClient) -> None:
+        """A picture that disagrees with the verifier is worse than no picture."""
+        index = EventIndex()
+        target = grant()
+        index.ingest_all(
+            [
+                genesis(),
+                target,
+                sign_payload(
+                    build_delegation_revoke(
+                        lineage=LINEAGE, issuer=ROOT.did, grant=target.event_id, issued_at=AT
+                    ),
+                    [ROOT],
+                ),
+            ]
+        )
+        revoked_client = TestClient(create_app(index))
+        decision = revoked_client.post("/v1/check-permission", json=permission_body()).json()
+        drawing = revoked_client.get(f"/v1/lineages/{LINEAGE}/graph", params={"at": AT_TEXT}).json()
+        edge = next(e for e in drawing["edges"] if e["eventId"] == target.event_id)
+        assert decision["reason"] == "REVOKED"
+        assert edge["live"] is False
+        assert edge["reason"] == "REVOKED"
+
+    def test_the_response_refuses_to_imply_trustworthiness(self, client: TestClient) -> None:
+        body = client.get(f"/v1/lineages/{LINEAGE}/graph", params={"at": AT_TEXT}).json()
+        assert "trustworthy" in body["note"]

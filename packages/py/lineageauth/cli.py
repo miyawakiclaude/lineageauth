@@ -664,3 +664,73 @@ def index_add(
             failed += 1
     typer.echo(f"  added {added}, refused {failed}, store now holds {len(store)}")
     raise typer.Exit(code=1 if failed else 0)
+
+
+@app.command("graph")
+def graph(
+    bundle_path: Annotated[
+        str,
+        typer.Argument(metavar="BUNDLE", help="Bundle of signed envelopes, or '-' for stdin."),
+    ],
+    lineage: Annotated[str | None, typer.Option("--lineage")] = None,
+    at: Annotated[str | None, typer.Option("--at", help="RFC3339 UTC evaluation time.")] = None,
+    as_json: Annotated[bool, typer.Option("--json")] = False,
+) -> None:
+    """Show a lineage as nodes and edges.
+
+    Every status shown is read off the resolver rather than worked out here. A
+    picture that disagrees with the verifier is worse than no picture.
+    """
+    from lineageauth.graph import build_graph
+
+    try:
+        envelopes = _parse_envelopes(_read_source(bundle_path))
+        moment = parse_instant(at, field="--at") if at is not None else datetime.now(tz=UTC)
+    except LineageAuthError as exc:
+        typer.secho(f"error: {exc}", fg=typer.colors.RED, err=True)
+        raise typer.Exit(code=2) from exc
+
+    event_bundle = EventBundle.from_envelopes(envelopes)
+    target = lineage
+    if target is None:
+        found = event_bundle.lineages()
+        if len(found) != 1:
+            typer.secho(
+                f"error: the bundle carries {len(found)} lineages; name one with --lineage",
+                fg=typer.colors.RED,
+                err=True,
+            )
+            for candidate in found:
+                typer.secho(f"  --lineage {candidate}", fg=typer.colors.RED, err=True)
+            raise typer.Exit(code=2)
+        target = found[0]
+
+    projection = build_graph(event_bundle, lineage=target, at=moment)
+    if as_json:
+        typer.echo(jsonio.dumps(projection.to_dict()))
+        raise typer.Exit(code=0 if projection.resolved else 1)
+
+    colour = typer.colors.GREEN if projection.resolved else typer.colors.RED
+    typer.secho(f"{projection.reason}", fg=colour, bold=True)
+    typer.echo(f"  {projection.detail}")
+    typer.echo("")
+    typer.echo("  nodes")
+    for node in projection.nodes:
+        typer.echo(f"    {node.did}")
+        typer.echo(f"      {', '.join(str(kind) for kind in node.kinds)}")
+    typer.echo("")
+    typer.echo("  edges")
+    for edge in projection.edges:
+        mark = "live" if edge.live else str(edge.reason)
+        typer.secho(
+            f"    [{mark}] {edge.kind}",
+            fg=typer.colors.GREEN if edge.live else typer.colors.YELLOW,
+        )
+        typer.echo(f"      {edge.source}")
+        typer.echo(f"        -> {edge.target}")
+        if edge.label:
+            typer.echo(f"      {edge.label}")
+        typer.echo(f"      via {edge.event_id}")
+    typer.echo("")
+    typer.secho(f"  note: {projection.note}", fg=typer.colors.YELLOW)
+    raise typer.Exit(code=0 if projection.resolved else 1)

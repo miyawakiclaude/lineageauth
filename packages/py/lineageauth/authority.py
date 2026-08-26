@@ -592,3 +592,82 @@ def check_permission(
         ),
         **common,
     )
+
+
+@dataclass(frozen=True, slots=True)
+class GrantStanding:
+    """Where one grant stands right now, and why.
+
+    Separate from `check_permission` on purpose. That answers "may this agent do
+    this exact thing", which is a question about one request. This answers "is
+    this grant live", which is what an operator looking at a lineage wants and
+    what a graph needs in order to draw an edge honestly.
+
+    `usable` means the grant itself is current -- not revoked, inside its window,
+    anchored to the current epoch. It says nothing about whether the chain above
+    it holds, so it is never on its own a reason to permit anything.
+    """
+
+    grant: Grant
+    usable: bool
+    reason: ReasonCode
+    detail: str
+    revoked_by: str | None = None
+
+
+def describe_grants(
+    bundle: EventBundle, *, lineage: str, at: datetime
+) -> tuple[GrantStanding, ...]:
+    """Report the standing of every delegation grant in a lineage.
+
+    Ordered by event id, so two callers with the same events get the same list.
+    """
+    if at.tzinfo is None:
+        raise MalformedEventError("the evaluation time must be timezone-aware (RFC3339 UTC)")
+
+    state = resolve_lineage(bundle, lineage=lineage, at=at)
+    refusals: list[Refusal] = []
+    grants = _collect_grants(bundle, lineage=lineage, refusals=refusals)
+    revoked: dict[str, str] = {}
+    if state.resolved and state.root is not None:
+        revoked = _collect_revocations(
+            bundle, lineage=lineage, grants=grants, root=state.root, refusals=refusals
+        )
+
+    out: list[GrantStanding] = []
+    for event_id in sorted(grants):
+        grant = grants[event_id]
+        if not state.resolved or state.epoch is None:
+            out.append(
+                GrantStanding(
+                    grant=grant,
+                    usable=False,
+                    reason=state.reason,
+                    detail=f"the lineage does not resolve: {state.detail}",
+                )
+            )
+            continue
+        standing = _grant_standing(grant, at=at, epoch=state.epoch, revoked=revoked)
+        if standing is None:
+            out.append(
+                GrantStanding(
+                    grant=grant,
+                    usable=True,
+                    reason=ReasonCode.VALID_AUTHORITY_CHAIN,
+                    detail=(
+                        "the grant itself is current. Whether the chain above it holds is a "
+                        "separate question -- ask check_permission."
+                    ),
+                )
+            )
+            continue
+        out.append(
+            GrantStanding(
+                grant=grant,
+                usable=False,
+                reason=standing[0],
+                detail=standing[1],
+                revoked_by=revoked.get(grant.event_id),
+            )
+        )
+    return tuple(out)

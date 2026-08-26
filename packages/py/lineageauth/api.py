@@ -36,6 +36,7 @@ from lineageauth import __version__, catalog
 from lineageauth.authority import check_permission
 from lineageauth.envelope import Envelope
 from lineageauth.errors import LineageAuthError
+from lineageauth.graph import build_graph
 from lineageauth.index import EventIndex
 from lineageauth.lineage import resolve_lineage
 from lineageauth.timeutil import format_instant, parse_instant
@@ -243,6 +244,20 @@ def create_app(index: EventIndex, *, title: str = "LineageAuth") -> FastAPI:
             "warnings": list(state.warnings),
             "note": state.note,
         }
+
+    @app.get(f"/{API_VERSION}/lineages/{{lineage}}/graph")
+    def get_lineage_graph(lineage: str, at: str | None = None) -> dict[str, Any]:
+        """Project a lineage into nodes and edges for rendering.
+
+        Every status here comes from the resolver, not from the drawing. A
+        picture that computed its own answers could disagree with the verifier,
+        and people believe pictures.
+        """
+        moment = _moment(at)
+        try:
+            return build_graph(index.bundle(lineage=lineage), lineage=lineage, at=moment).to_dict()
+        except LineageAuthError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     @app.get(f"/{API_VERSION}/dids/{{did}}")
     def get_did(did: str) -> dict[str, Any]:
