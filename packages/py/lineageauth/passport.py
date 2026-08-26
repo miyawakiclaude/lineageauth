@@ -19,10 +19,11 @@ the caveats.
     third-party         what other keys have said about those artifacts
       attested
 
-Some absences are reported rather than left blank. Tasks, fleet bindings, impact
+Some absences are reported rather than left blank. Fleet bindings, impact
 edges, and availability belong to phases that are not built yet, and an empty
 list reads as "this agent has none" when the truth is "this system does not
-track that". The `notIncluded` section names each one and why.
+track that". The `notIncluded` section names each one and why, and entries leave
+it as their phases land -- completed tasks moved out of it when Phase 8 shipped.
 
 And the standing caveat, on every passport: a key is not a person. Nothing here
 establishes identity, employment, affiliation, or honesty.
@@ -48,6 +49,7 @@ from lineageauth.evidence import (
 from lineageauth.evidence import read_receipt as read_artifact_receipt
 from lineageauth.lineage import resolve_lineage
 from lineageauth.timeutil import format_instant
+from lineageauth.work import TASK_REQUEST, TaskStatus, build_work_receipt, read_task
 
 PROFILE_STATEMENT = "profile.statement"
 SKILL_CLAIM = "skill.claim"
@@ -64,7 +66,6 @@ PASSPORT_NOTE = (
 # Named rather than omitted: an empty list reads as an absence of evidence, and
 # these are an absence of machinery.
 NOT_IMPLEMENTED: tuple[tuple[str, str], ...] = (
-    ("completedTasks", "the task lifecycle is Phase 8 and is not built"),
     ("fleetBindings", "fleet disclosure is Phase 13 and is not built"),
     ("impact", "the impact graph is Phase 14 and is not built"),
     ("availability", "availability statements are Phase 10 and are not built"),
@@ -116,6 +117,24 @@ class ProducedArtifact:
     authority_supported: bool
     authority_reason: ReasonCode
     authority_detail: str
+
+
+@dataclass(frozen=True, slots=True)
+class TaskParticipation:
+    """A task this DID worked on, and how far it got.
+
+    The relationship signals travel with it. A completed-task count on its own
+    is the number `docs/08` warns about -- self-created tasks and same-key
+    verifications inflate it -- so the passport never shows the count without
+    what qualifies it.
+    """
+
+    task_id: str
+    title: str
+    status: TaskStatus
+    requester_is_worker: bool
+    independent_verifiers: tuple[str, ...]
+    artifact_refs: tuple[str, ...]
 
 
 @dataclass(frozen=True, slots=True)
@@ -179,6 +198,7 @@ class Passport:
 
     # evidence-supported
     produced: tuple[ProducedArtifact, ...] = ()
+    tasks: tuple[TaskParticipation, ...] = ()
     skills: tuple[SkillEvidence, ...] = ()
 
     # third-party attested
@@ -242,6 +262,17 @@ class Passport:
                         "authorityDetail": p.authority_detail,
                     }
                     for p in self.produced
+                ],
+                "completedTasks": [
+                    {
+                        "taskId": t.task_id,
+                        "title": t.title,
+                        "status": str(t.status),
+                        "requesterIsWorker": t.requester_is_worker,
+                        "independentVerifiers": list(t.independent_verifiers),
+                        "artifactRefs": list(t.artifact_refs),
+                    }
+                    for t in self.tasks
                 ],
                 "skills": [
                     {
@@ -384,6 +415,31 @@ def build_passport(bundle: EventBundle, *, lineage: str, did: str, at: datetime)
 
     produced_ids = {p.artifact_id for p in produced}
 
+    # ---- tasks this DID worked on ----
+    tasks: list[TaskParticipation] = []
+    for event in bundle.of_type(TASK_REQUEST, lineage=lineage):
+        parsed_task = read_task(event)
+        if isinstance(parsed_task, str):
+            warnings.append(f"task.request {event.event_id} ignored: {parsed_task}")
+            continue
+        try:
+            work = build_work_receipt(bundle, lineage=lineage, task_id=parsed_task.event_id, at=at)
+        except MalformedEventError as exc:  # pragma: no cover - defensive
+            warnings.append(f"task {parsed_task.event_id} could not be summarised: {exc}")
+            continue
+        if work.worker != did:
+            continue
+        tasks.append(
+            TaskParticipation(
+                task_id=work.task_id,
+                title=work.title,
+                status=work.status,
+                requester_is_worker=work.signals.requester_is_worker,
+                independent_verifiers=work.signals.independent_verifiers,
+                artifact_refs=work.artifact_refs,
+            )
+        )
+
     # ---- third-party attested ----
     subjects = produced_ids | set(receipt_ids)
     attestations: list[ThirdPartyClaim] = []
@@ -444,6 +500,7 @@ def build_passport(bundle: EventBundle, *, lineage: str, did: str, at: datetime)
         self_claims=tuple(sorted(self_claims, key=lambda c: c.event_id)),
         skill_claims=tuple(sorted(skill_claims, key=lambda c: c.event_id)),
         produced=tuple(sorted(produced, key=lambda p: p.receipt_id)),
+        tasks=tuple(sorted(tasks, key=lambda t: t.task_id)),
         skills=tuple(sorted(skills, key=lambda s: s.skill)),
         attestations=tuple(sorted(attestations, key=lambda a: a.event_id)),
         warnings=tuple(warnings),
@@ -461,6 +518,7 @@ __all__ = [
     "SelfClaim",
     "SkillClaim",
     "SkillEvidence",
+    "TaskParticipation",
     "ThirdPartyClaim",
     "build_passport",
 ]

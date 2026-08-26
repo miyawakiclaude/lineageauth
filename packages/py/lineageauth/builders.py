@@ -506,3 +506,204 @@ def build_skill_claim(
     if evidence_refs:
         payload["evidenceRefs"] = sorted(set(evidence_refs))
     return payload
+
+
+TASK_REQUEST = "task.request"
+TASK_CLAIM = "task.claim"
+TASK_RELEASE = "task.release"
+TASK_RESULT = "task.result"
+TASK_VERIFY = "task.verify"
+
+ACCEPTED = "accepted"
+REJECTED = "rejected"
+VERDICTS = (ACCEPTED, REJECTED)
+
+MAX_TITLE = 200
+MAX_SUMMARY = 4096
+
+
+def _check_display_text(label: str, value: str, limit: int) -> None:
+    if not value.strip():
+        raise MalformedEventError(f"{label} must not be blank")
+    if len(value) > limit:
+        raise MalformedEventError(f"{label} is limited to {limit} characters")
+    if any(ord(c) < 0x20 or ord(c) == 0x7F for c in value):
+        raise MalformedEventError(
+            f"{label} must not contain control characters; it is displayed to whoever "
+            "decides whether to take the work on"
+        )
+
+
+def build_task_request(
+    *,
+    lineage: str,
+    requester: str,
+    title: str,
+    acceptance_criteria: list[str],
+    allowed_claims: int = 1,
+    deadline: datetime | None = None,
+    reward_reference: str | None = None,
+    required_authority: list[dict[str, Any]] | None = None,
+    issued_at: datetime,
+) -> dict[str, Any]:
+    """Draft a `task.request` (D-055).
+
+    `rewardReference` is an opaque string and nothing else. The core protocol
+    escrows nothing, pays nothing, and validates no token value -- whatever a
+    reward reference points at is somebody else's system, and treating it as a
+    promise here would be the protocol claiming something it cannot deliver.
+    """
+    public_key_from_did_key(requester)
+    _check_display_text("title", title, MAX_TITLE)
+    if not acceptance_criteria:
+        raise MalformedEventError(
+            "a task must state its acceptance criteria; without them a verification "
+            "is an opinion about nothing in particular"
+        )
+    for criterion in acceptance_criteria:
+        _check_display_text("acceptance criterion", criterion, MAX_TITLE)
+    if allowed_claims < 1:
+        raise MalformedEventError("allowedClaims must be at least 1")
+    if deadline is not None and deadline <= issued_at:
+        raise MalformedEventError("deadline must be after issuedAt")
+    if reward_reference is not None:
+        _check_display_text("rewardReference", reward_reference, MAX_TITLE)
+
+    payload = _common(TASK_REQUEST, lineage, issued_at) | {
+        "requester": requester,
+        "title": title,
+        "acceptanceCriteria": list(acceptance_criteria),
+        "allowedClaims": allowed_claims,
+    }
+    if deadline is not None:
+        payload["deadline"] = format_instant(deadline)
+    if reward_reference is not None:
+        payload["rewardReference"] = reward_reference
+    if required_authority:
+        payload["requiredAuthority"] = [
+            {
+                "namespace": scope.namespace,
+                "resource": scope.resource.render(),
+                "actions": sorted(scope.actions),
+            }
+            for scope in parse_scopes(required_authority)
+        ]
+    return payload
+
+
+def build_task_claim(
+    *,
+    lineage: str,
+    task: str,
+    claimant: str,
+    nonce: bytes,
+    expires_at: datetime,
+    issued_at: datetime,
+) -> dict[str, Any]:
+    """Draft a `task.claim`.
+
+    The nonce makes two claims by one key on one task distinguishable, so a
+    replayed claim cannot masquerade as a fresh one.
+    """
+    if not is_event_id(task):
+        raise MalformedEventError("task must be the event id of a task.request")
+    public_key_from_did_key(claimant)
+    if len(nonce) < MIN_NONCE_BYTES:
+        raise MalformedEventError(
+            f"nonce must carry at least {MIN_NONCE_BYTES} bytes of randomness"
+        )
+    if expires_at <= issued_at:
+        raise MalformedEventError("expiresAt must be after issuedAt")
+
+    return _common(TASK_CLAIM, lineage, issued_at) | {
+        "task": task,
+        "claimant": claimant,
+        "nonce": b64u_encode(nonce),
+        "expiresAt": format_instant(expires_at),
+    }
+
+
+def build_task_release(
+    *, lineage: str, claim: str, claimant: str, issued_at: datetime
+) -> dict[str, Any]:
+    """Draft a `task.release`: the claimant giving the task back."""
+    if not is_event_id(claim):
+        raise MalformedEventError("claim must be the event id of a task.claim")
+    public_key_from_did_key(claimant)
+    return _common(TASK_RELEASE, lineage, issued_at) | {
+        "claim": claim,
+        "claimant": claimant,
+    }
+
+
+def build_task_result(
+    *,
+    lineage: str,
+    task: str,
+    claim: str,
+    worker: str,
+    artifact_refs: list[str],
+    summary: str,
+    issued_at: datetime,
+) -> dict[str, Any]:
+    """Draft a `task.result`: the work, pointing at what was produced."""
+    for label, ref in (("task", task), ("claim", claim)):
+        if not is_event_id(ref):
+            raise MalformedEventError(f"{label} must be an event id")
+    public_key_from_did_key(worker)
+    if not artifact_refs:
+        raise MalformedEventError(
+            "a result must reference at least one artifact; a claim of work with "
+            "nothing attached is not evidence of any"
+        )
+    for ref in artifact_refs:
+        if not is_event_id(ref):
+            raise MalformedEventError("every artifactRef must be a sha256:<64 hex> id")
+    _check_display_text("summary", summary, MAX_SUMMARY)
+
+    return _common(TASK_RESULT, lineage, issued_at) | {
+        "task": task,
+        "claim": claim,
+        "worker": worker,
+        "artifactRefs": sorted(set(artifact_refs)),
+        "summary": summary,
+    }
+
+
+def build_task_verify(
+    *,
+    lineage: str,
+    task: str,
+    result: str,
+    verifier: str,
+    verdict: str,
+    criteria_results: dict[str, bool] | None = None,
+    evidence_refs: list[str] | None = None,
+    issued_at: datetime,
+) -> dict[str, Any]:
+    """Draft a `task.verify`: one verifier's signed assessment.
+
+    A verdict is that verifier's opinion, and the work receipt derived from it
+    reports who held it rather than treating it as settled.
+    """
+    for label, ref in (("task", task), ("result", result)):
+        if not is_event_id(ref):
+            raise MalformedEventError(f"{label} must be an event id")
+    public_key_from_did_key(verifier)
+    if verdict not in VERDICTS:
+        raise MalformedEventError(f"verdict must be one of {list(VERDICTS)}, got {verdict!r}")
+    for ref in evidence_refs or []:
+        if not is_event_id(ref):
+            raise MalformedEventError("every evidenceRef must be a sha256:<64 hex> id")
+
+    payload = _common(TASK_VERIFY, lineage, issued_at) | {
+        "task": task,
+        "result": result,
+        "verifier": verifier,
+        "verdict": verdict,
+    }
+    if criteria_results:
+        payload["criteriaResults"] = {k: bool(v) for k, v in sorted(criteria_results.items())}
+    if evidence_refs:
+        payload["evidenceRefs"] = sorted(set(evidence_refs))
+    return payload

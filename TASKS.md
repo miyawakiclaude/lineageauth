@@ -147,15 +147,16 @@ depend on the indexer or the Explorer.)*
 - [x] tests
 
 ## P8 Useful Work
-- [ ] task.request
-- [ ] task.claim
-- [ ] release
-- [ ] result
-- [ ] verify
-- [ ] work.receipt
-- [ ] derived state machine
-- [ ] anti-gaming signals
-- [ ] tests
+- [x] task.request — acceptance criteria mandatory; `rewardReference` opaque
+- [x] task.claim — nonce required; signed by the claimant (D-055)
+- [x] release — only the holder may hand a claim back
+- [x] result — must cite its own claim and at least one artifact
+- [x] verify — accepted/rejected; disagreement yields CONTESTED, not a verdict
+- [x] work.receipt — derived; carries no number that could be summed (D-056)
+- [x] derived state machine — `resolve_task`; removing a verification un-accepts
+- [x] anti-gaming signals — self-created task, self-verification, independent
+      verifier count, reciprocal verifier pairs; reported, never weighted
+- [x] tests
 
 ## P9 Passport
 - [x] profile statement — self-claimed; control characters refused (D-053)

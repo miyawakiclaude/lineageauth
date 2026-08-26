@@ -713,6 +713,60 @@ Git/GitHub writes require confirmation of active account + repository owner + re
   sections are still rendered empty, so the distinction stays legible.
 - **Migration:** Entries are removed from `NOT_IMPLEMENTED` as their phases land.
 
+## D-055 Task lifecycle payloads, and state that is derived rather than stored
+
+- **Date:** 2026-08-27
+- **Problem:** `docs/03` names the five task events; none of their payloads is
+  specified, and nothing says where a task's status lives.
+- **Decision:**
+  - `task.request` — `requester`, `title`, `acceptanceCriteria` (required,
+    non-empty), `allowedClaims`, `deadline?`, `rewardReference?`,
+    `requiredAuthority?`
+  - `task.claim` — `task`, `claimant`, `nonce`, `expiresAt`
+  - `task.release` — `claim`, `claimant`
+  - `task.result` — `task`, `claim`, `worker`, `artifactRefs` (non-empty),
+    `summary`
+  - `task.verify` — `task`, `result`, `verifier`, `verdict`,
+    `criteriaResults?`, `evidenceRefs?`
+  Status is **derived** by `resolve_task`. No event writes it.
+- **Security impact:** Each event must be signed by the party it names, so a
+  result cannot be submitted against somebody else's claim and only the holder
+  may release one -- otherwise anyone could free a task out from under whoever
+  is working on it. Acceptance criteria are mandatory because a verification
+  against no criteria is an opinion about nothing in particular. Deriving status
+  means removing a verification from a bundle un-accepts the task, which is what
+  makes the chain checkable rather than a stored flag somebody set.
+- **Disagreement is not resolved here:** an accepted and a rejected verdict on
+  one result yields `CONTESTED`. Picking a side would be inventing an
+  adjudication this protocol does not have; `docs/12` is where that belongs.
+- **`rewardReference` is opaque.** The core escrows nothing, pays nothing, and
+  validates no token value. Treating a reward reference as a promise would be
+  the protocol claiming something it cannot deliver.
+- **Migration:** Pre-1.0.
+
+## D-056 A work receipt carries signals, never a score
+
+- **Date:** 2026-08-27
+- **Problem:** `docs/08` says never to mint points in the core, and then lists
+  the shapes that make a naive count of completed work meaningless:
+  self-created tasks, same-operator verification, and volume.
+- **Decision:** `WorkReceipt` has no numeric field that could be summed. It
+  reports `requesterIsWorker`, `selfVerified`, the distinct independent
+  verifiers, the non-independent ones, and any reciprocal verifier pair -- and
+  weights none of them. A test walks every key in the rendered receipt and fails
+  on any name containing score, points, rating, rank, or reputation.
+- **Security impact:** A reciprocal pair is the cheapest way to make review look
+  independent: A verifies B's work and B verifies A's, and each passes the
+  narrow "is the verifier the worker" test. Detecting it needs the whole bundle
+  rather than the one task, which is why the signal is computed across every
+  result and verification present.
+- **Passport coupling:** the passport's completed-task section carries these
+  signals with each task, so the count never appears without what qualifies it.
+  `completedTasks` left `notIncluded` when this phase landed (D-054).
+- **Interop impact:** Rankers may use the signals transparently, which means
+  handing over the parts rather than an answer.
+- **Migration:** None.
+
 ### Pending decision template
 
 - ID:

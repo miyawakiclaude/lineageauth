@@ -455,3 +455,134 @@ class TestProfileBuilderRules:
                 evidence_refs=["../secrets"],
                 issued_at=AT,
             )
+
+
+class TestCompletedTasks:
+    """Phase 8 landed, so this section is real evidence now rather than absent."""
+
+    def _worked_task(self) -> list[Envelope]:
+        from lineageauth.builders import (
+            build_task_claim,
+            build_task_request,
+            build_task_result,
+            build_task_verify,
+        )
+
+        task = sign_payload(
+            build_task_request(
+                lineage=LINEAGE,
+                requester=REVIEWER.did,
+                title="Curate the list",
+                acceptance_criteria=["links resolve"],
+                issued_at=AT,
+            ),
+            [REVIEWER],
+        )
+        held = sign_payload(
+            build_task_claim(
+                lineage=LINEAGE,
+                task=task.event_id,
+                claimant=AGENT.did,
+                nonce=b"\x33" * 16,
+                expires_at=AT + timedelta(days=7),
+                issued_at=AT,
+            ),
+            [AGENT],
+        )
+        done = sign_payload(
+            build_task_result(
+                lineage=LINEAGE,
+                task=task.event_id,
+                claim=held.event_id,
+                worker=AGENT.did,
+                artifact_refs=[ARTIFACT],
+                summary="done",
+                issued_at=AT,
+            ),
+            [AGENT],
+        )
+        checked = sign_payload(
+            build_task_verify(
+                lineage=LINEAGE,
+                task=task.event_id,
+                result=done.event_id,
+                verifier=REVIEWER_2.did,
+                verdict="accepted",
+                issued_at=AT,
+            ),
+            [REVIEWER_2],
+        )
+        return [task, held, done, checked]
+
+    def test_a_completed_task_appears_with_its_signals(self) -> None:
+        found = passport_of(genesis(), grant(), *self._worked_task())
+        assert len(found.tasks) == 1
+        assert str(found.tasks[0].status) == "VERIFIED_ACCEPTED"
+        assert not found.tasks[0].requester_is_worker
+        assert found.tasks[0].independent_verifiers == (REVIEWER_2.did,)
+
+    def test_a_self_created_task_says_so(self) -> None:
+        """A completed-task count without this qualifier is the gamed number."""
+        from lineageauth.builders import (
+            build_task_claim,
+            build_task_request,
+            build_task_result,
+        )
+
+        task = sign_payload(
+            build_task_request(
+                lineage=LINEAGE,
+                requester=AGENT.did,
+                title="Task I set myself",
+                acceptance_criteria=["it exists"],
+                issued_at=AT,
+            ),
+            [AGENT],
+        )
+        held = sign_payload(
+            build_task_claim(
+                lineage=LINEAGE,
+                task=task.event_id,
+                claimant=AGENT.did,
+                nonce=b"\x44" * 16,
+                expires_at=AT + timedelta(days=7),
+                issued_at=AT,
+            ),
+            [AGENT],
+        )
+        done = sign_payload(
+            build_task_result(
+                lineage=LINEAGE,
+                task=task.event_id,
+                claim=held.event_id,
+                worker=AGENT.did,
+                artifact_refs=[ARTIFACT],
+                summary="done",
+                issued_at=AT,
+            ),
+            [AGENT],
+        )
+        found = passport_of(genesis(), grant(), task, held, done)
+        assert found.tasks[0].requester_is_worker
+        assert found.tasks[0].independent_verifiers == ()
+
+    def test_someone_elses_task_is_not_in_this_passport(self) -> None:
+        from lineageauth.builders import build_task_request
+
+        task = sign_payload(
+            build_task_request(
+                lineage=LINEAGE,
+                requester=REVIEWER.did,
+                title="Nobody claimed this",
+                acceptance_criteria=["x"],
+                issued_at=AT,
+            ),
+            [REVIEWER],
+        )
+        assert passport_of(genesis(), task).tasks == ()
+
+    def test_completed_tasks_left_the_not_included_list(self) -> None:
+        body = passport_of(genesis(), grant()).to_dict()
+        sections = {item["section"] for item in body["notIncluded"]}
+        assert "completedTasks" not in sections
+        assert "completedTasks" in body["evidenceSupported"]

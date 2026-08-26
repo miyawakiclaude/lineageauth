@@ -818,6 +818,13 @@ def passport(
     for made in projection.produced:
         mark = "authority ok" if made.authority_supported else str(made.authority_reason)
         typer.echo(f"    artifact  {made.artifact_id}  [{mark}]")
+    for done in projection.tasks:
+        marks = []
+        if done.requester_is_worker:
+            marks.append("self-created task")
+        marks.append(f"{len(done.independent_verifiers)} independent verifier(s)")
+        typer.echo(f"    task      {done.title}  [{done.status}]")
+        typer.echo(f"      {', '.join(marks)}")
     for supported in projection.skills:
         typer.echo(
             f"    skill     {supported.skill}: "
@@ -825,7 +832,7 @@ def passport(
             f"{len(supported.independent_attesters)} independent attester(s) "
             f"-> supported={supported.is_evidence_supported}"
         )
-    if not projection.produced and not projection.skills:
+    if not projection.produced and not projection.skills and not projection.tasks:
         typer.echo("    (none)")
 
     typer.echo("")
