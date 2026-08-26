@@ -1,0 +1,18 @@
+{
+  "payload": {
+    "protocol": "lineageauth",
+    "version": "0.1",
+    "type": "root.create",
+    "lineage": "lineage:la:z6Mkj3MFJwUVhEAMBQQ4oRsNJLrvtX3ZbKiLnnXuz8v9tfs2",
+    "issuedAt": "2026-08-26T09:00:00Z",
+    "root": "did:key:z6Mkj3MFJwUVhEAMBQQ4oRsNJLrvtX3ZbKiLnnXuz8v9tfs2",
+    "epoch": 0
+  },
+  "proofs": [
+    {
+      "alg": "Ed25519",
+      "signer": "did:key:z6Mkj3MFJwUVhEAMBQQ4oRsNJLrvtX3ZbKiLnnXuz8v9tfs2",
+      "sig": "HGbti1OcVQQG01oXUsNd7tZzDnnqzOGjPKcM7wvt0VudqUmn_s3AhbkBk0jCXxjcarQhb3iG7-tHlXbOEdFXCA"
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+# Line endings are normalised to LF everywhere, including Windows checkouts.
+#
+# This is not a style preference. Canonicalization, event ids, and signatures
+# are defined over exact bytes, and CI checks that regenerating examples/ is
+# byte-identical. A CRLF conversion on checkout would break that check on any
+# platform that disagrees with the one that generated the files.
+* text=auto eol=lf
+
+# Signed material and conformance vectors: never touch these bytes.
+examples/*.json -text
+tests/vectors/** -text

@@ -1,0 +1,76 @@
+# LineageAuth budget invariant — CLAUDE.md 2.7 / docs/31_ZERO_COST_OPERATIONS.md
+#
+# This file is the machine-readable spend contract. Do not relax any of the
+# flags below without explicit human approval recorded in docs/29_DECISIONS.md.
+budget_mode: zero_cost
+monthly_spend_limit_jpy: 0
+allow_paid_services: false
+allow_automatic_upgrades: false
+allow_domain_purchase: false
+on_free_limit_exceeded: stop_or_degrade
+
+# Every external service must appear here before it is used, with the date its
+# current free tier was actually checked. Old quota numbers are not permanent
+# architecture assumptions (docs/SOURCE_NOTES.md).
+services:
+  - name: local-filesystem-event-store
+    purpose: immutable signed event store
+    required: true
+    cost_mode: free
+    billing_enabled: false
+    free_tier_checked: n/a
+    fallback: n/a
+    shutdown_behavior: n/a
+
+  - name: local-sqlite
+    purpose: derived index, rebuildable from events
+    required: true
+    cost_mode: free
+    billing_enabled: false
+    free_tier_checked: n/a
+    fallback: n/a
+    shutdown_behavior: n/a
+
+  - name: github-repository
+    purpose: source hosting
+    required: false
+    cost_mode: free
+    billing_enabled: false
+    free_tier_checked: "2026-08-26"
+    fallback: local git repository
+    shutdown_behavior: development continues locally
+    notes: >
+      Free for public repositories. No remote is configured yet; adding one is
+      an external write and needs explicit approval (CLAUDE.md 2.3, 2.8.11).
+
+  - name: github-actions
+    purpose: CI (lint, types, tests, secret scan)
+    required: false
+    cost_mode: free
+    billing_enabled: false
+    free_tier_checked: "2026-08-26"
+    fallback: run the same commands locally via `uv run`
+    shutdown_behavior: disable the workflow; local checks are authoritative
+    notes: >
+      Standard GitHub-hosted runners are free and UNMETERED on public
+      repositories, verified 2026-08-26. On a PRIVATE repository the same
+      workflow draws on the Free plan's 2,000 minutes/month instead and can
+      eventually incur charges. Making this repository private is therefore a
+      budget decision, not just a visibility one.
+
+# Not selected. Listed so that "we already decided this" is never assumed.
+# Each would need a free-tier verification date and human approval first.
+candidates_not_selected:
+  - cloudflare-pages       # Explorer hosting, phase 4
+  - cloudflare-workers     # small read API, phase 4
+  - cloudflare-d1          # shared derived index, phase 4
+  - cloudflare-r2          # optional immutable mirror, only if hash-only receipts prove insufficient
+
+# Documentation-only. Never provision without explicit approval (CLAUDE.md 2.7.5).
+paid_scale_targets:
+  - postgresql
+  - redis
+  - managed-object-storage
+  - managed-search
+  - paid-observability
+  - custom-domain

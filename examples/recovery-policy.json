@@ -1,0 +1,24 @@
+{
+  "payload": {
+    "protocol": "lineageauth",
+    "version": "0.1",
+    "type": "recovery.policy",
+    "lineage": "lineage:la:z6Mkj3MFJwUVhEAMBQQ4oRsNJLrvtX3ZbKiLnnXuz8v9tfs2",
+    "issuedAt": "2026-08-26T09:00:00Z",
+    "epoch": 0,
+    "policySeq": 1,
+    "members": [
+      "did:key:z6MkpDhidLuCgm4fKfN76zp8T8arHkUXzRGQSVmE5jtopNXY",
+      "did:key:z6MksySZJxGsqVw6iUoStT5VdibBFsQC4bDcWxvSEeCHmz1T",
+      "did:key:z6MktHFSmucUcbw6DAY99cxRVJraKBoHYfuheUzgZtCXjP4K"
+    ],
+    "threshold": 2
+  },
+  "proofs": [
+    {
+      "alg": "Ed25519",
+      "signer": "did:key:z6Mkj3MFJwUVhEAMBQQ4oRsNJLrvtX3ZbKiLnnXuz8v9tfs2",
+      "sig": "oPLuuwA39wDtDr10XW_QYKSaz5yJ3ZKo4kxBa8UAYj-5YNxT909B2BXL-NMREM3-3oyc21UECWE9YKOyW7ADDA"
+    }
+  ]
+}

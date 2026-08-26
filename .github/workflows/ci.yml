@@ -1,0 +1,90 @@
+name: CI
+
+# Budget note (CLAUDE.md 2.7, docs/31_ZERO_COST_OPERATIONS.md):
+# Standard GitHub-hosted runners are free and unmetered on PUBLIC repositories.
+# Verified against GitHub's published pricing on 2026-08-26.
+#
+# If this repository is ever made PRIVATE, the same workflow starts drawing on
+# the Free plan's 2,000 minutes/month and can eventually incur charges. That
+# would need an explicit decision, not a silent flip -- see the cost register in
+# infra/cost-policy.yaml.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: lint, types, tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      - name: Install dependencies
+        run: uv sync --extra dev --frozen
+
+      - name: Lint
+        run: uv run ruff check .
+
+      - name: Format check
+        run: uv run ruff format --check .
+
+      - name: Type check
+        run: uv run mypy
+
+      - name: Tests
+        run: uv run pytest
+
+      - name: Examples are deterministic
+        # Regeneration must be byte-identical. A diff here means the protocol
+        # changed without the vectors being updated deliberately.
+        run: |
+          uv run python scripts/generate_examples.py
+          git diff --exit-code -- examples/
+
+      - name: CLI smoke test
+        run: |
+          uv run la verify examples/root-create.json
+          ! uv run la verify examples/tampered-root-create.json
+
+  secrets:
+    name: secret scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Reject private key material
+        # CLAUDE.md 2.1 -- private seeds, JWK "d" values, and PEM private keys
+        # must never reach this repository. Test keys are derived at runtime
+        # from a public constant and are never stored as key material.
+        run: |
+          set -euo pipefail
+          patterns='BEGIN [A-Z ]*PRIVATE KEY|"d"[[:space:]]*:[[:space:]]*"[A-Za-z0-9_-]{40,}"|PRIVATE_KEY[[:space:]]*=|SEED[[:space:]]*=[[:space:]]*"[0-9a-fA-F]{64}"'
+          if git grep -nEI "$patterns" -- . ':!.github/workflows/ci.yml'; then
+            echo "::error::possible private key material found -- see CLAUDE.md 2.1"
+            exit 1
+          fi
+          echo "no private key material found"

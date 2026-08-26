@@ -1,0 +1,21 @@
+{
+  "payload": {
+    "protocol": "lineageauth",
+    "version": "0.1",
+    "type": "root.succession",
+    "lineage": "lineage:la:z6Mkj3MFJwUVhEAMBQQ4oRsNJLrvtX3ZbKiLnnXuz8v9tfs2",
+    "issuedAt": "2026-09-01T12:00:00Z",
+    "fromRoot": "did:key:z6Mkj3MFJwUVhEAMBQQ4oRsNJLrvtX3ZbKiLnnXuz8v9tfs2",
+    "toRoot": "did:key:z6MkhCQKL9KABp6NQ5suPTC5R1pn1j9MHr8jQaVVcZQwQc9z",
+    "fromEpoch": 0,
+    "toEpoch": 1,
+    "mode": "normal"
+  },
+  "proofs": [
+    {
+      "alg": "Ed25519",
+      "signer": "did:key:z6Mkj3MFJwUVhEAMBQQ4oRsNJLrvtX3ZbKiLnnXuz8v9tfs2",
+      "sig": "cs5EvtPS2EOMar9I6Lwj71DjYf7UPyQbCwA9PWgn1LSmN052gwwwiOvSx7iGt8rdfn-tU_RwIUs90FipNEJvBw"
+    }
+  ]
+}

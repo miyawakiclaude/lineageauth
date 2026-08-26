@@ -1,0 +1,55 @@
+# ---------------------------------------------------------------
+# SECRET-SAFE IGNORES  (LineageAuth CLAUDE.md 2.1)
+# Never commit private key material of any kind.
+# ---------------------------------------------------------------
+*.key
+*.pem
+*.p8
+*.pk8
+*.seed
+*.secret
+*.jwk
+*_private*
+*privkey*
+.env
+.env.*
+!.env.example
+keys/
+secrets/
+.secrets/
+*.kdbx
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.hypothesis/
+dist/
+build/
+*.egg-info/
+.coverage
+htmlcov/
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+*.tsbuildinfo
+
+# Local derived state (rebuildable from immutable events)
+*.sqlite
+*.sqlite3
+*.db
+var/
+.index/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/

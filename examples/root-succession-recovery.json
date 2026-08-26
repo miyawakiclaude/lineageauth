@@ -1,0 +1,27 @@
+{
+  "payload": {
+    "protocol": "lineageauth",
+    "version": "0.1",
+    "type": "root.succession",
+    "lineage": "lineage:la:z6Mkj3MFJwUVhEAMBQQ4oRsNJLrvtX3ZbKiLnnXuz8v9tfs2",
+    "issuedAt": "2026-09-01T12:00:00Z",
+    "fromRoot": "did:key:z6Mkj3MFJwUVhEAMBQQ4oRsNJLrvtX3ZbKiLnnXuz8v9tfs2",
+    "toRoot": "did:key:z6MkhCQKL9KABp6NQ5suPTC5R1pn1j9MHr8jQaVVcZQwQc9z",
+    "fromEpoch": 0,
+    "toEpoch": 1,
+    "mode": "recovery",
+    "recoveryPolicyRef": "sha256:9cdc790f4b03e3fbf53f18a4c1ab371170f9d609942bbc20521934a0106ce910"
+  },
+  "proofs": [
+    {
+      "alg": "Ed25519",
+      "signer": "did:key:z6MktHFSmucUcbw6DAY99cxRVJraKBoHYfuheUzgZtCXjP4K",
+      "sig": "HHDTFtdoOOUe96oDvy1WEG1EgCmswsmJRAwC-xsT4q3NGuAdBrk8W_yC7yFEyW9xyO16l_i3eY_oZVQrCh7ABg"
+    },
+    {
+      "alg": "Ed25519",
+      "signer": "did:key:z6MkpDhidLuCgm4fKfN76zp8T8arHkUXzRGQSVmE5jtopNXY",
+      "sig": "CIhEJ16dejuLfePiDu0rNmG0fPiahB5act8Uwi1b-YoynjWCMxbeNr_DPLNQdLGRSQqDx8KffUrVOyWVXYI-AQ"
+    }
+  ]
+}
