@@ -53,12 +53,13 @@ uv run pytest && uv run ruff check . && uv run mypy
       package (query + expected result + evidence path) is still to come
 
 ## P2 Authority
-- [ ] scope types
-- [ ] Technocore containment
-- [ ] MCP containment
-- [ ] A2A containment
-- [ ] GitHub placeholder
-- [ ] HTTP placeholder
+- [x] scope types — `scopes.py`: namespace registry, resource grammar,
+      `ApprovalMode` ordered `none < external-only < required`
+- [x] Technocore containment — `room:`, `owned-room:`, `note:`
+- [x] MCP containment — `server:`, `server:<id>/tool:<tool>`
+- [x] A2A containment — `agent:`, `skill:`
+- [x] GitHub placeholder — `repo:<owner>/<name>`
+- [x] HTTP placeholder — `host:<hostname>`
 - [ ] delegation grant
 - [ ] attenuation
 - [ ] delegation depth
