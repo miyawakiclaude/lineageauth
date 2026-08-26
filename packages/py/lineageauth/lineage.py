@@ -465,13 +465,28 @@ def _authorize_succession(
             "a recovery succession",
         )
     if referenced != active.event_id:
-        resolvable = bundle.by_id(referenced) is not None
+        # SUPERSEDED means "a real policy, just not the current one". Deciding
+        # that on mere presence in the bundle would report a citation of some
+        # unrelated event -- a task, another lineage's policy -- as a superseded
+        # policy that never existed. Both outcomes deny, so this costs no
+        # authority; it costs an operator the truth about why.
+        target = bundle.by_id(referenced)
+        is_policy = (
+            target is not None
+            and target.event_type == RECOVERY_POLICY
+            and target.lineage == event.lineage
+        )
         return DeniedCandidate(
             event.event_id,
             ROOT_SUCCESSION,
-            ReasonCode.SUPERSEDED if resolvable else ReasonCode.UNRESOLVED_PARENT,
+            ReasonCode.SUPERSEDED if is_policy else ReasonCode.UNRESOLVED_PARENT,
             f"cites recovery policy {referenced}, but the policy active at epoch "
-            f"{succession.from_epoch} is {active.event_id} (D-030)",
+            f"{succession.from_epoch} is {active.event_id} (D-030)"
+            + (
+                ""
+                if is_policy
+                else "; the cited id is not a verified recovery policy of this lineage"
+            ),
         )
 
     # One key, one vote: duplicate proofs collapse and non-members count zero.
@@ -515,8 +530,16 @@ def _resolve_genesis(bundle: EventBundle, *, lineage: str, denied: list[DeniedCa
             f"{len(event_ids)} genesis events claim {lineage}; a lineage opens exactly once",
             event_ids,
         )
-    root = _as_str(valid[0].get("root"))
-    assert root is not None  # _genesis_complaint already established this
+    # `_genesis_complaint` has already established this. Re-checked rather than
+    # asserted anyway: `python -O` removes assertions, and the one invariant
+    # that must not be removable is the one naming the root of the lineage.
+    root = _as_did(valid[0].get("root"))
+    if root is None:  # pragma: no cover - defensive
+        raise _Halt(
+            ReasonCode.MALFORMED,
+            "the genesis event passed validation but carries no usable root DID",
+            (valid[0].event_id,),
+        )
     return root
 
 

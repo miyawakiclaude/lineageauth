@@ -533,3 +533,100 @@ def test_small_bundles_are_order_independent_under_every_permutation() -> None:
 def test_repeated_resolution_is_stable() -> None:
     events = _chain()
     assert _snapshot(resolve(*events)) == _snapshot(resolve(*events))
+
+
+# ----------------------------------------------------- reason-code accuracy (D-037)
+
+
+def test_a_succession_citing_a_non_policy_event_is_unresolved_not_superseded() -> None:
+    """A reason code that is merely plausible is worse than no reason code.
+
+    SUPERSEDED asserts that a real policy exists and has been replaced. Deciding
+    that from mere presence in the bundle reported a citation of *any* event id
+    -- another lineage's policy, a genesis, anything -- as a superseded policy
+    that never existed. Both paths deny, so this costs no authority; it costs
+    the operator an accurate account of what went wrong.
+    """
+    active = policy(policy_seq=1)
+    decoy = genesis()  # a real, verified event in the bundle -- but not a policy
+    move = succession(
+        mode="recovery",
+        recovery_policy_ref=decoy.event_id,
+        signers=[MEMBERS[0], MEMBERS[1]],
+    )
+
+    state = resolve(genesis(), active, move)
+
+    # The lineage still resolves -- genesis is sound, and only the succession is
+    # refused, so the chain simply does not advance past epoch 0.
+    assert (state.resolved, state.epoch) == (True, 0)
+    assert denial_for(state, move) is ReasonCode.UNRESOLVED_PARENT
+    assert any(
+        "not a verified recovery policy" in item.detail
+        for item in state.denied
+        if item.event_id == move.event_id
+    )
+
+
+def test_a_succession_citing_a_replaced_policy_is_superseded() -> None:
+    """The other side of the same distinction: a real policy, just not current."""
+    first = policy(policy_seq=1)
+    second = policy(policy_seq=2, previous_policy=first.event_id, members=MEMBERS[:2], threshold=2)
+    move = succession(
+        mode="recovery",
+        recovery_policy_ref=first.event_id,
+        signers=[MEMBERS[0], MEMBERS[1]],
+    )
+
+    state = resolve(genesis(), first, second, move)
+
+    assert denial_for(state, move) is ReasonCode.SUPERSEDED
+
+
+def test_a_malformed_policy_reference_is_refused_before_it_is_looked_up() -> None:
+    """D-037: a field that names an event must look like an event id."""
+    move = succession(mode="recovery", recovery_policy_ref="not-an-event-id")
+    state = resolve(genesis(), policy(), move)
+
+    assert denial_for(state, move) is ReasonCode.MALFORMED
+
+
+# ------------------------------------------------------- observability (D-038)
+
+
+def test_a_policy_stamped_with_an_unreachable_epoch_is_reported() -> None:
+    """A mistyped epoch on a rotation must not look like a clean result.
+
+    Rotation exists to drop a compromised member. If the replacement is stamped
+    with an epoch the walk never reaches, the old membership -- still naming the
+    compromised key -- stays active. Silently ignoring the replacement lets that
+    read as success.
+    """
+    active = policy(epoch=0, policy_seq=1)
+    mistyped = policy(
+        epoch=7,  # the lineage never reaches epoch 7
+        policy_seq=2,
+        previous_policy=active.event_id,
+        members=MEMBERS[:2],
+        threshold=2,
+    )
+
+    state = resolve(genesis(), active, mistyped)
+
+    assert state.resolved  # the lineage itself is fine
+    assert state.active_recovery_policy is not None
+    assert state.active_recovery_policy.event_id == active.event_id
+    assert any(mistyped.event_id in warning for warning in state.warnings)
+    assert any("never evaluated" in warning for warning in state.warnings)
+
+
+def test_superseded_roots_never_lists_the_root_currently_held() -> None:
+    """A -> B -> A leaves A live; calling it superseded invites a wrong read."""
+    out = succession(from_root=ROOT, to_root=NEXT_ROOT, from_epoch=0)
+    back = succession(from_root=NEXT_ROOT, to_root=ROOT, from_epoch=1, signers=[NEXT_ROOT])
+
+    state = resolve(genesis(), out, back)
+
+    assert (state.root, state.epoch) == (ROOT.did, 2)
+    assert ROOT.did not in state.superseded_roots
+    assert state.superseded_roots == (NEXT_ROOT.did,)

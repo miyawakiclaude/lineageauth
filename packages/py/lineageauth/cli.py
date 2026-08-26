@@ -373,11 +373,16 @@ def lineage_show(
     if target is None:
         found = event_bundle.lineages()
         if len(found) != 1:
+            # Anyone who can append one unrelated event to a bundle can make the
+            # guess ambiguous, so name the candidates: the operator should be one
+            # copy-paste away from proceeding, not left to go digging.
             typer.secho(
                 f"error: the bundle carries {len(found)} lineages; name one with --lineage",
                 fg=typer.colors.RED,
                 err=True,
             )
+            for candidate in found:
+                typer.secho(f"  --lineage {candidate}", fg=typer.colors.RED, err=True)
             raise typer.Exit(code=2)
         target = found[0]
 
