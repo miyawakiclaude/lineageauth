@@ -21,6 +21,7 @@ from __future__ import annotations
 import hashlib
 import json
 import sqlite3
+import threading
 from collections.abc import Iterable, Iterator
 from contextlib import contextmanager
 from pathlib import Path
@@ -76,16 +77,25 @@ class IndexError_(LineageAuthError):
 class EventIndex:
     """A rebuildable, read-optimised view over an event store."""
 
-    __slots__ = ("_connection", "_path")
+    __slots__ = ("_connection", "_lock", "_path")
 
     def __init__(self, path: str | Path = ":memory:") -> None:
         self._path = str(path)
-        # One connection for the object's lifetime. `:memory:` demands it -- a
-        # second connect() to that name is a *different* empty database, so a
-        # per-call connection would lose the schema between statements. Holding
-        # it for file paths too keeps one code path instead of two, and an index
-        # is a single-process read cache rather than a shared server.
-        self._connection = sqlite3.connect(self._path)
+        # One connection for the object's lifetime, guarded by a lock.
+        #
+        # `:memory:` forces the single connection: a second connect() to that
+        # name is a *different* empty database, so per-call connections would
+        # lose the schema between statements.
+        #
+        # `check_same_thread=False` plus the lock is what makes that safe under
+        # a threaded server. sqlite3 binds a connection to its creating thread
+        # by default, and an index behind an HTTP API is read from whichever
+        # worker thread handles the request. Serialising access is honest for
+        # something this size -- these are indexed reads over a local file, and
+        # a correct answer from one connection beats a fast one from a pool that
+        # has to be reasoned about.
+        self._lock = threading.RLock()
+        self._connection = sqlite3.connect(self._path, check_same_thread=False)
         self._connection.execute("PRAGMA foreign_keys=ON")
         with self._cursor() as connection:
             connection.executescript(_SCHEMA)
@@ -96,12 +106,16 @@ class EventIndex:
 
     @contextmanager
     def _cursor(self) -> Iterator[sqlite3.Connection]:
-        yield self._connection
-        self._connection.commit()
+        # Reentrant: `rebuild` holds the lock and then calls `ingest`, which
+        # takes it again.
+        with self._lock:
+            yield self._connection
+            self._connection.commit()
 
     def close(self) -> None:
         """Release the connection. The index is a cache; closing loses nothing."""
-        self._connection.close()
+        with self._lock:
+            self._connection.close()
 
     def __enter__(self) -> EventIndex:
         return self
@@ -122,53 +136,71 @@ class EventIndex:
         ever be handed back to a caller who then has to reject it, and an index
         that carries invalid events is one a reader has to distrust wholesale.
         """
+        with self._cursor() as connection:
+            return self._ingest_uncommitted(connection, envelope)
+
+    def _ingest_uncommitted(self, connection: sqlite3.Connection, envelope: Envelope) -> str | None:
+        """Index one envelope inside a caller-held transaction."""
         result = verify_event(envelope)
         if not result.integrity_ok:
             return None
         if result.event_id is None or result.event_type is None or result.lineage is None:
             return None  # pragma: no cover - verify_event guarantees these on a pass
 
-        with self._cursor() as connection:
-            connection.execute(
-                "INSERT OR REPLACE INTO events "
-                "(event_id, type, family, lineage, issued_at, document) VALUES (?,?,?,?,?,?)",
-                (
-                    result.event_id,
-                    result.event_type,
-                    result.event_family or "",
-                    result.lineage,
-                    str(envelope.payload.get("issuedAt", "")),
-                    canonical_document(envelope),
-                ),
-            )
-            connection.execute("DELETE FROM event_signers WHERE event_id = ?", (result.event_id,))
-            connection.executemany(
-                "INSERT OR IGNORE INTO event_signers (event_id, signer) VALUES (?,?)",
-                [(result.event_id, signer) for signer in sorted(set(result.verified_signers))],
-            )
+        connection.execute(
+            "INSERT OR REPLACE INTO events "
+            "(event_id, type, family, lineage, issued_at, document) VALUES (?,?,?,?,?,?)",
+            (
+                result.event_id,
+                result.event_type,
+                result.event_family or "",
+                result.lineage,
+                str(envelope.payload.get("issuedAt", "")),
+                canonical_document(envelope),
+            ),
+        )
+        connection.execute("DELETE FROM event_signers WHERE event_id = ?", (result.event_id,))
+        connection.executemany(
+            "INSERT OR IGNORE INTO event_signers (event_id, signer) VALUES (?,?)",
+            [(result.event_id, signer) for signer in sorted(set(result.verified_signers))],
+        )
         return result.event_id
 
     def ingest_all(self, envelopes: Iterable[Envelope]) -> tuple[int, int]:
-        """Index many envelopes. Returns (indexed, rejected)."""
+        """Index many envelopes in one transaction. Returns (indexed, rejected)."""
         indexed = rejected = 0
-        for envelope in envelopes:
-            if self.ingest(envelope) is None:
-                rejected += 1
-            else:
-                indexed += 1
+        with self._cursor() as connection:
+            for envelope in envelopes:
+                if self._ingest_uncommitted(connection, envelope) is None:
+                    rejected += 1
+                else:
+                    indexed += 1
         return indexed, rejected
 
     def rebuild(self, store: EventStore) -> tuple[int, int]:
-        """Discard every projection and rebuild it from the store.
+        """Discard every projection and rebuild it from the store, atomically.
 
         The whole point of the index being derived is that this is always safe.
         If it is ever not, something in here is holding state that never came
         from a signed event.
+
+        Atomic is not a nicety here. Emptying the tables and refilling them in
+        separate transactions leaves a window where a reader sees *some* of the
+        events -- and a permission check computed against a partial index can
+        come out ALLOW because the revocation had not been reinserted yet. So
+        the delete and every insert happen under one lock and one commit: a
+        reader sees the index before the rebuild or after it, never during.
         """
+        indexed = rejected = 0
         with self._cursor() as connection:
             connection.execute("DELETE FROM event_signers")
             connection.execute("DELETE FROM events")
-        return self.ingest_all(store)
+            for envelope in store:
+                if self._ingest_uncommitted(connection, envelope) is None:
+                    rejected += 1
+                else:
+                    indexed += 1
+        return indexed, rejected
 
     # ---------------------------------------------------------------- reads
 

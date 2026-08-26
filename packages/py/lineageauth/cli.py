@@ -570,3 +570,97 @@ def check(
         _print_decision(decision, event_bundle)
 
     raise typer.Exit(code=0 if decision.allowed else 1)
+
+
+index_app = typer.Typer(
+    name="index",
+    help="Build and inspect the derived index over an event store.",
+    no_args_is_help=True,
+)
+app.add_typer(index_app)
+
+
+@index_app.command("rebuild")
+def index_rebuild(
+    store_path: Annotated[
+        str, typer.Argument(metavar="STORE", help="Directory holding the event store.")
+    ],
+    db: Annotated[
+        str, typer.Option("--db", help="Path for the SQLite index. It is safe to delete.")
+    ],
+) -> None:
+    """Discard every projection and rebuild it from the store.
+
+    Always safe: the index is derived. If a rebuild ever changed an answer, the
+    index was holding state that never came from a signed event.
+    """
+    from lineageauth.index import EventIndex
+    from lineageauth.store import FileEventStore
+
+    store = FileEventStore(store_path)
+    with EventIndex(db) as index:
+        indexed, rejected = index.rebuild(store)
+        typer.echo(f"  store      {store_path} ({len(store)} event(s))")
+        typer.echo(f"  index      {db}")
+        typer.echo(f"  indexed    {indexed}")
+        if rejected:
+            typer.secho(f"  rejected   {rejected} (did not verify)", fg=typer.colors.RED)
+        typer.echo(f"  checksum   {index.checksum()}")
+    raise typer.Exit(code=1 if rejected else 0)
+
+
+@index_app.command("stat")
+def index_stat(
+    db: Annotated[str, typer.Option("--db", help="Path to the SQLite index.")],
+) -> None:
+    """Summarise what an index holds."""
+    from lineageauth.index import EventIndex
+
+    with EventIndex(db) as index:
+        typer.echo(f"  events     {len(index)}")
+        typer.echo(f"  checksum   {index.checksum()}")
+        lineages = index.lineages()
+        typer.echo(f"  lineages   {len(lineages)}")
+        for lineage in lineages:
+            typer.echo(f"    {lineage}")
+        counts = index.counts_by_type()
+        if counts:
+            typer.echo("  by type")
+            for event_type, count in counts.items():
+                typer.echo(f"    {event_type:24} {count}")
+
+
+@index_app.command("add")
+def index_add(
+    store_path: Annotated[
+        str, typer.Argument(metavar="STORE", help="Directory holding the event store.")
+    ],
+    events: Annotated[
+        list[str],
+        typer.Argument(help="Envelope or bundle files to add. Each is verified first."),
+    ],
+) -> None:
+    """Add events to the store. Anything that does not verify is refused.
+
+    The store is the authoritative side, so this is the only way events enter
+    the system -- there is no HTTP path that can add one.
+    """
+    from lineageauth.store import FileEventStore, StoreError
+
+    store = FileEventStore(store_path)
+    added = 0
+    failed = 0
+    for path in events:
+        try:
+            for envelope in _parse_envelopes(_read_source(path)):
+                try:
+                    typer.echo(f"  + {store.put(envelope)}  ({path})")
+                    added += 1
+                except StoreError as exc:
+                    typer.secho(f"  ! {path}: {exc}", fg=typer.colors.RED, err=True)
+                    failed += 1
+        except LineageAuthError as exc:
+            typer.secho(f"  ! {path}: {exc}", fg=typer.colors.RED, err=True)
+            failed += 1
+    typer.echo(f"  added {added}, refused {failed}, store now holds {len(store)}")
+    raise typer.Exit(code=1 if failed else 0)

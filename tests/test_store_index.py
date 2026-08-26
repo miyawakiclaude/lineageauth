@@ -358,3 +358,82 @@ class TestIndexLifecycle:
         with EventIndex(path) as reopened:
             assert len(reopened) == 3
             assert reopened.checksum() == checksum
+
+
+class TestIndexConcurrency:
+    def test_it_can_be_read_from_several_threads(self, tmp_path: Path) -> None:
+        """An index behind an HTTP API is read from worker threads.
+
+        sqlite3 binds a connection to its creating thread by default, so this is
+        the case that caught the first version of the design out.
+        """
+        import threading
+
+        with EventIndex(tmp_path / "index.sqlite") as index:
+            index.ingest_all(sample())
+            results: list[int] = []
+            errors: list[BaseException] = []
+            lock = threading.Lock()
+
+            def read() -> None:
+                try:
+                    count = len(index.envelopes(lineage=LINEAGE))
+                    with lock:
+                        results.append(count)
+                except BaseException as exc:
+                    with lock:
+                        errors.append(exc)
+
+            threads = [threading.Thread(target=read) for _ in range(12)]
+            for thread in threads:
+                thread.start()
+            for thread in threads:
+                thread.join()
+
+            assert errors == []
+            assert results == [3] * 12
+
+    def test_a_rebuild_running_alongside_reads_stays_consistent(self, tmp_path: Path) -> None:
+        import threading
+
+        store = FileEventStore(tmp_path / "events")
+        store.extend(sample())
+
+        with EventIndex(tmp_path / "index.sqlite") as index:
+            index.ingest_all(store)
+            seen: list[int] = []
+            errors: list[BaseException] = []
+            lock = threading.Lock()
+
+            def read() -> None:
+                try:
+                    for _ in range(20):
+                        count = len(index)
+                        with lock:
+                            seen.append(count)
+                except BaseException as exc:
+                    with lock:
+                        errors.append(exc)
+
+            def rebuild() -> None:
+                try:
+                    for _ in range(5):
+                        index.rebuild(store)
+                except BaseException as exc:
+                    with lock:
+                        errors.append(exc)
+
+            threads = [threading.Thread(target=read) for _ in range(4)]
+            threads.append(threading.Thread(target=rebuild))
+            for thread in threads:
+                thread.start()
+            for thread in threads:
+                thread.join()
+
+            assert errors == []
+            # A reader never observes a half-rebuilt index. This is the whole
+            # reason `rebuild` is one transaction: a permission check computed
+            # against a partially repopulated index could come out ALLOW because
+            # the revocation had not been reinserted yet.
+            assert set(seen) == {3}
+            assert len(index) == 3

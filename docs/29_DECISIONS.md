@@ -555,6 +555,32 @@ Git/GitHub writes require confirmation of active account + repository owner + re
 - **Interop impact:** None; this is client-side conduct.
 - **Migration:** None.
 
+## D-048 A rebuild is one transaction, and the API is optional
+
+- **Date:** 2026-08-26
+- **Problem:** `EventIndex.rebuild` emptied its tables in one transaction and
+  refilled them one event at a time. A concurrency test showed a reader
+  observing counts of 1 and 2 during a rebuild of three events.
+- **Why that is not merely untidy:** a permission check computed against a
+  partially repopulated index can return ALLOW because the `delegation.revoke`
+  had not been reinserted yet. The partial state is not a smaller truth, it is
+  a different and more permissive one, and an index behind an HTTP API is read
+  concurrently by definition.
+- **Decision:** the delete and every insert happen under one lock and one
+  commit. A reader sees the index before the rebuild or after it, never during.
+- **Also decided:** the REST API is an optional extra (`lineageauth[api]`), not
+  a core dependency. `CLAUDE.md` 2.7.2 requires the protocol core to stay fully
+  useful locally, so nothing needed to verify an event, resolve a lineage, or
+  check a permission may live behind FastAPI. The service ingests nothing over
+  HTTP and holds no keys -- events enter only through the store, so a request
+  cannot manufacture authority, and there is nowhere for a private key to go.
+- **Related:** the same test run found that a single SQLite connection is bound
+  to its creating thread, which a threaded server violates immediately. Fixed
+  with `check_same_thread=False` plus a reentrant lock: serialising access is
+  honest for indexed reads over a local file.
+- **Interop impact:** none; this is implementation conduct.
+- **Migration:** none.
+
 ### Pending decision template
 
 - ID:

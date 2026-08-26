@@ -91,11 +91,13 @@ uv run pytest && uv run ruff check . && uv run mypy
 - [x] SQLite index — `index.py`; derived, never authority
 - [ ] Postgres schema — documentation-only scale target, not provisioned
 - [x] rebuild — `EventIndex.rebuild` + `checksum()` for the docs/25 drill
-- [ ] REST verify
-- [ ] REST read
+- [x] REST verify — `POST /v1/verify/event`, `POST /v1/check-permission`;
+      both compute an answer and store nothing
+- [x] REST read — events, lineages, DIDs; every assertion carries the event ids
+      behind it so a client can reach its own verdict
 - [ ] graph projection
 - [ ] Next.js explorer
-- [ ] security headers
+- [x] security headers — CSP, nosniff, DENY, no-referrer on every response
 - [x] no key storage — asserted: no private key material reaches the index
 
 ## P5 Technocore

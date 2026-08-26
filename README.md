@@ -110,6 +110,7 @@ real authority behind it yet.
 - [x] Root creation, recovery policy, succession, epoch resolution — `la lineage show`
 - [x] Delegation, attenuation, revocation, authority resolver — `la check`
 - [x] Exact-action human approval and replay protection — `check_execution`
+- [x] Event store, rebuildable SQLite index, and a read-and-verify REST API
 - [x] Technocore adapter — GET-write classification, single-line sweep,
       dry-run write preparation. It cannot publish.
 - [ ] Everything after that — see [MASTER_PLAN.md](MASTER_PLAN.md)
