@@ -155,6 +155,24 @@ def classify(url: str, *, method: str = "GET") -> Classification:
         )
 
     path = parts.path or "/"
+
+    # Dot segments never reach the route table. `urlsplit` does not normalise
+    # them, but proxies, caches, and the server itself may, so `/kv/../x` can be
+    # classified as one route here and resolved as another there. Percent-
+    # encoding does not help: `quote` leaves `.` alone, so a caller escaping its
+    # inputs correctly still produces them.
+    if any(segment in (".", "..") for segment in path.split("/")):
+        return Classification(
+            url=url,
+            consequence=Consequence.UNKNOWN,
+            description="path contains a relative segment",
+            signed=False,
+            detail=(
+                f"path {path!r} contains a '.' or '..' segment; what this classifier "
+                "matches and what the server resolves could differ"
+            ),
+        )
+
     for route in ROUTES:
         if route.pattern.match(path):
             consequence = route.consequence

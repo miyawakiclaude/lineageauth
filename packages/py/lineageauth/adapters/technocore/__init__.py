@@ -11,6 +11,19 @@ exact URL, the exact bytes, and the signature, and returns them. Sending is a
 separate act that belongs behind `lineageauth.approval`.
 """
 
+from lineageauth.adapters.technocore.client import (
+    DEFAULT_MAX_BYTES,
+    DEFAULT_TIMEOUT_SECONDS,
+    HttpsTransport,
+    MockTransport,
+    Response,
+    TechnocoreReader,
+    Transport,
+    TransportError,
+    UntrustedMessage,
+    parse_messages,
+    verify_message_signature,
+)
 from lineageauth.adapters.technocore.prepare import (
     ANNOUNCE_PREFIX,
     MAX_URL_BYTES,
@@ -38,6 +51,8 @@ from lineageauth.adapters.technocore.text import (
 
 __all__ = [
     "ANNOUNCE_PREFIX",
+    "DEFAULT_MAX_BYTES",
+    "DEFAULT_TIMEOUT_SECONDS",
     "MAX_MESSAGE_CHARS",
     "MAX_NOTE_CHARS",
     "MAX_URL_BYTES",
@@ -45,14 +60,23 @@ __all__ = [
     "SERVICE_ORIGIN",
     "Classification",
     "Consequence",
+    "HttpsTransport",
+    "MockTransport",
     "PreparedWrite",
+    "Response",
     "SignedMessage",
+    "TechnocoreReader",
+    "Transport",
+    "TransportError",
+    "UntrustedMessage",
     "assert_safe_to_read",
     "build_signed_message",
     "classify",
     "format_announcement",
     "is_write",
     "note_signing_bytes",
+    "parse_messages",
     "prepare_signed_message",
     "sweep",
+    "verify_message_signature",
 ]

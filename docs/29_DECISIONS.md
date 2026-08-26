@@ -535,6 +535,26 @@ Git/GitHub writes require confirmation of active account + repository owner + re
   It must be re-checked before shipping any integration that acts on it.
 - **Migration:** Adding a route is a table edit plus a fresh verification date.
 
+## D-047 The read client refuses redirects and re-checks at the socket
+
+- **Date:** 2026-08-26
+- **Problem:** A read adapter is still an outbound request to an address, and
+  the two ways that goes wrong are a redirect chosen by someone else and a guard
+  that lives only at the call site.
+- **Decision:** `HttpsTransport` refuses every redirect, caps the response size,
+  sends no cookies or credentials, and calls `assert_safe_to_read` itself --
+  even though every caller already did.
+- **Security impact:** Following a redirect means fetching a URL the classifier
+  never saw, which is the shape of an SSRF regardless of it being "only a read".
+  Re-checking inside the transport puts the guard at the last point before a
+  socket opens, so a future caller that forgets is refused rather than trusted.
+  Dot segments (`.`, `..`) are rejected in `classify` before the route table is
+  consulted: `urlsplit` does not normalise them but proxies and servers may, so
+  a path could match one route here and resolve to another there -- and
+  percent-encoding does not help, since `quote` leaves `.` alone.
+- **Interop impact:** None; this is client-side conduct.
+- **Migration:** None.
+
 ### Pending decision template
 
 - ID:

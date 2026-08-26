@@ -102,8 +102,9 @@ uv run pytest && uv run ruff check . && uv run mypy
 depend on the indexer or the Explorer.)*
 - [x] re-read official latest docs — llms.txt / auth.md / patterns.md,
       re-checked 2026-08-26; notes sign a different preimage from messages
-- [ ] read-only client — the classifier and its guards exist; the HTTP
-      transport itself is not written yet
+- [x] read-only client — `TechnocoreReader` + `HttpsTransport`; no redirects,
+      a response size cap, no cookies or credentials, and every read re-checked
+      by the classifier at the last point before a socket opens
 - [x] semantic endpoint table — `routes.py`; writes reachable by GET are
       classified as writes, and UNKNOWN is a refusal (D-046)
 - [x] dry-run write builder — `prepare_signed_message`, returns the exact URL,
@@ -111,7 +112,7 @@ depend on the indexer or the Explorer.)*
 - [x] announcement formatter — `format_announcement`
 - [x] confirmation boundary — publishing is not implemented at all; a prepared
       write can only be performed through `check_execution`
-- [ ] mock transport — needed with the read-only client
+- [x] mock transport — `MockTransport`; the suite refuses sockets outright
 - [x] no live writes tests — the suite refuses sockets outright for this module
 
 ## P6 MCP/A2A

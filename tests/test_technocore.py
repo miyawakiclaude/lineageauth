@@ -8,6 +8,7 @@ the network outright rather than by trusting that nobody typed a URL.
 
 from __future__ import annotations
 
+import json
 import socket
 from urllib.parse import quote
 
@@ -316,3 +317,173 @@ class TestAnnouncement:
             event_type="GRANT", lineage="lineage:la:z6Mk", event_id="sha256:" + "b" * 64
         )
         assert "url=" not in line
+
+
+# ------------------------------------------------------------ read-only client
+
+
+class TestReader:
+    def _reader(self, responses: dict[str, object]) -> tuple[object, object]:
+        from lineageauth.adapters.technocore import MockTransport, TechnocoreReader
+
+        transport = MockTransport(responses)  # type: ignore[arg-type]
+        return TechnocoreReader(transport), transport
+
+    def test_it_reads_a_room_and_returns_untrusted_messages(self) -> None:
+        body = json.dumps(
+            {
+                "room": "lobby",
+                "count": 1,
+                "first_seq": 1,
+                "last_seq": 1,
+                "messages": [
+                    {"seq": 1, "ts": "2026-08-26T09:00:00.000000Z", "from": "nick", "text": "hi"}
+                ],
+            }
+        )
+        reader, transport = self._reader({f"{ORIGIN}/r/lobby?format=json": body})
+        messages = reader.room("lobby")  # type: ignore[attr-defined]
+        assert len(messages) == 1
+        assert messages[0].text == "hi"
+        assert messages[0].sender == "nick"
+        assert transport.requested == [f"{ORIGIN}/r/lobby?format=json"]  # type: ignore[attr-defined]
+
+    def test_every_read_passes_the_classifier(self) -> None:
+        reader, transport = self._reader({})
+        with pytest.raises(MalformedEventError):
+            reader.note("..", "x")  # type: ignore[attr-defined]
+        # Nothing was attempted: the refusal happens before the transport.
+        assert transport.requested == []  # type: ignore[attr-defined]
+
+    def test_a_room_name_that_could_change_the_route_is_refused(self) -> None:
+        reader, transport = self._reader({})
+        for room in ("lobby/say/nick/hi", "..", "a b"):
+            with pytest.raises(MalformedEventError):
+                reader.room_raw(room)  # type: ignore[attr-defined]
+        assert transport.requested == []  # type: ignore[attr-defined]
+
+    def test_rate_limiting_is_surfaced_not_swallowed(self) -> None:
+        from lineageauth.adapters.technocore import Response, TransportError
+
+        reader, _ = self._reader(
+            {
+                f"{ORIGIN}/r/lobby?format=json": Response(
+                    status=429,
+                    body="",
+                    url=f"{ORIGIN}/r/lobby?format=json",
+                    headers={"Retry-After": "30"},
+                )
+            }
+        )
+        with pytest.raises(TransportError, match="retry after 30"):
+            reader.room("lobby")  # type: ignore[attr-defined]
+
+    def test_service_metadata_must_be_a_json_object(self) -> None:
+        reader, _ = self._reader({f"{ORIGIN}/.well-known/agent.json": "not json"})
+        with pytest.raises(MalformedEventError, match="not JSON"):
+            reader.service_metadata()  # type: ignore[attr-defined]
+
+
+class TestDefensiveParsing:
+    """Upstream's shape can change; a reader that crashes on that is a liability."""
+
+    def test_unknown_fields_are_kept_rather_than_dropped(self) -> None:
+        from lineageauth.adapters.technocore import parse_messages
+
+        body = json.dumps({"messages": [{"seq": 1, "text": "hi", "somethingNew": 42}]})
+        message = parse_messages(body)[0]
+        assert message.raw["somethingNew"] == 42
+
+    def test_a_field_of_the_wrong_type_becomes_none(self) -> None:
+        from lineageauth.adapters.technocore import parse_messages
+
+        body = json.dumps({"messages": [{"seq": "not-an-int", "text": None, "from": 7}]})
+        message = parse_messages(body)[0]
+        assert (message.seq, message.text, message.sender) == (None, None, None)
+
+    def test_a_missing_messages_array_yields_nothing(self) -> None:
+        from lineageauth.adapters.technocore import parse_messages
+
+        assert parse_messages(json.dumps({"room": "lobby"})) == ()
+
+    def test_non_json_is_refused(self) -> None:
+        from lineageauth.adapters.technocore import parse_messages
+
+        with pytest.raises(MalformedEventError, match="not JSON"):
+            parse_messages("<html>")
+
+
+class TestSignedLaneVerification:
+    def test_a_prepared_message_verifies_through_the_reader_helper(self) -> None:
+        from lineageauth.adapters.technocore import verify_message_signature
+
+        prepared = prepare_signed_message(room="lobby", text="hello", nonce=7, signer=AGENT)
+        assert verify_message_signature(
+            room="lobby", nonce=7, text="hello", did=AGENT.did, signature=prepared.signature
+        )
+
+    def test_altering_any_part_of_the_preimage_fails(self) -> None:
+        from lineageauth.adapters.technocore import verify_message_signature
+
+        prepared = prepare_signed_message(room="lobby", text="hello", nonce=7, signer=AGENT)
+        for kwargs in (
+            {"room": "ops"},
+            {"nonce": 8},
+            {"text": "hell0"},
+        ):
+            args = {"room": "lobby", "nonce": 7, "text": "hello"} | kwargs
+            assert not verify_message_signature(did=AGENT.did, signature=prepared.signature, **args)
+
+
+class TestTransportSafety:
+    def test_the_transport_refuses_an_off_origin_url_before_opening_a_socket(self) -> None:
+        from lineageauth.adapters.technocore import HttpsTransport
+
+        # The autouse fixture makes any socket use an error, so reaching the
+        # refusal at all proves nothing was attempted.
+        with pytest.raises(MalformedEventError, match="refusing to fetch"):
+            HttpsTransport().get("https://evil.example/r/lobby")
+
+    def test_the_transport_refuses_a_write_url(self) -> None:
+        from lineageauth.adapters.technocore import HttpsTransport
+
+        with pytest.raises(MalformedEventError, match="refusing to fetch"):
+            HttpsTransport().get(f"{ORIGIN}/r/lobby/say/nick/hi")
+
+    def test_redirects_are_refused(self) -> None:
+        """Following one would fetch a URL the classifier never saw."""
+        from lineageauth.adapters.technocore.client import _NoRedirects
+
+        assert (
+            _NoRedirects().redirect_request(None, None, 302, "Found", {}, "https://evil.test")
+            is None
+        )
+
+
+class TestDotSegments:
+    """`urlsplit` does not normalise `..`; proxies and servers may.
+
+    That gap means a URL can be classified as one route here and resolved as a
+    different one there, so dot segments are refused before the route table is
+    consulted at all.
+    """
+
+    @pytest.mark.parametrize(
+        "path",
+        [
+            "/kv/../x",
+            "/kv/ns/..",
+            "/r/../lobby",
+            "/./rooms",
+            "/r/lobby/../lobby/say/nick/hi",
+        ],
+    )
+    def test_a_path_with_a_dot_segment_is_unknown(self, path: str) -> None:
+        result = classify(f"{ORIGIN}{path}")
+        assert result.consequence is Consequence.UNKNOWN
+        assert not result.safe_to_call_automatically
+
+    def test_percent_encoding_does_not_smuggle_one_past(self) -> None:
+        # `quote` leaves '.' alone, so a caller escaping its inputs correctly
+        # still produces a dot segment. The guard has to be on the path.
+        assert not classify(f"{ORIGIN}/kv/{quote('..', safe='')}/x").safe_to_call_automatically
