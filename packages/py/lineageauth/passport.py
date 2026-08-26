@@ -19,11 +19,12 @@ the caveats.
     third-party         what other keys have said about those artifacts
       attested
 
-Some absences are reported rather than left blank. Impact edges belong to a
-phase that is not built yet, and an empty
-list reads as "this agent has none" when the truth is "this system does not
-track that". The `notIncluded` section names each one and why, and entries leave
-it as their phases land -- completed tasks moved out of it when Phase 8 shipped.
+Absences are reported rather than left blank. An empty list reads as "this
+agent has none" when the truth may be "this system does not track that", so the
+`notIncluded` section names any section no implemented phase can fill. It is
+empty now -- every section the specification asks for has a phase behind it --
+and it stays in the response so a reader can tell the difference rather than
+having to know which release they are looking at.
 
 And the standing caveat, on every passport: a key is not a person. Nothing here
 establishes identity, employment, affiliation, or honesty.
@@ -48,6 +49,7 @@ from lineageauth.evidence import (
 )
 from lineageauth.evidence import read_receipt as read_artifact_receipt
 from lineageauth.fleet import resolve_fleets
+from lineageauth.impact import collect_impact
 from lineageauth.lineage import resolve_lineage
 from lineageauth.timeutil import format_instant
 from lineageauth.work import TASK_REQUEST, TaskStatus, build_work_receipt, read_task
@@ -66,9 +68,7 @@ PASSPORT_NOTE = (
 # Sections the specification calls for that no implemented phase can fill yet.
 # Named rather than omitted: an empty list reads as an absence of evidence, and
 # these are an absence of machinery.
-NOT_IMPLEMENTED: tuple[tuple[str, str], ...] = (
-    ("impact", "the impact graph is Phase 14 and is not built"),
-)
+NOT_IMPLEMENTED: tuple[tuple[str, str], ...] = ()
 
 
 def _as_str(value: Any) -> str | None:
@@ -202,6 +202,11 @@ class Passport:
     # evidence-supported
     produced: tuple[ProducedArtifact, ...] = ()
     tasks: tuple[TaskParticipation, ...] = ()
+    downstream_use: tuple[tuple[str, int, int], ...] = ()
+    """(artifact, independent reusers, same-fleet reusers) for work this DID made.
+
+    Counts of distinct keys, not of edges: one key can emit as many reuse events
+    as it likes, and adoption means other people, not more messages."""
     skills: tuple[SkillEvidence, ...] = ()
 
     # third-party attested
@@ -281,6 +286,14 @@ class Passport:
                         "artifactRefs": list(t.artifact_refs),
                     }
                     for t in self.tasks
+                ],
+                "downstreamUse": [
+                    {
+                        "artifactId": artifact,
+                        "independentReusers": independent,
+                        "sameFleetReusers": siblings,
+                    }
+                    for artifact, independent, siblings in self.downstream_use
                 ],
                 "skills": [
                     {
@@ -426,6 +439,17 @@ def build_passport(bundle: EventBundle, *, lineage: str, did: str, at: datetime)
 
     produced_ids = {p.artifact_id for p in produced}
 
+    downstream: list[tuple[str, int, int]] = []
+    for artifact_id in sorted(produced_ids):
+        impact = collect_impact(bundle, lineage=lineage, artifact_id=artifact_id, at=at)
+        downstream.append(
+            (
+                artifact_id,
+                len(impact.independent_reusers),
+                len(impact.same_fleet_reusers),
+            )
+        )
+
     # ---- tasks this DID worked on ----
     tasks: list[TaskParticipation] = []
     for event in bundle.of_type(TASK_REQUEST, lineage=lineage):
@@ -513,6 +537,7 @@ def build_passport(bundle: EventBundle, *, lineage: str, did: str, at: datetime)
         skill_claims=tuple(sorted(skill_claims, key=lambda c: c.event_id)),
         produced=tuple(sorted(produced, key=lambda p: p.receipt_id)),
         tasks=tuple(sorted(tasks, key=lambda t: t.task_id)),
+        downstream_use=tuple(downstream),
         skills=tuple(sorted(skills, key=lambda s: s.skill)),
         attestations=tuple(sorted(attestations, key=lambda a: a.event_id)),
         warnings=tuple(warnings),

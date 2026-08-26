@@ -321,11 +321,18 @@ class TestPassportEndpoint:
         }
         assert body["cryptographicallyLinked"]["holdsLiveAuthority"] is True
 
-    def test_unbuilt_sections_are_named_not_omitted(self, client: TestClient) -> None:
+    def test_unbuilt_sections_would_be_named_rather_than_omitted(self, client: TestClient) -> None:
+        """Every section now has a phase behind it, so the list is empty.
+
+        The key stays in the response regardless: a reader has to be able to
+        tell "nothing is missing" from "this release does not track that", and
+        an absent key would make those look the same. Any entry that does appear
+        has to explain itself.
+        """
         body = client.get(
             f"/v1/passports/{AGENT.did}", params={"lineage": LINEAGE, "at": AT_TEXT}
         ).json()
-        assert body["notIncluded"]
+        assert "notIncluded" in body
         assert all("not built" in item["reason"] for item in body["notIncluded"])
 
     def test_a_malformed_did_is_a_client_error(self, client: TestClient) -> None:

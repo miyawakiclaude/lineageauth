@@ -115,6 +115,8 @@ real authority behind it yet.
 - [x] Useful work — task lifecycle, derived state, anti-gaming signals
 - [x] Fleet transparency — voluntary disclosure that never costs the discloser
 - [x] Router — discovery by capability, authority, evidence, and availability
+- [x] Impact graph — signed downstream use, counted by distinct key rather
+      than by edge, with no score attached
 - [x] Agent passport — four claim categories, deliberately never merged
 - [x] MCP adapter — tools for verification, authority, and unsigned drafts
 - [x] Technocore adapter — GET-write classification, single-line sweep,

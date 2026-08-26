@@ -839,6 +839,44 @@ Git/GitHub writes require confirmation of active account + repository owner + re
   unrelated agent as part of their group.
 - **Migration:** Pre-1.0.
 
+## D-060: impact is features, not a score, and independence has three tiers
+
+- **Date:** 2026-08-27
+- **Problem:** `docs/14` asks for demonstrable downstream use and immediately
+  lists the ways a use count lies: the author reusing their own work, one
+  enthusiast reusing it ten times, a disclosed sibling vouching.
+- **Decision:**
+  - `artifact.reuse` -- `reuser`, `used`, `usedIn`; signed by the reuser
+  - `artifact.improve` -- `author`, `improves`, `artifact`, `note?`; signed by
+    the author
+  - `impact.attest` -- `issuer`, `subjectRef`, `observed`; a third party
+    reporting use they saw, kept as its own edge kind because who is speaking
+    differs from a first-person reuse
+  `collect_impact` returns features -- edges, `independent_reusers`,
+  `self_reuses`, `same_fleet_reusers`, flags -- and **no number**.
+- **Why no score here:** `docs/14` permits a product to compute one only if the
+  formula is versioned, the inputs disclosed and an explanation attached. The
+  router already does exactly that (`explainable-v1`). A second number computed
+  in this module would be a second ranking to reconcile, and the one without an
+  explanation would win by being shorter.
+- **Three tiers, and the third is the weakest:** same key / same fleet (D-059) /
+  independent. "Independent" means *no disclosure ties these two* -- an
+  undisclosed fleet is indistinguishable from a stranger, so a high count means
+  the evidence looks independent, not that it is. The note says so in every
+  response.
+- **Distinct keys, not edge count:** ten reuses by one key are one adopter.
+  `edges` is kept because the detail is real, but `independent_reusers` is the
+  number a reader should quote, and a test pins the gap between them.
+- **Signature binding:** a reuse must be signed by the `reuser` and an
+  improvement by its `author`. Without it an author could mint their own
+  adoption, which is the cheapest possible attack on this whole layer.
+- **Flags are heuristics:** `reuse_concentration`, `only_self_reuse`,
+  `only_disclosed_siblings`, `no_signed_producer`. Each is reported with its
+  reason and none is proof of wrongdoing -- `only_disclosed_siblings` in
+  particular fires on the *honest* operator who disclosed, so it must read as an
+  observation and never as an accusation (D-059).
+- **Migration:** Pre-1.0.
+
 ### Pending decision template
 
 - ID:

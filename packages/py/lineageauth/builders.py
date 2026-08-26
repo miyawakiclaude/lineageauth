@@ -832,3 +832,108 @@ def build_fleet_unbind(
         "bind": bind,
         "controller": controller,
     }
+
+
+ARTIFACT_REUSE = "artifact.reuse"
+ARTIFACT_IMPROVE = "artifact.improve"
+IMPACT_ATTEST = "impact.attest"
+
+
+def build_artifact_reuse(
+    *,
+    lineage: str,
+    reuser: str,
+    used: str,
+    used_in: str,
+    note: str | None = None,
+    issued_at: datetime,
+) -> dict[str, Any]:
+    """Draft an `artifact.reuse`: B used A (D-060).
+
+    Signed by the reuser, because the claim is "I used this". A reuse anyone
+    could mint would let an author manufacture their own downstream adoption,
+    which is exactly the vanity metric `docs/14` sets out to avoid.
+    """
+    public_key_from_did_key(reuser)
+    for label, ref in (("used", used), ("usedIn", used_in)):
+        if not is_event_id(ref):
+            raise MalformedEventError(f"{label} must be a sha256:<64 hex> reference")
+    if used == used_in:
+        raise MalformedEventError("an artifact cannot be reused in itself")
+    if note is not None:
+        _check_display_text("note", note, MAX_TITLE)
+
+    payload = _common(ARTIFACT_REUSE, lineage, issued_at) | {
+        "reuser": reuser,
+        "used": used,
+        "usedIn": used_in,
+    }
+    if note is not None:
+        payload["note"] = note
+    return payload
+
+
+def build_artifact_improve(
+    *,
+    lineage: str,
+    author: str,
+    improves: str,
+    artifact: str,
+    note: str | None = None,
+    issued_at: datetime,
+) -> dict[str, Any]:
+    """Draft an `artifact.improve`: this artifact derives from and improves another.
+
+    "Improves" is the author's claim, not a finding. Whether the newer artifact
+    is actually better is exactly the kind of judgement a signature cannot make.
+    """
+    public_key_from_did_key(author)
+    for label, ref in (("improves", improves), ("artifact", artifact)):
+        if not is_event_id(ref):
+            raise MalformedEventError(f"{label} must be a sha256:<64 hex> reference")
+    if improves == artifact:
+        raise MalformedEventError("an artifact cannot improve on itself")
+    if note is not None:
+        _check_display_text("note", note, MAX_TITLE)
+
+    payload = _common(ARTIFACT_IMPROVE, lineage, issued_at) | {
+        "author": author,
+        "improves": improves,
+        "artifact": artifact,
+    }
+    if note is not None:
+        payload["note"] = note
+    return payload
+
+
+def build_impact_attest(
+    *,
+    lineage: str,
+    issuer: str,
+    subject_ref: str,
+    observed: str,
+    evidence_refs: list[str] | None = None,
+    issued_at: datetime,
+) -> dict[str, Any]:
+    """Draft an `impact.attest`: a third party reporting downstream use.
+
+    Distinct from `artifact.reuse` in who is speaking. A reuse is the user's own
+    statement; this is somebody else observing that use happened, which is
+    weaker evidence about the fact and stronger evidence about independence.
+    """
+    public_key_from_did_key(issuer)
+    if not is_event_id(subject_ref):
+        raise MalformedEventError("subjectRef must be a sha256:<64 hex> reference")
+    _check_display_text("observed", observed, MAX_SUMMARY)
+    for ref in evidence_refs or []:
+        if not is_event_id(ref):
+            raise MalformedEventError("every evidenceRef must be a sha256:<64 hex> reference")
+
+    payload = _common(IMPACT_ATTEST, lineage, issued_at) | {
+        "issuer": issuer,
+        "subjectRef": subject_ref,
+        "observed": observed,
+    }
+    if evidence_refs:
+        payload["evidenceRefs"] = sorted(set(evidence_refs))
+    return payload

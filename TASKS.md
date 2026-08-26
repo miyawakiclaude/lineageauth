@@ -209,11 +209,17 @@ depend on the indexer or the Explorer.)*
       both the router and passport say so
 
 ## P14 Impact
-- [ ] reuse event
-- [ ] improve event
-- [ ] impact edges
-- [ ] independent impact summary
-- [ ] fraud heuristics presentation
+- [x] `artifact.reuse` — signed by the reuser, so an author cannot mint their
+      own adoption
+- [x] `artifact.improve` — signed by its author
+- [x] `impact.attest` — a third party reporting use they observed; its own edge
+      kind because who is speaking differs from a first-person reuse
+- [x] impact edges with three-tier independence (same key / same fleet /
+      independent) (D-060)
+- [x] independent impact summary — distinct keys, not edge count; ten reuses by
+      one key are one adopter
+- [x] fraud heuristics presentation — reported with reasons, never as proof
+- [x] passport `downstreamUse`
 - [ ] impact UI
 
 ## P15 Production

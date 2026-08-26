@@ -378,7 +378,11 @@ class TestThirdParties:
 
 class TestHonestAbsences:
     def test_unbuilt_sections_say_so_rather_than_reading_as_empty(self) -> None:
-        """An empty list reads as "this agent has none". That would be a lie."""
+        """An empty section reads as "this agent has none". That is only true
+        when the machinery to look exists -- otherwise it would be a lie, so
+        anything unbuilt is named. Every section has a phase behind it now, so
+        the list is empty and the key remains, which is how a reader tells the
+        two cases apart."""
         body = passport_of(genesis(), grant()).to_dict()
         sections = {item["section"] for item in body["notIncluded"]}
         assert sections == {name for name, _ in NOT_IMPLEMENTED}
