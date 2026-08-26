@@ -1,5 +1,9 @@
 # LineageAuth
 
+[![CI](https://github.com/miyawakiclaude/lineageauth/actions/workflows/ci.yml/badge.svg)](https://github.com/miyawakiclaude/lineageauth/actions/workflows/ci.yml)
+[![Python 3.12+](https://img.shields.io/badge/python-3.12%2B-blue)](https://www.python.org/downloads/)
+[![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-green)](LICENSE)
+
 **Portable authority and evidence infrastructure for autonomous agents.**
 
 Protocol family: **LAP — Lineage Authority Protocol**
@@ -104,12 +108,25 @@ real authority behind it yet.
 - [ ] Exact-action human approval and replay protection
 - [ ] Everything after that — see [MASTER_PLAN.md](MASTER_PLAN.md)
 
+## Contributing
+
+The most useful contribution right now is an **independent implementation that
+disagrees with this one**. If your verifier reaches a different verdict on the
+same event bundle, that is a finding worth an issue.
+
+See [CONTRIBUTING.md](CONTRIBUTING.md). The short version: don't hand-roll
+crypto or canonical JSON, fail closed, never commit key material, and record
+protocol decisions in [docs/29_DECISIONS.md](docs/29_DECISIONS.md).
+
 ## Security
 
 Never put a real private seed in a prompt, an issue, a fixture, a log, or this
 repository. Test vectors use disposable deterministic keys, labelled as unsafe
-test material. See [docs/22_SECURITY.md](docs/22_SECURITY.md).
+test material.
+
+Report vulnerabilities privately — see [SECURITY.md](SECURITY.md). The working
+threat model is [docs/22_SECURITY.md](docs/22_SECURITY.md).
 
 ## License
 
-Apache-2.0.
+[Apache-2.0](LICENSE).
