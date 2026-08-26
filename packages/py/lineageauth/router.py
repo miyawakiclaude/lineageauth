@@ -42,6 +42,7 @@ from lineageauth.authority import check_permission
 from lineageauth.bundle import EventBundle
 from lineageauth.didkey import public_key_from_did_key
 from lineageauth.errors import LineageAuthError, MalformedEventError, ReasonCode
+from lineageauth.fleet import FleetView, resolve_fleets
 from lineageauth.passport import SKILL_CLAIM, Passport, build_passport
 from lineageauth.scopes import ApprovalMode, parse_resource
 from lineageauth.timeutil import format_instant, parse_instant
@@ -58,7 +59,9 @@ ROUTER_NOTE = (
     "an agent. A result is not authorization: re-check authority at the moment of "
     "action, because a grant can be revoked between finding an agent and asking it "
     "to act. Nothing here detects Sybils -- the relationship signals are shown so "
-    "you can judge, not because they settle anything."
+    "you can judge, not because they settle anything. A disclosed fleet is not "
+    "penalised: siblings simply do not count as independent, and an agent with no "
+    "disclosed fleet has said nothing rather than proved anything."
 )
 
 # Every contribution, with the weight it carries. Published rather than buried:
@@ -162,6 +165,14 @@ class RelationshipShape:
     self_created_tasks: int
     accepted_tasks: int
     rejected_tasks: int
+    disclosed_fleets: tuple[str, ...] = ()
+    same_fleet_counterparties: tuple[str, ...] = ()
+    """Attesters a disclosure ties to this agent.
+
+    These are *excluded* from the independent count rather than subtracted from
+    the score. `docs/13` forbids penalising disclosure in a hidden way, and a
+    penalty here would cost the operator who discloses exactly what it saves the
+    one who stays quiet."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -218,6 +229,11 @@ class Candidate:
                 "selfCreatedTasks": self.shape.self_created_tasks,
                 "acceptedTasks": self.shape.accepted_tasks,
                 "rejectedTasks": self.shape.rejected_tasks,
+                "disclosedFleets": list(self.shape.disclosed_fleets),
+                # Not a penalty. Excluded from the independent count so a
+                # disclosure is not double-counted, never subtracted -- see
+                # docs/13 on not penalising disclosure.
+                "sameFleetCounterparties": list(self.shape.same_fleet_counterparties),
             },
             "contributions": [
                 {
@@ -293,8 +309,14 @@ def _read_availability(
     )
 
 
-def _shape_of(passport: Passport, bundle: EventBundle, *, at: datetime) -> RelationshipShape:
+def _shape_of(
+    passport: Passport, bundle: EventBundle, *, at: datetime, fleets: FleetView
+) -> RelationshipShape:
+    # A disclosed sibling is not an independent counterparty. Excluded from the
+    # count, never subtracted from the score (docs/13).
+    related = fleets.related_to(passport.did)
     issuers = [a.issuer for a in passport.attestations if a.issuer != passport.did]
+    same_fleet = tuple(sorted({i for i in issuers if i in related}))
     concentration = 0.0
     if issuers:
         counts: dict[str, int] = {}
@@ -315,12 +337,16 @@ def _shape_of(passport: Passport, bundle: EventBundle, *, at: datetime) -> Relat
         reciprocal += len(receipt.signals.reciprocal_verifier_pairs)
 
     return RelationshipShape(
-        independent_counterparties=len(passport.independent_counterparties),
+        independent_counterparties=len(
+            [d for d in passport.independent_counterparties if d not in related]
+        ),
         attestation_concentration=concentration,
         reciprocal_pairs=reciprocal,
         self_created_tasks=sum(1 for t in passport.tasks if t.requester_is_worker),
         accepted_tasks=sum(1 for t in passport.tasks if t.status is TaskStatus.VERIFIED_ACCEPTED),
         rejected_tasks=sum(1 for t in passport.tasks if t.status is TaskStatus.VERIFIED_REJECTED),
+        disclosed_fleets=fleets.fleets_of(passport.did),
+        same_fleet_counterparties=same_fleet,
     )
 
 
@@ -355,6 +381,8 @@ def search(
         raise MalformedEventError("limit must be at least 1")
 
     warnings: list[str] = list(bundle.warnings)
+    fleets = resolve_fleets(bundle, lineage=lineage, at=at)
+    warnings.extend(fleets.warnings)
     candidates: list[Candidate] = []
     subjects = _subjects(bundle, lineage=lineage)
 
@@ -405,7 +433,7 @@ def search(
         if query.require_available and not availability.usable:
             continue
 
-        shape = _shape_of(passport, bundle, at=at)
+        shape = _shape_of(passport, bundle, at=at, fleets=fleets)
 
         # Declared as data rather than accumulated by a closure: a helper that
         # captured the list from this loop would be the shape of a late-binding

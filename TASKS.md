@@ -199,12 +199,14 @@ depend on the indexer or the Explorer.)*
 - [ ] tests
 
 ## P13 Fleet
-- [ ] fleet.create
-- [ ] bind
-- [ ] unbind
-- [ ] graph
-- [ ] router integration
-- [ ] clear limitations
+- [x] fleet.create — signed by the controller
+- [x] bind — signed by the controller, not the member (D-059)
+- [x] unbind — forward-only; only the controller that bound may unbind
+- [ ] graph — fleet edges in the authority graph projection
+- [x] router integration — siblings excluded from the independent count and
+      never subtracted; disclosing costs exactly the uncounted counterparty
+- [x] clear limitations — an absent fleet is silence, not independence, and
+      both the router and passport say so
 
 ## P14 Impact
 - [ ] reuse event

@@ -752,3 +752,83 @@ def build_availability_statement(
     if capacity is not None:
         payload["capacity"] = capacity
     return payload
+
+
+FLEET_CREATE = "fleet.create"
+FLEET_BIND = "fleet.bind"
+FLEET_UNBIND = "fleet.unbind"
+
+MAX_FLEET_NAME = 128
+
+
+def build_fleet_create(
+    *, lineage: str, controller: str, name: str, issued_at: datetime
+) -> dict[str, Any]:
+    """Draft a `fleet.create`: an operator disclosing that it runs a group (D-059).
+
+    Disclosure is voluntary and one-directional. Creating a fleet says "these
+    DIDs are mine"; it can never say "and I have no others", so nothing built on
+    this may treat an absent fleet as evidence of independence.
+    """
+    public_key_from_did_key(controller)
+    _check_display_text("name", name, MAX_FLEET_NAME)
+    return _common(FLEET_CREATE, lineage, issued_at) | {
+        "controller": controller,
+        "name": name,
+    }
+
+
+def build_fleet_bind(
+    *,
+    lineage: str,
+    fleet: str,
+    controller: str,
+    member: str,
+    role: str | None = None,
+    expires_at: datetime | None = None,
+    issued_at: datetime,
+) -> dict[str, Any]:
+    """Draft a `fleet.bind`: the controller declaring a DID part of its fleet.
+
+    Signed by the controller, not the member. The claim being made is "I operate
+    this", which is the controller's to make -- and it stays a claim: a binding
+    proves the signer asserted a relationship, not that one legal person holds
+    both keys.
+    """
+    if not is_event_id(fleet):
+        raise MalformedEventError("fleet must be the event id of a fleet.create")
+    public_key_from_did_key(controller)
+    public_key_from_did_key(member)
+    if role is not None:
+        _check_display_text("role", role, MAX_FLEET_NAME)
+    if expires_at is not None and expires_at <= issued_at:
+        raise MalformedEventError("expiresAt must be after issuedAt")
+
+    payload = _common(FLEET_BIND, lineage, issued_at) | {
+        "fleet": fleet,
+        "controller": controller,
+        "member": member,
+    }
+    if role is not None:
+        payload["role"] = role
+    if expires_at is not None:
+        payload["expiresAt"] = format_instant(expires_at)
+    return payload
+
+
+def build_fleet_unbind(
+    *, lineage: str, bind: str, controller: str, issued_at: datetime
+) -> dict[str, Any]:
+    """Draft a `fleet.unbind`: ending a binding going forward.
+
+    Forward-only. The binding happened and the events that relied on it stay as
+    they were; unbinding says the relationship no longer holds, not that it
+    never did.
+    """
+    if not is_event_id(bind):
+        raise MalformedEventError("bind must be the event id of a fleet.bind")
+    public_key_from_did_key(controller)
+    return _common(FLEET_UNBIND, lineage, issued_at) | {
+        "bind": bind,
+        "controller": controller,
+    }

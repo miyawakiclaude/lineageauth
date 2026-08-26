@@ -19,8 +19,8 @@ the caveats.
     third-party         what other keys have said about those artifacts
       attested
 
-Some absences are reported rather than left blank. Fleet bindings and impact
-edges belong to phases that are not built yet, and an empty
+Some absences are reported rather than left blank. Impact edges belong to a
+phase that is not built yet, and an empty
 list reads as "this agent has none" when the truth is "this system does not
 track that". The `notIncluded` section names each one and why, and entries leave
 it as their phases land -- completed tasks moved out of it when Phase 8 shipped.
@@ -47,6 +47,7 @@ from lineageauth.evidence import (
     read_attestation,
 )
 from lineageauth.evidence import read_receipt as read_artifact_receipt
+from lineageauth.fleet import resolve_fleets
 from lineageauth.lineage import resolve_lineage
 from lineageauth.timeutil import format_instant
 from lineageauth.work import TASK_REQUEST, TaskStatus, build_work_receipt, read_task
@@ -66,7 +67,6 @@ PASSPORT_NOTE = (
 # Named rather than omitted: an empty list reads as an absence of evidence, and
 # these are an absence of machinery.
 NOT_IMPLEMENTED: tuple[tuple[str, str], ...] = (
-    ("fleetBindings", "fleet disclosure is Phase 13 and is not built"),
     ("impact", "the impact graph is Phase 14 and is not built"),
 )
 
@@ -190,6 +190,10 @@ class Passport:
     epoch: int | None
     authority_scopes: tuple[str, ...] = ()
     holds_live_authority: bool = False
+    disclosed_fleets: tuple[str, ...] = ()
+    """Fleets an operator has voluntarily disclosed this DID as part of.
+
+    Empty means nothing was disclosed -- never that the agent is independent."""
 
     # self-claimed
     self_claims: tuple[SelfClaim, ...] = ()
@@ -230,6 +234,11 @@ class Passport:
                 "epoch": self.epoch,
                 "authorityScopes": list(self.authority_scopes),
                 "holdsLiveAuthority": self.holds_live_authority,
+                "disclosedFleets": list(self.disclosed_fleets),
+                "fleetDisclosureNote": (
+                    "A binding proves the controller asserted a relationship. An empty "
+                    "list means nothing was disclosed, not that this agent is independent."
+                ),
             },
             "selfClaimed": {
                 "statements": [
@@ -373,6 +382,9 @@ def build_passport(bundle: EventBundle, *, lineage: str, did: str, at: datetime)
             scopes.extend(scope.render() for scope in standing.grant.scopes)
     authority_scopes = tuple(sorted(set(scopes)))
 
+    fleets = resolve_fleets(bundle, lineage=lineage, at=at)
+    warnings.extend(fleets.warnings)
+
     # ---- self-claimed ----
     self_claims = tuple(
         claim
@@ -496,6 +508,7 @@ def build_passport(bundle: EventBundle, *, lineage: str, did: str, at: datetime)
         epoch=state.epoch if state.resolved else None,
         authority_scopes=authority_scopes,
         holds_live_authority=holds_live,
+        disclosed_fleets=fleets.fleets_of(did),
         self_claims=tuple(sorted(self_claims, key=lambda c: c.event_id)),
         skill_claims=tuple(sorted(skill_claims, key=lambda c: c.event_id)),
         produced=tuple(sorted(produced, key=lambda p: p.receipt_id)),

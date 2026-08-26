@@ -808,6 +808,37 @@ Git/GitHub writes require confirmation of active account + repository owner + re
   with "said yes a long time ago".
 - **Migration:** None.
 
+## D-059 Fleet payloads, and disclosure that costs nothing to make
+
+- **Date:** 2026-08-27
+- **Problem:** `docs/13` wants voluntary disclosure of shared operation, and
+  adds a constraint that is easy to violate by accident: *never penalize
+  disclosure in a hidden way*.
+- **Decision:**
+  - `fleet.create` — `controller`, `name`; signed by the controller
+  - `fleet.bind` — `fleet`, `controller`, `member`, `role?`, `expiresAt?`;
+    signed by the controller, not the member
+  - `fleet.unbind` — `bind`, `controller`; forward-only
+  A disclosed sibling is **excluded from the independent count** and **never
+  subtracted from the relevance**.
+- **Why that distinction is the whole design:** the obvious implementation
+  subtracts points when a verifier turns out to be a fleet sibling. That makes
+  disclosure cost the honest operator exactly what silence saves the quiet one,
+  and nobody discloses again. "Disclosure costs you" and "what you disclosed is
+  not double-counted" are different rules, and only the second can be published
+  without destroying the behaviour it is meant to encourage. A test pins it:
+  disclosing lowers the relevance by exactly the uncounted counterparty's weight
+  and not a point more.
+- **What a binding proves:** that the signing controller asserted a
+  relationship. Not one legal person, not employment, and never that every DID
+  an operator runs has been disclosed. So an absent fleet is not evidence of
+  independence -- an agent with no fleet has said nothing, and both the router
+  and the passport say so in their own output.
+- **Signed by the controller:** the claim is "I operate this", which is the
+  controller's to make. A binding anyone could mint would let a stranger tar an
+  unrelated agent as part of their group.
+- **Migration:** Pre-1.0.
+
 ### Pending decision template
 
 - ID:
