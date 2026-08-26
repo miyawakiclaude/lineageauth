@@ -46,8 +46,12 @@ RECOVERED_AT = datetime(2026, 9, 1, 12, 0, 0, tzinfo=UTC)
 
 
 def write(name: str, envelope_json: str) -> None:
+    # newline="\n" is required, not cosmetic. The platform default would write
+    # CRLF on Windows, so the same generator would produce different bytes on
+    # different machines and the determinism check would fail depending on who
+    # ran it. These files are signed material; their bytes are the point.
     path = EXAMPLES / name
-    path.write_text(envelope_json + "\n", encoding="utf-8")
+    path.write_text(envelope_json + "\n", encoding="utf-8", newline="\n")
     print(f"wrote examples/{name}")
 
 
