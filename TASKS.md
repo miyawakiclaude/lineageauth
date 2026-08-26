@@ -71,16 +71,19 @@ uv run pytest && uv run ruff check . && uv run mypy
 - [x] property tests — a child never permits what its parent forbids
 
 ## P3 Approval
-- [ ] canonical action descriptor
-- [ ] content/request hash
-- [ ] destination binding
-- [ ] nonce
-- [ ] expiry
-- [ ] approver authority
-- [ ] spent store
-- [ ] atomic reserve
-- [ ] TOCTOU recheck
-- [ ] tests
+- [x] canonical action descriptor — `actions.ActionRequest`
+- [x] content/request hash — `requestHash = sha256(JCS(request))`, carried
+      alongside the fields and re-derived on verification (D-043)
+- [x] destination binding — control characters refused; the destination is what
+      the human reads before consenting
+- [x] nonce — at least 16 bytes, canonical unpadded base64url
+- [x] expiry — exclusive at the boundary; a future-dated receipt is refused
+- [x] approver authority — current root or an issuer on the path (D-042)
+- [x] spent store — `InMemorySpentStore` and durable `SqliteSpentStore`
+- [x] atomic reserve — primary-key insert, no read-then-write (D-044)
+- [x] TOCTOU recheck — `check_execution` re-resolves everything, then reserves
+- [x] tests — substitution, replay, races, and "approval is not authority"
+- [ ] `la approval draft` / `la execute` CLI surface
 
 ## P4 Resolver/Explorer
 - [ ] immutable event store abstraction

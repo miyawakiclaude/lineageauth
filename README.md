@@ -109,7 +109,7 @@ real authority behind it yet.
 - [x] Event integrity verification with reason codes — `la verify`
 - [x] Root creation, recovery policy, succession, epoch resolution — `la lineage show`
 - [x] Delegation, attenuation, revocation, authority resolver — `la check`
-- [ ] Exact-action human approval and replay protection
+- [x] Exact-action human approval and replay protection — `check_execution`
 - [ ] Everything after that — see [MASTER_PLAN.md](MASTER_PLAN.md)
 
 ## Contributing

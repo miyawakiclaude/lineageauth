@@ -430,6 +430,65 @@ Git/GitHub writes require confirmation of active account + repository owner + re
 - **Interop impact:** None beyond the rule itself.
 - **Migration:** None.
 
+## D-042 Who may approve an exercise of authority
+
+- **Date:** 2026-08-26
+- **Problem:** `docs/06` fixes what an approval binds but not who may sign one.
+  Any DID would mean a stranger's consent counts; only the root would make
+  delegated operation impractical, since the operator who delegated to an agent
+  is exactly the party who should be able to consent to its actions.
+- **Decision:** The approver must be the current root of the lineage, or an
+  issuer of a grant on the authority path that authorized this action.
+- **Security impact:** Mirrors D-041 for revocation, and for the same reason:
+  the party that conferred authority is the party entitled to speak about its
+  use. A receipt from outside that set is refused with `DENIED` rather than
+  ignored, so an operator can see that a receipt they collected does not count.
+- **Interop impact:** An implementation accepting any signer would permit
+  actions this one refuses.
+- **Migration:** A future `approve` scope action could widen this deliberately.
+
+## D-043 `approval.receipt` carries the action in full and as a hash
+
+- **Date:** 2026-08-26
+- **Problem:** `docs/06` requires an approval to bind lineage, approver, agent,
+  namespace, resource, operation, destination, content hash, nonce, issuance and
+  expiry. Should the receipt carry the fields, the hash, or both?
+- **Decision:** Both. The fields are present verbatim, plus `requestHash` =
+  SHA-256 over the JCS encoding of the canonical request object. A verifier
+  recomputes the hash from the fields and refuses on mismatch.
+- **Security impact:** The hash is derivable, so carrying it adds no secrecy --
+  it adds a consistency check. A receipt that displays one destination and
+  commits to another is exactly the substitution an approval preview exists to
+  prevent, and the mismatch surfaces immediately rather than at execution time.
+  The nonce must decode to at least 16 bytes, so a receipt cannot be
+  precomputed for a request the approver has not seen. An agent may not approve
+  its own action: the point of an approval is that a second party consented.
+- **Limitation to state plainly:** `contentHash` fixes the bytes an executor may
+  transmit. It says nothing about how a transport frames them, so every adapter
+  must document which bytes it hashes. Technocore's signed lane is the live
+  example -- it signs `<room>|<nonce>|<text>`, not the URL carrying it.
+- **Migration:** Pre-1.0.
+
+## D-044 Reservation is the last step, and a store never guesses
+
+- **Date:** 2026-08-26
+- **Problem:** Where in `check_execution` should a receipt be marked spent, and
+  what should a spent store do when it cannot tell?
+- **Decision:** Reserve after every other check has passed. A store that cannot
+  establish an outcome raises rather than returning `False`.
+- **Security impact:** Reserving early would let a check that was going to fail
+  anyway burn the receipt, forcing the approver to consent again -- a denial of
+  service on the human. Reserving last makes the reservation the commit point:
+  once it returns True the caller may act, and if the action then fails the
+  receipt stays spent, because replaying it is the worse outcome. On the store
+  side, `False` means "already spent", and a caller told that will reasonably
+  stop; returning it for a lock timeout would report a definite outcome that was
+  never established. `reserve=False` exists so a caller can preview a decision
+  without consuming anything.
+- **Interop impact:** None; the store is local infrastructure, not protocol.
+- **Migration:** `docs/06` anticipates a shared spent service or transparency
+  log for production. The `SpentReceiptStore` protocol is the seam for it.
+
 ### Pending decision template
 
 - ID:

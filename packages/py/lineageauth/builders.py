@@ -16,7 +16,8 @@ from datetime import datetime
 from typing import Any
 
 from lineageauth import catalog
-from lineageauth.canonical import preimage
+from lineageauth.actions import ActionRequest
+from lineageauth.canonical import b64u_encode, preimage
 from lineageauth.crypto import LocalSigner
 from lineageauth.didkey import public_key_from_did_key
 from lineageauth.envelope import ALG_ED25519, Envelope, Proof
@@ -24,6 +25,8 @@ from lineageauth.errors import MalformedEventError
 from lineageauth.identifiers import derive_lineage_id
 from lineageauth.scopes import ApprovalMode, parse_scopes
 from lineageauth.timeutil import format_instant
+
+MIN_NONCE_BYTES = 16
 
 SuccessionMode = str  # "normal" | "recovery"
 NORMAL_SUCCESSION = "normal"
@@ -239,3 +242,53 @@ def build_delegation_revoke(
     if reason is not None:
         payload["reason"] = reason
     return payload
+
+
+def build_approval_receipt(
+    *,
+    lineage: str,
+    approver: str,
+    agent: str,
+    request: ActionRequest,
+    nonce: bytes,
+    expires_at: datetime,
+    issued_at: datetime,
+) -> dict[str, Any]:
+    """Draft a human approval for one exact action (D-043).
+
+    The action's fields are carried in full *and* as `requestHash`. The hash is
+    derivable from the fields, so carrying both lets a verifier confirm the
+    receipt binds the same action it displays -- a receipt that shows one
+    destination and commits to another is precisely what an approval preview
+    exists to prevent.
+
+    `nonce` must be at least 16 bytes from a cryptographic source. Generating it
+    is the caller's job because this module never invents randomness that a
+    human's consent depends on.
+    """
+    public_key_from_did_key(approver)
+    public_key_from_did_key(agent)
+    if approver == agent:
+        raise MalformedEventError(
+            "an agent may not approve its own action; the point of an approval is "
+            "that a second party consented"
+        )
+    if len(nonce) < MIN_NONCE_BYTES:
+        raise MalformedEventError(
+            f"nonce must carry at least {MIN_NONCE_BYTES} bytes of randomness, got {len(nonce)}"
+        )
+    if expires_at <= issued_at:
+        raise MalformedEventError("expiresAt must be after issuedAt")
+
+    return _common("approval.receipt", lineage, issued_at) | {
+        "approver": approver,
+        "agent": agent,
+        "namespace": request.namespace,
+        "resource": request.resource,
+        "action": request.action,
+        "destination": request.destination,
+        "contentHash": request.content_hash,
+        "requestHash": request.request_hash,
+        "nonce": b64u_encode(nonce),
+        "expiresAt": format_instant(expires_at),
+    }
