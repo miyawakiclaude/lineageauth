@@ -298,3 +298,29 @@ class TestGraphEndpoint:
     def test_the_response_refuses_to_imply_trustworthiness(self, client: TestClient) -> None:
         body = client.get(f"/v1/lineages/{LINEAGE}/graph", params={"at": AT_TEXT}).json()
         assert "trustworthy" in body["note"]
+
+
+class TestPassportEndpoint:
+    def test_it_keeps_the_categories_apart(self, client: TestClient) -> None:
+        body = client.get(
+            f"/v1/passports/{AGENT.did}", params={"lineage": LINEAGE, "at": AT_TEXT}
+        ).json()
+        assert set(body) >= {
+            "cryptographicallyLinked",
+            "selfClaimed",
+            "evidenceSupported",
+            "thirdPartyAttested",
+            "notIncluded",
+        }
+        assert body["cryptographicallyLinked"]["holdsLiveAuthority"] is True
+
+    def test_unbuilt_sections_are_named_not_omitted(self, client: TestClient) -> None:
+        body = client.get(
+            f"/v1/passports/{AGENT.did}", params={"lineage": LINEAGE, "at": AT_TEXT}
+        ).json()
+        assert body["notIncluded"]
+        assert all("not built" in item["reason"] for item in body["notIncluded"])
+
+    def test_a_malformed_did_is_a_client_error(self, client: TestClient) -> None:
+        response = client.get("/v1/passports/not-a-did", params={"lineage": LINEAGE, "at": AT_TEXT})
+        assert response.status_code == 400

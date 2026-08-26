@@ -158,11 +158,13 @@ depend on the indexer or the Explorer.)*
 - [ ] tests
 
 ## P9 Passport
-- [ ] profile statement
-- [ ] skill claim
-- [ ] claim/evidence categories
-- [ ] passport projection
-- [ ] passport API
+- [x] profile statement — self-claimed; control characters refused (D-053)
+- [x] skill claim — a claim whoever signs it; `evidenceRefs` point at artifacts
+- [x] claim/evidence categories — four separate collections, no combined field;
+      a test fails any key that reads as a rating
+- [x] passport projection — `build_passport`; skill support needs both a signed
+      receipt and an independent attester
+- [x] passport API — `GET /v1/passports/{did}` + `la passport`
 - [ ] passport UI
 
 ## P10 Router

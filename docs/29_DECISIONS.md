@@ -672,6 +672,47 @@ Git/GitHub writes require confirmation of active account + repository owner + re
 - **Interop impact:** None.
 - **Migration:** None.
 
+## D-053 A passport is four sections with no combined field
+
+- **Date:** 2026-08-27
+- **Problem:** `docs/09_AGENT_PASSPORT.md` asks for an evidence-first profile
+  and forbids a single trust score in the same breath. Any convenience field
+  that summarised the sections would become that score in practice, whatever it
+  was called.
+- **Decision:** `Passport` exposes self-claimed, cryptographically linked,
+  evidence-supported, and third-party attested as separate collections, and
+  offers nothing that merges them. `profile.statement` and `skill.claim` carry
+  the self-claimed half; both refuse control characters, because they are
+  rendered beside cryptographically-backed facts and must not be able to dress
+  themselves up as one.
+- **Security impact:** A test walks every key in the rendered passport and
+  fails on any name containing `score`, `rating`, `trust`, `reputation`, `rank`,
+  or `level`. Keeping the categories apart is the whole value: a self-claimed
+  skill and an independently attested one are different things, and a reader
+  who cannot tell which is which has been given a number, not evidence.
+- **Skill support requires both halves:** a skill counts as evidence-supported
+  only when the subject signed a receipt for a cited artifact *and* a different
+  key attested to it. Without the receipt the claim points at work nobody can
+  tie to that key; without an independent attester the only support is the
+  claimant's own word twice over. Support is reported as the parts -- which
+  artifacts, which attesters -- rather than as a verdict, because `docs/10`
+  requires ranking inputs to stay explainable.
+- **Migration:** Pre-1.0.
+
+## D-054 Unbuilt sections are named, not left empty
+
+- **Date:** 2026-08-27
+- **Problem:** `docs/09` lists completed tasks, fleet bindings, impact, and
+  availability among a passport's contents. None of those phases is built.
+- **Decision:** the passport carries a `notIncluded` section naming each and
+  saying why.
+- **Security impact:** An empty list reads as "this agent has none" when the
+  truth is "this system does not look". The difference matters most for the
+  sections a reader would weigh -- an agent with no completed tasks and an agent
+  whose completed tasks are invisible look identical otherwise. Genuinely empty
+  sections are still rendered empty, so the distinction stays legible.
+- **Migration:** Entries are removed from `NOT_IMPLEMENTED` as their phases land.
+
 ### Pending decision template
 
 - ID:

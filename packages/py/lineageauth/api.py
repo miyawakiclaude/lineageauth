@@ -39,6 +39,7 @@ from lineageauth.errors import LineageAuthError
 from lineageauth.graph import build_graph
 from lineageauth.index import EventIndex
 from lineageauth.lineage import resolve_lineage
+from lineageauth.passport import build_passport
 from lineageauth.timeutil import format_instant, parse_instant
 from lineageauth.verify import verify_event
 
@@ -256,6 +257,22 @@ def create_app(index: EventIndex, *, title: str = "LineageAuth") -> FastAPI:
         moment = _moment(at)
         try:
             return build_graph(index.bundle(lineage=lineage), lineage=lineage, at=moment).to_dict()
+        except LineageAuthError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    @app.get(f"/{API_VERSION}/passports/{{did}}")
+    def get_passport(did: str, lineage: str, at: str | None = None) -> dict[str, Any]:
+        """Project what this bundle says about one DID, in separate categories.
+
+        `docs/09`: never merge them into one unlabelled truth. There is no
+        combined field, and the response says which sections are absent because
+        nothing was found versus absent because the machinery is not built.
+        """
+        moment = _moment(at)
+        try:
+            return build_passport(
+                index.bundle(lineage=lineage), lineage=lineage, did=did, at=moment
+            ).to_dict()
         except LineageAuthError as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
 

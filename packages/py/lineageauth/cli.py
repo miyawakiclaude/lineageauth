@@ -734,3 +734,118 @@ def graph(
     typer.echo("")
     typer.secho(f"  note: {projection.note}", fg=typer.colors.YELLOW)
     raise typer.Exit(code=0 if projection.resolved else 1)
+
+
+@app.command("passport")
+def passport(
+    bundle_path: Annotated[
+        str,
+        typer.Argument(metavar="BUNDLE", help="Bundle of signed envelopes, or '-' for stdin."),
+    ],
+    did: Annotated[str, typer.Option("--did", help="The agent's did:key.")],
+    lineage: Annotated[str | None, typer.Option("--lineage")] = None,
+    at: Annotated[str | None, typer.Option("--at", help="RFC3339 UTC evaluation time.")] = None,
+    as_json: Annotated[bool, typer.Option("--json")] = False,
+) -> None:
+    """Show what a bundle says about one agent, in separate categories.
+
+    A passport is a projection of signed events -- not an identity, and not a
+    score. The four sections are printed apart because a self-claimed skill and
+    an independently attested one are different things.
+    """
+    from lineageauth.passport import build_passport
+
+    try:
+        envelopes = _parse_envelopes(_read_source(bundle_path))
+        moment = parse_instant(at, field="--at") if at is not None else datetime.now(tz=UTC)
+    except LineageAuthError as exc:
+        typer.secho(f"error: {exc}", fg=typer.colors.RED, err=True)
+        raise typer.Exit(code=2) from exc
+
+    event_bundle = EventBundle.from_envelopes(envelopes)
+    target = lineage
+    if target is None:
+        found = event_bundle.lineages()
+        if len(found) != 1:
+            typer.secho(
+                f"error: the bundle carries {len(found)} lineages; name one with --lineage",
+                fg=typer.colors.RED,
+                err=True,
+            )
+            for candidate in found:
+                typer.secho(f"  --lineage {candidate}", fg=typer.colors.RED, err=True)
+            raise typer.Exit(code=2)
+        target = found[0]
+
+    try:
+        projection = build_passport(event_bundle, lineage=target, did=did, at=moment)
+    except LineageAuthError as exc:
+        typer.secho(f"error: {exc}", fg=typer.colors.RED, err=True)
+        raise typer.Exit(code=2) from exc
+
+    if as_json:
+        typer.echo(jsonio.dumps(projection.to_dict()))
+        raise typer.Exit(code=0)
+
+    typer.secho(f"passport  {projection.did}", bold=True)
+    typer.echo(f"  lineage      {projection.lineage}")
+    typer.echo(f"  evaluatedAt  {format_instant(projection.evaluated_at)}")
+
+    typer.echo("")
+    typer.secho("  cryptographically linked", fg=typer.colors.CYAN)
+    typer.echo(f"    lineage resolved  {projection.lineage_resolved} ({projection.lineage_reason})")
+    typer.echo(f"    current root      {projection.current_root}")
+    typer.echo(f"    epoch             {projection.epoch}")
+    typer.echo(f"    holds authority   {projection.holds_live_authority}")
+    for scope in projection.authority_scopes:
+        typer.echo(f"      {scope}")
+
+    typer.echo("")
+    typer.secho("  self-claimed (this key's own word, nothing more)", fg=typer.colors.YELLOW)
+    for claim in projection.self_claims:
+        if claim.nickname:
+            typer.echo(f"    nickname     {claim.nickname}")
+        if claim.description:
+            typer.echo(f"    description  {claim.description}")
+    for claimed in projection.skill_claims:
+        mark = "self" if claimed.self_claimed else "third party"
+        typer.echo(f"    skill        {claimed.skill}  (claimed by {mark})")
+    if not projection.self_claims and not projection.skill_claims:
+        typer.echo("    (none)")
+
+    typer.echo("")
+    typer.secho("  evidence-supported", fg=typer.colors.GREEN)
+    for made in projection.produced:
+        mark = "authority ok" if made.authority_supported else str(made.authority_reason)
+        typer.echo(f"    artifact  {made.artifact_id}  [{mark}]")
+    for supported in projection.skills:
+        typer.echo(
+            f"    skill     {supported.skill}: "
+            f"{len(supported.produced_artifacts)} produced, "
+            f"{len(supported.independent_attesters)} independent attester(s) "
+            f"-> supported={supported.is_evidence_supported}"
+        )
+    if not projection.produced and not projection.skills:
+        typer.echo("    (none)")
+
+    typer.echo("")
+    typer.secho("  third-party attested (who said it, not that it is true)", fg=typer.colors.CYAN)
+    for said in projection.attestations:
+        known = "" if said.predicate_is_known else "  [unregistered predicate]"
+        typer.echo(f"    {said.predicate}{known}")
+        typer.echo(f"      by {said.issuer}")
+    typer.echo(f"    independent counterparties: {len(projection.independent_counterparties)}")
+
+    typer.echo("")
+    typer.secho("  not included", fg=typer.colors.BRIGHT_BLACK)
+    from lineageauth.passport import NOT_IMPLEMENTED
+
+    for name, reason in NOT_IMPLEMENTED:
+        typer.echo(f"    {name:16} {reason}")
+
+    for warning in projection.warnings:
+        typer.echo("")
+        typer.secho(f"  warning: {warning}", fg=typer.colors.YELLOW)
+
+    typer.echo("")
+    typer.secho(f"  note: {projection.note}", fg=typer.colors.YELLOW)

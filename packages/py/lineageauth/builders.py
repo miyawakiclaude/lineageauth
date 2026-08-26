@@ -420,3 +420,89 @@ def build_attestation(
     if expires_at is not None:
         payload["expiresAt"] = format_instant(expires_at)
     return payload
+
+
+MAX_NICKNAME = 64
+MAX_DESCRIPTION = 1024
+
+
+def build_profile_statement(
+    *,
+    lineage: str,
+    subject: str,
+    nickname: str | None = None,
+    description: str | None = None,
+    issued_at: datetime,
+) -> dict[str, Any]:
+    """Draft a `profile.statement`: what a DID says about itself (D-053).
+
+    Everything in here is self-claimed and stays labelled that way for the whole
+    life of the event. A nickname is not a name, a description is not a
+    credential, and the passport that renders them says so.
+
+    Control characters are refused because these strings are displayed next to
+    cryptographically-backed facts, and a description able to redraw its
+    surroundings could borrow their authority.
+    """
+    public_key_from_did_key(subject)
+    for label, value, limit in (
+        ("nickname", nickname, MAX_NICKNAME),
+        ("description", description, MAX_DESCRIPTION),
+    ):
+        if value is None:
+            continue
+        if not value.strip():
+            raise MalformedEventError(f"{label} must not be blank when present")
+        if len(value) > limit:
+            raise MalformedEventError(f"{label} is limited to {limit} characters")
+        if any(ord(c) < 0x20 or ord(c) == 0x7F for c in value):
+            raise MalformedEventError(
+                f"{label} must not contain control characters; it is shown beside "
+                "facts that are cryptographically backed and must not be able to "
+                "dress itself up as one"
+            )
+    if nickname is None and description is None:
+        raise MalformedEventError("a profile statement must say something")
+
+    payload = _common("profile.statement", lineage, issued_at) | {"subject": subject}
+    if nickname is not None:
+        payload["nickname"] = nickname
+    if description is not None:
+        payload["description"] = description
+    return payload
+
+
+def build_skill_claim(
+    *,
+    lineage: str,
+    subject: str,
+    skill: str,
+    evidence_refs: list[str] | None = None,
+    issued_at: datetime,
+) -> dict[str, Any]:
+    """Draft a `skill.claim`.
+
+    A claim, whoever signs it. When the subject signs it, it is self-claimed;
+    when somebody else does, it is a third party's opinion about them. Neither
+    is evidence -- that comes from artifacts the subject actually produced, and
+    `evidence_refs` is how a claim points at them so a reader can check rather
+    than believe.
+    """
+    public_key_from_did_key(subject)
+    if not skill or not skill.strip():
+        raise MalformedEventError("skill must be a non-empty identifier")
+    if len(skill) > 128:
+        raise MalformedEventError("skill is limited to 128 characters")
+    if any(ord(c) < 0x20 or ord(c) == 0x7F for c in skill):
+        raise MalformedEventError("skill must not contain control characters")
+    for ref in evidence_refs or []:
+        if not is_event_id(ref):
+            raise MalformedEventError("every evidenceRef must be a sha256:<64 hex> reference")
+
+    payload = _common("skill.claim", lineage, issued_at) | {
+        "subject": subject,
+        "skill": skill,
+    }
+    if evidence_refs:
+        payload["evidenceRefs"] = sorted(set(evidence_refs))
+    return payload
