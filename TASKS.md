@@ -86,16 +86,17 @@ uv run pytest && uv run ruff check . && uv run mypy
 - [ ] `la approval draft` / `la execute` CLI surface
 
 ## P4 Resolver/Explorer
-- [ ] immutable event store abstraction
-- [ ] SQLite index
-- [ ] Postgres schema
-- [ ] rebuild
+- [x] immutable event store abstraction — `store.py`; content-addressed files,
+      atomic writes, proofs unioned across copies of one id (D-036)
+- [x] SQLite index — `index.py`; derived, never authority
+- [ ] Postgres schema — documentation-only scale target, not provisioned
+- [x] rebuild — `EventIndex.rebuild` + `checksum()` for the docs/25 drill
 - [ ] REST verify
 - [ ] REST read
 - [ ] graph projection
 - [ ] Next.js explorer
 - [ ] security headers
-- [ ] no key storage
+- [x] no key storage — asserted: no private key material reaches the index
 
 ## P5 Technocore
 *(brought forward ahead of P4: the read adapter and dry-run builder do not
