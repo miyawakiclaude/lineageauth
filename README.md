@@ -111,6 +111,7 @@ real authority behind it yet.
 - [x] Delegation, attenuation, revocation, authority resolver — `la check`
 - [x] Exact-action human approval and replay protection — `check_execution`
 - [x] Event store, rebuildable SQLite index, and a read-and-verify REST API
+- [x] Evidence — artifacts, signed authorship receipts, attestations
 - [x] MCP adapter — tools for verification, authority, and unsigned drafts
 - [x] Technocore adapter — GET-write classification, single-line sweep,
       dry-run write preparation. It cannot publish.

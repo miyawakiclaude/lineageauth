@@ -626,6 +626,52 @@ Git/GitHub writes require confirmation of active account + repository owner + re
 - **Interop impact:** None.
 - **Migration:** None.
 
+## D-051 Evidence payload shapes, and the three claim categories
+
+- **Date:** 2026-08-27
+- **Problem:** `docs/03` names `artifact.register`, `artifact.receipt`, and
+  `attestation.issue`; none of their payloads is specified.
+- **Decision:**
+  - `artifact.register` — `artifactId` (content hash, the identity),
+    `mediaType?`, `byteLength?`, `uri?`, `createdBy?`, `sourceRefs?`
+  - `artifact.receipt` — `artifactId`, `worker`, `authorityRefs?`,
+    `approvalRef?`; must be signed by `worker`
+  - `attestation.issue` — `issuer`, `subjectRef`, `predicate`, `value?`,
+    `reasonCode?`, `evidenceRefs?`, `expiresAt?`; must be signed by `issuer`
+- **Security impact:** The three categories `docs/09` requires kept apart start
+  here, because a passport can only present what this layer hands it.
+  `createdBy` on a registration is a *claim* -- anyone may register an artifact
+  and name anyone as its creator -- so it is reported as self-asserted unless
+  that DID signed the registration. A receipt is stronger, because the worker
+  signed it, and is still only a claim of authorship rather than evidence the
+  work is any good. An attestation is one signer's opinion, so
+  `independent_attesters` counts distinct keys rather than rows: counting rows
+  would let one key manufacture a consensus by attesting repeatedly.
+- **Availability:** `uri` is optional and non-authoritative. A receipt can bind
+  bytes nobody hosts, and there is no field claiming otherwise -- reading a hash
+  as "this is fetchable" would be inventing a fact.
+- **Unknown predicates:** accepted and kept displayable, but marked. Refusing to
+  let anyone express a new kind of claim would be the wrong failure; letting an
+  unrecognised one take effect would be the dangerous one.
+- **Migration:** Pre-1.0.
+
+## D-052 A cited authority is checked, never taken on trust
+
+- **Date:** 2026-08-27
+- **Problem:** An `artifact.receipt` may cite the grants the work was done
+  under. A citation is just a field in a payload the worker signed.
+- **Decision:** `check_receipt_authority` resolves each cited grant and reports
+  whether it is currently usable *and* actually held by the worker who signed
+  the receipt.
+- **Security impact:** Citing a grant is not holding it. Without the subject
+  check, a worker could cite any live grant in the lineage -- including one
+  delegated to somebody else -- and have the citation read as support. An
+  unsupported citation is reported rather than discarded, because the receipt
+  is still a signed claim of authorship; what it must never do is read as
+  supported.
+- **Interop impact:** None.
+- **Migration:** None.
+
 ### Pending decision template
 
 - ID:

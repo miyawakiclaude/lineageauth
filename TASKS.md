@@ -134,12 +134,17 @@ depend on the indexer or the Explorer.)*
       target system's own authorization still applies
 
 ## P7 Evidence
-- [ ] artifact.register
-- [ ] artifact.receipt
-- [ ] attestation
-- [ ] private artifact hash-only support
-- [ ] evidence bundle
-- [ ] tests
+- [x] artifact.register — content-addressed; `createdBy` reported as a *claim*
+      unless that DID signed the registration (D-051)
+- [x] artifact.receipt — must be signed by the worker it names; cited authority
+      is resolved and checked against the worker, never trusted (D-052)
+- [x] attestation — one signer's opinion; distinct issuers counted, not rows;
+      unknown predicates displayable but inert
+- [x] private artifact hash-only support — `uri` optional and
+      non-authoritative; a hash is never read as availability
+- [x] evidence bundle — `collect_evidence` keeps self-asserted, signed, and
+      third-party claims in separate fields
+- [x] tests
 
 ## P8 Useful Work
 - [ ] task.request
