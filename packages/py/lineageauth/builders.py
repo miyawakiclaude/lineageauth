@@ -22,6 +22,7 @@ from lineageauth.didkey import public_key_from_did_key
 from lineageauth.envelope import ALG_ED25519, Envelope, Proof
 from lineageauth.errors import MalformedEventError
 from lineageauth.identifiers import derive_lineage_id
+from lineageauth.scopes import ApprovalMode, parse_scopes
 from lineageauth.timeutil import format_instant
 
 SuccessionMode = str  # "normal" | "recovery"
@@ -149,3 +150,92 @@ def sign_payload(payload: dict[str, Any], signers: list[LocalSigner]) -> Envelop
         for signer in signers
     ]
     return Envelope(payload=payload, proofs=proofs)
+
+
+def build_delegation_grant(
+    *,
+    lineage: str,
+    issuer: str,
+    subject: str,
+    epoch: int,
+    scopes: list[dict[str, Any]],
+    not_before: datetime,
+    expires_at: datetime,
+    max_depth: int = 0,
+    approval: str = "none",
+    parent: str | None = None,
+    issued_at: datetime,
+) -> dict[str, Any]:
+    """Draft a delegation of attenuated scopes (D-039).
+
+    `epoch` binds the grant to the root epoch under which it was issued. A
+    succession moves the lineage past that epoch and the grant stops being
+    current -- which is the whole point of recovery: authority a compromised
+    root handed out must not survive its replacement.
+
+    `maxDepth` is how many *further* delegations this grant permits, so a leaf
+    grant is depth 0. `approval` may only be strengthened by a child.
+    """
+    if epoch < 0:
+        raise MalformedEventError("epoch must be a non-negative integer")
+    if max_depth < 0:
+        raise MalformedEventError("maxDepth must be a non-negative integer")
+    if issuer == subject:
+        raise MalformedEventError("a grant must delegate to a different DID than its issuer")
+    public_key_from_did_key(issuer)
+    public_key_from_did_key(subject)
+    if not scopes:
+        raise MalformedEventError("a grant must carry at least one scope")
+    if expires_at <= not_before:
+        raise MalformedEventError("expiresAt must be after notBefore")
+
+    # Validate and normalise the scopes through the same grammar the verifier
+    # uses, so a draft that would be refused fails here rather than after it has
+    # been signed.
+    normalised = [
+        {
+            "namespace": parsed.namespace,
+            "resource": parsed.resource.render(),
+            "actions": sorted(parsed.actions),
+        }
+        for parsed in parse_scopes(scopes)
+    ]
+    ApprovalMode.parse(approval)
+
+    payload = _common("delegation.grant", lineage, issued_at) | {
+        "issuer": issuer,
+        "subject": subject,
+        "epoch": epoch,
+        "scopes": normalised,
+        "notBefore": format_instant(not_before),
+        "expiresAt": format_instant(expires_at),
+        "maxDepth": max_depth,
+        "approval": approval,
+    }
+    if parent is not None:
+        payload["parent"] = parent
+    return payload
+
+
+def build_delegation_revoke(
+    *,
+    lineage: str,
+    issuer: str,
+    grant: str,
+    reason: str | None = None,
+    issued_at: datetime,
+) -> dict[str, Any]:
+    """Draft a revocation of one grant.
+
+    Revocation only ever removes authority, so it is deliberately easier to
+    issue than a grant: the grant's own issuer, any ancestor that delegated to
+    that issuer, or the current root may all revoke it (D-041).
+    """
+    public_key_from_did_key(issuer)
+    payload = _common("delegation.revoke", lineage, issued_at) | {
+        "issuer": issuer,
+        "grant": grant,
+    }
+    if reason is not None:
+        payload["reason"] = reason
+    return payload

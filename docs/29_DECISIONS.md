@@ -374,6 +374,62 @@ Git/GitHub writes require confirmation of active account + repository owner + re
 - **Interop impact:** Additive output only; no verdict changes.
 - **Migration:** None.
 
+## D-039 `delegation.grant` and `delegation.revoke` payload shapes
+
+- **Date:** 2026-08-26
+- **Problem:** `docs/03_EVENT_CATALOG.md` names both events; neither payload is
+  specified.
+- **Decision:**
+  - `delegation.grant` — `issuer`, `subject`, `epoch`, `scopes[]`, `notBefore`,
+    `expiresAt`, `maxDepth`, `approval`, and `parent` (absent on a grant issued
+    directly by the root).
+  - `delegation.revoke` — `issuer`, `grant`, optional `reason`.
+- **Security impact:** `maxDepth` counts *further* delegations, so a leaf grant
+  is depth 0 and delegating from a parent of depth N yields at most N-1;
+  otherwise depth would be unbounded in practice. A grant must be signed by its
+  declared `issuer`, or anyone could mint a payload naming the root and have it
+  treated as the root's delegation.
+- **Interop impact:** Any change is a protocol version bump.
+- **Migration:** Pre-1.0; shapes may still change.
+
+## D-040 A grant is anchored to a root epoch and does not survive a succession
+
+- **Date:** 2026-08-26
+- **Problem:** When a lineage moves from epoch N to N+1, what happens to grants
+  issued under epoch N?
+- **Options:** (a) they continue until their own expiry; (b) they are superseded
+  the moment the lineage advances.
+- **Decision:** (b). A grant declares its `epoch` and is current only while the
+  lineage is at that epoch.
+- **Security impact:** This is what makes recovery mean anything. Recovery
+  exists because a root key was lost or compromised; if that root's outstanding
+  delegations kept working afterwards, recovery would have changed who can sign
+  *new* grants and nothing else, leaving every agent the attacker had already
+  provisioned in place. `MASTER_PLAN.md` invariant 4 -- a higher valid epoch
+  supersedes lower current authority -- is not satisfied by any weaker reading.
+- **Operational cost:** Real, and deliberate. A voluntary succession also
+  invalidates outstanding grants, so re-issuing them is part of rotating a root.
+  Making the cheap path the safe one is the trade being taken.
+- **Interop impact:** An implementation honouring old-epoch grants would allow
+  actions this one refuses. Covered by conformance vectors.
+- **Migration:** None.
+
+## D-041 Who may revoke a grant
+
+- **Date:** 2026-08-26
+- **Problem:** Revocation only ever subtracts authority, which argues for a wide
+  revoker set. But an unbounded one lets any stranger switch off a lineage.
+- **Decision:** A revocation counts when signed by its declared issuer and that
+  issuer is the grant's own issuer, any ancestor that delegated (transitively)
+  to it, or the current root.
+- **Security impact:** Revoking a grant removes the whole subtree beneath it,
+  because every chain through that subtree passes through the revoked grant --
+  so revocation cannot be escaped by delegating onward. A revocation from
+  outside the set is recorded as a refusal rather than silently dropped, so an
+  operator can see that a revocation they issued is not taking effect.
+- **Interop impact:** None beyond the rule itself.
+- **Migration:** None.
+
 ### Pending decision template
 
 - ID:

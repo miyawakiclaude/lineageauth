@@ -1,0 +1,72 @@
+[
+  {
+    "payload": {
+      "protocol": "lineageauth",
+      "version": "0.1",
+      "type": "root.create",
+      "lineage": "lineage:la:z6Mkj3MFJwUVhEAMBQQ4oRsNJLrvtX3ZbKiLnnXuz8v9tfs2",
+      "issuedAt": "2026-08-26T09:00:00Z",
+      "root": "did:key:z6Mkj3MFJwUVhEAMBQQ4oRsNJLrvtX3ZbKiLnnXuz8v9tfs2",
+      "epoch": 0
+    },
+    "proofs": [
+      {
+        "alg": "Ed25519",
+        "signer": "did:key:z6Mkj3MFJwUVhEAMBQQ4oRsNJLrvtX3ZbKiLnnXuz8v9tfs2",
+        "sig": "HGbti1OcVQQG01oXUsNd7tZzDnnqzOGjPKcM7wvt0VudqUmn_s3AhbkBk0jCXxjcarQhb3iG7-tHlXbOEdFXCA"
+      }
+    ]
+  },
+  {
+    "payload": {
+      "protocol": "lineageauth",
+      "version": "0.1",
+      "type": "delegation.grant",
+      "lineage": "lineage:la:z6Mkj3MFJwUVhEAMBQQ4oRsNJLrvtX3ZbKiLnnXuz8v9tfs2",
+      "issuedAt": "2026-08-26T09:00:00Z",
+      "issuer": "did:key:z6Mkj3MFJwUVhEAMBQQ4oRsNJLrvtX3ZbKiLnnXuz8v9tfs2",
+      "subject": "did:key:z6MkqFRbThS1M62TP7pUYo8DGxizE5TD66mbf6vXh6kmyE6X",
+      "epoch": 0,
+      "scopes": [
+        {
+          "namespace": "technocore",
+          "resource": "room:lobby",
+          "actions": [
+            "read",
+            "write"
+          ]
+        }
+      ],
+      "notBefore": "2026-08-26T09:00:00Z",
+      "expiresAt": "2027-08-26T09:00:00Z",
+      "maxDepth": 0,
+      "approval": "none"
+    },
+    "proofs": [
+      {
+        "alg": "Ed25519",
+        "signer": "did:key:z6Mkj3MFJwUVhEAMBQQ4oRsNJLrvtX3ZbKiLnnXuz8v9tfs2",
+        "sig": "QAtiEwLNbgGcF10wkAbGvIE1XkCohX1xhHUGkP-qV3d6ZMKoMuc-Eu9E_z1wWGYAZJrcVnpHU6lOkTm73SlXDg"
+      }
+    ]
+  },
+  {
+    "payload": {
+      "protocol": "lineageauth",
+      "version": "0.1",
+      "type": "delegation.revoke",
+      "lineage": "lineage:la:z6Mkj3MFJwUVhEAMBQQ4oRsNJLrvtX3ZbKiLnnXuz8v9tfs2",
+      "issuedAt": "2026-09-01T12:00:00Z",
+      "issuer": "did:key:z6Mkj3MFJwUVhEAMBQQ4oRsNJLrvtX3ZbKiLnnXuz8v9tfs2",
+      "grant": "sha256:7618dffecd1b13b40329776b92356a27224e6a26404e87127b7bf138e461c21a",
+      "reason": "agent key rotated"
+    },
+    "proofs": [
+      {
+        "alg": "Ed25519",
+        "signer": "did:key:z6Mkj3MFJwUVhEAMBQQ4oRsNJLrvtX3ZbKiLnnXuz8v9tfs2",
+        "sig": "CKOK1ukTb-cLJ8hD6lXrjg-AlFYDDER_HpCWes_NB4yqBqJimg27KjbVUyrx-r50HD3Gu_f0Vl9mg4IeKmdtCg"
+      }
+    ]
+  }
+]

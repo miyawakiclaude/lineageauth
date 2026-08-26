@@ -60,13 +60,15 @@ uv run pytest && uv run ruff check . && uv run mypy
 - [x] A2A containment — `agent:`, `skill:`
 - [x] GitHub placeholder — `repo:<owner>/<name>`
 - [x] HTTP placeholder — `host:<hostname>`
-- [ ] delegation grant
-- [ ] attenuation
-- [ ] delegation depth
-- [ ] revoke
-- [ ] path resolver
-- [ ] reason codes
-- [ ] property tests
+- [x] delegation grant — `delegation.grant` builder + `authority.read_grant` (D-039)
+- [x] attenuation — actions, resource, time window, depth, approval monotonicity
+- [x] delegation depth — `maxDepth` counts *further* delegations; a leaf is 0
+- [x] revoke — `delegation.revoke`; revoking a parent removes the whole
+      subtree; revoker must be the issuer, an ancestor, or the root (D-041)
+- [x] path resolver — `check_permission` + `la check`, reports the grant path
+- [x] reason codes — DENIED / SCOPE_VIOLATION / REVOKED / EXPIRED /
+      NOT_YET_VALID / SUPERSEDED / UNRESOLVED_PARENT / APPROVAL_REQUIRED
+- [x] property tests — a child never permits what its parent forbids
 
 ## P3 Approval
 - [ ] canonical action descriptor

@@ -40,6 +40,11 @@ protocol exists to provide.
 | `root-succession-normal.json` | Root A hands over to root B voluntarily. One proof. |
 | `root-succession-recovery.json` | Root A is lost; two of three recovery keys install root B. Two proofs. |
 | `tampered-root-create.json` | `root-create.json` with `epoch` edited to `1`. Must fail. |
+| `delegation-allowed.json` | Genesis + a root grant of `technocore:room:lobby [read,write]` to the agent. |
+| `delegation-revoked.json` | The same, plus the root's revocation of that grant. |
+
+The agent in the delegation bundles is
+`did:key:z6MkqFRbThS1M62TP7pUYo8DGxizE5TD66mbf6vXh6kmyE6X`.
 
 ## Try it
 
@@ -54,12 +59,42 @@ uv run la verify examples/tampered-root-create.json
 The second exits non-zero and reports `INVALID_SIGNATURE`, naming the proof that
 failed and why.
 
+Resolve who currently holds the lineage:
+
+```bash
+uv run la lineage show examples/delegation-allowed.json
+```
+
+Then Demo A from [docs/26](../docs/26_LAUNCH_ADOPTION.md) — delegate, allow,
+revoke, deny. The agent is authorized here:
+
+```bash
+uv run la check examples/delegation-allowed.json --agent did:key:z6MkqFRbThS1M62TP7pUYo8DGxizE5TD66mbf6vXh6kmyE6X --namespace technocore --resource room:lobby --action write
+```
+
+and refused here, naming the revocation that did it:
+
+```bash
+uv run la check examples/delegation-revoked.json --agent did:key:z6MkqFRbThS1M62TP7pUYo8DGxizE5TD66mbf6vXh6kmyE6X --namespace technocore --resource room:lobby --action write
+```
+
 ## What a passing result does and does not mean
 
 `SIGNATURE_VERIFIED` means: these bytes were signed by these DIDs, and nothing
 has been altered since.
 
 It does **not** mean the action is authorized, that the signer is the lineage
-root, that the root is current, or that any human approved anything. Those are
-authority questions, answered by a separate layer over the same events — and
-that layer is not implemented yet.
+root, or that the root is current. Those are separate questions, answered by
+`la lineage show` and `la check` over the same events.
+
+`VALID_AUTHORITY_CHAIN` from `la check` means: a chain of grants, each a proper
+attenuation of the one above it, runs from the current root of this lineage to
+this agent and covers this exact action, and nothing on that chain is revoked,
+expired, or superseded.
+
+It still does **not** mean the provider will let the action through. OAuth, API
+keys, repository permissions, and MCP or A2A server policy all apply
+independently and are never bypassed. Nor does it mean a human approved
+anything — that is an approval receipt, and it is not implemented yet. A chain
+whose grants demand approval reports `APPROVAL_REQUIRED` rather than allowing
+the action.

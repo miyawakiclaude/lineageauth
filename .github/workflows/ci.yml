@@ -62,9 +62,14 @@ jobs:
           git diff --exit-code -- examples/
 
       - name: CLI smoke test
+        env:
+          AGENT: did:key:z6MkqFRbThS1M62TP7pUYo8DGxizE5TD66mbf6vXh6kmyE6X
         run: |
           uv run la verify examples/root-create.json
           ! uv run la verify examples/tampered-root-create.json
+          uv run la lineage show examples/delegation-allowed.json
+          uv run la check examples/delegation-allowed.json             --agent "$AGENT" --namespace technocore --resource room:lobby --action write
+          ! uv run la check examples/delegation-revoked.json             --agent "$AGENT" --namespace technocore --resource room:lobby --action write
 
   secrets:
     name: secret scan

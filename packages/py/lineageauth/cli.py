@@ -20,6 +20,7 @@ from typing import Annotated, Any
 import typer
 
 from lineageauth import __version__, catalog, jsonio
+from lineageauth.authority import AuthorityDecision, check_permission
 from lineageauth.bundle import EventBundle
 from lineageauth.envelope import Envelope
 from lineageauth.errors import LineageAuthError, ReasonCode
@@ -406,3 +407,166 @@ def version() -> None:
 
 if __name__ == "__main__":  # pragma: no cover
     app()
+
+
+def _decision_as_dict(decision: AuthorityDecision, bundle: EventBundle) -> dict[str, Any]:
+    return {
+        "allowed": decision.allowed,
+        "reason": str(decision.reason),
+        "detail": decision.detail,
+        "request": {
+            "agent": decision.request.agent,
+            "namespace": decision.request.namespace,
+            "resource": decision.request.resource,
+            "action": decision.request.action,
+        },
+        "lineage": decision.lineage,
+        "evaluatedAt": format_instant(decision.evaluated_at),
+        "root": decision.root,
+        "epoch": decision.epoch,
+        "path": list(decision.path),
+        "approval": decision.approval.wire_name,
+        "refusals": [
+            {"eventId": item.event_id, "reason": str(item.reason), "detail": item.detail}
+            for item in decision.refusals
+        ],
+        "rejected": [
+            {
+                "eventId": item.event_id,
+                "eventType": item.event_type,
+                "reason": str(item.reason),
+                "detail": item.detail,
+            }
+            for item in bundle.rejected
+        ],
+        "warnings": list(decision.warnings),
+        "note": decision.note,
+    }
+
+
+def _print_decision(decision: AuthorityDecision, bundle: EventBundle) -> None:
+    colour = typer.colors.GREEN if decision.allowed else typer.colors.RED
+    typer.secho(f"{decision.reason}", fg=colour, bold=True)
+    typer.echo(f"  {decision.detail}")
+    typer.echo("")
+    typer.echo(f"  request      {decision.request.render()}")
+    typer.echo(f"  lineage      {decision.lineage}")
+    typer.echo(f"  root         {decision.root}")
+    typer.echo(f"  epoch        {decision.epoch}")
+    typer.echo(f"  approval     {decision.approval.wire_name}")
+    typer.echo(f"  evaluatedAt  {format_instant(decision.evaluated_at)}")
+
+    if decision.path:
+        typer.echo("")
+        typer.echo("  authority path (root -> agent)")
+        for depth, event_id in enumerate(decision.path):
+            typer.echo(f"    {'  ' * depth}{event_id}")
+
+    if decision.refusals:
+        typer.echo("")
+        typer.echo("  grants considered and not used")
+        for item in decision.refusals:
+            typer.echo(f"    {item.reason}  {item.event_id}")
+            typer.echo(f"      {item.detail}")
+
+    if bundle.rejected:
+        typer.echo("")
+        typer.secho("  rejected before resolution (integrity)", fg=typer.colors.RED)
+        for rejection in bundle.rejected:
+            typer.secho(f"    {rejection.reason}  {rejection.event_id}", fg=typer.colors.RED)
+
+    for warning in decision.warnings:
+        typer.echo("")
+        typer.secho(f"  warning: {warning}", fg=typer.colors.YELLOW)
+
+    typer.echo("")
+    typer.secho(f"  note: {decision.note}", fg=typer.colors.YELLOW)
+
+
+@app.command("check")
+def check(
+    bundle_path: Annotated[
+        str,
+        typer.Argument(
+            metavar="BUNDLE",
+            help="Path to a bundle of signed envelopes, or '-' to read stdin.",
+        ),
+    ],
+    agent: Annotated[str, typer.Option("--agent", help="The acting agent's did:key.")],
+    namespace: Annotated[
+        str, typer.Option("--namespace", help="Scope namespace, e.g. 'technocore'.")
+    ],
+    resource: Annotated[str, typer.Option("--resource", help="Resource, e.g. 'room:lobby'.")],
+    action: Annotated[str, typer.Option("--action", help="Action, e.g. 'write'.")],
+    lineage: Annotated[
+        str | None,
+        typer.Option("--lineage", help="Which lineage to resolve against."),
+    ] = None,
+    at: Annotated[
+        str | None,
+        typer.Option("--at", help="RFC3339 UTC evaluation time. Defaults to now."),
+    ] = None,
+    internal: Annotated[
+        bool,
+        typer.Option(
+            "--internal",
+            help="Assert the action has no effect outside the agent. Without it the "
+            "action is assumed external, which is the assumption that fails safe.",
+        ),
+    ] = False,
+    as_json: Annotated[
+        bool, typer.Option("--json", help="Emit the machine-readable decision.")
+    ] = False,
+) -> None:
+    """Decide whether an agent holds authority for one exact action.
+
+    Exit code 0 means allowed, 1 means it is not (denied, revoked, expired,
+    superseded, or awaiting human approval), and 2 means the bundle could not
+    be read.
+
+    A `0` here is provenance, not permission from the provider: OAuth, API
+    keys, repository permissions, and MCP or A2A server policy all still apply.
+    """
+    try:
+        envelopes = _parse_envelopes(_read_source(bundle_path))
+        moment = parse_instant(at, field="--at") if at is not None else datetime.now(tz=UTC)
+    except LineageAuthError as exc:
+        typer.secho(f"error: {exc}", fg=typer.colors.RED, err=True)
+        raise typer.Exit(code=2) from exc
+
+    event_bundle = EventBundle.from_envelopes(envelopes)
+    target = lineage
+    if target is None:
+        found = event_bundle.lineages()
+        if len(found) != 1:
+            typer.secho(
+                f"error: the bundle carries {len(found)} lineages; name one with --lineage",
+                fg=typer.colors.RED,
+                err=True,
+            )
+            for candidate in found:
+                typer.secho(f"  --lineage {candidate}", fg=typer.colors.RED, err=True)
+            raise typer.Exit(code=2)
+        target = found[0]
+
+    try:
+        decision = check_permission(
+            event_bundle,
+            lineage=target,
+            agent=agent,
+            namespace=namespace,
+            resource=resource,
+            action=action,
+            at=moment,
+            external=not internal,
+        )
+    except LineageAuthError as exc:
+        typer.secho(f"error: {exc}", fg=typer.colors.RED, err=True)
+        raise typer.Exit(code=2) from exc
+
+    if as_json:
+        typer.echo(jsonio.dumps(_decision_as_dict(decision, event_bundle)))
+    else:
+        _print_decision(decision, event_bundle)
+
+    raise typer.Exit(code=0 if decision.allowed else 1)

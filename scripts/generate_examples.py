@@ -13,6 +13,7 @@ protocol change. These files double as the first conformance vectors
 
 from __future__ import annotations
 
+import json
 import sys
 from datetime import UTC, datetime
 from pathlib import Path
@@ -22,6 +23,7 @@ sys.path.insert(0, str(REPO_ROOT))
 sys.path.insert(0, str(REPO_ROOT / "packages" / "py"))
 
 from tests.testkeys import (  # noqa: E402
+    AGENT_1,
     RECOVERY_1,
     RECOVERY_2,
     RECOVERY_3,
@@ -33,16 +35,26 @@ from tests.testkeys import (  # noqa: E402
 from lineageauth.builders import (  # noqa: E402
     NORMAL_SUCCESSION,
     RECOVERY_SUCCESSION,
+    build_delegation_grant,
+    build_delegation_revoke,
     build_recovery_policy,
     build_root_create,
     build_root_succession,
     sign_payload,
 )
+from lineageauth.envelope import Envelope  # noqa: E402
 from lineageauth.identifiers import derive_lineage_id  # noqa: E402
 
 EXAMPLES = REPO_ROOT / "examples"
 ISSUED_AT = datetime(2026, 8, 26, 9, 0, 0, tzinfo=UTC)
 RECOVERED_AT = datetime(2026, 9, 1, 12, 0, 0, tzinfo=UTC)
+EXPIRES_AT = datetime(2027, 8, 26, 9, 0, 0, tzinfo=UTC)
+
+
+def write_bundle(name: str, envelopes: list[Envelope]) -> None:
+    """Write several envelopes as one JSON array, ready for `la check`."""
+    document = [json.loads(envelope.to_json()) for envelope in envelopes]
+    write(name, json.dumps(document, indent=2, ensure_ascii=False))
 
 
 def write(name: str, envelope_json: str) -> None:
@@ -116,11 +128,50 @@ def main() -> None:
     tampered.payload["epoch"] = 1
     write("tampered-root-create.json", tampered.to_json())
 
+    # Demo A from docs/26_LAUNCH_ADOPTION.md: root delegates a Technocore write,
+    # the agent is authorized, the grant is revoked, the agent is denied.
+    agent = unsafe_signer(AGENT_1)
+    grant = sign_payload(
+        build_delegation_grant(
+            lineage=lineage,
+            issuer=root_a.did,
+            subject=agent.did,
+            epoch=0,
+            scopes=[
+                {
+                    "namespace": "technocore",
+                    "resource": "room:lobby",
+                    "actions": ["read", "write"],
+                }
+            ],
+            not_before=ISSUED_AT,
+            expires_at=EXPIRES_AT,
+            max_depth=0,
+            approval="none",
+            issued_at=ISSUED_AT,
+        ),
+        [root_a],
+    )
+    revocation = sign_payload(
+        build_delegation_revoke(
+            lineage=lineage,
+            issuer=root_a.did,
+            grant=grant.event_id,
+            reason="agent key rotated",
+            issued_at=RECOVERED_AT,
+        ),
+        [root_a],
+    )
+    write_bundle("delegation-allowed.json", [root_create, grant])
+    write_bundle("delegation-revoked.json", [root_create, grant, revocation])
+
     print()
     print(f"lineage      {lineage}")
     print(f"root A       {root_a.did}")
     print(f"root B       {root_b.did}")
+    print(f"agent        {agent.did}")
     print(f"root.create  {root_create.event_id}")
+    print(f"grant        {grant.event_id}")
 
 
 if __name__ == "__main__":

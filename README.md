@@ -76,6 +76,10 @@ uv run la verify examples/root-create.json
 ```
 
 ```bash
+uv run la check examples/delegation-allowed.json --agent did:key:z6MkqFRbThS1M62TP7pUYo8DGxizE5TD66mbf6vXh6kmyE6X --namespace technocore --resource room:lobby --action write
+```
+
+```bash
 uv run pytest
 ```
 
@@ -104,7 +108,7 @@ real authority behind it yet.
 - [x] Envelope model, strict JSON loading, strict RFC3339 UTC
 - [x] Event integrity verification with reason codes — `la verify`
 - [x] Root creation, recovery policy, succession, epoch resolution — `la lineage show`
-- [ ] Delegation, attenuation, revocation, authority resolver
+- [x] Delegation, attenuation, revocation, authority resolver — `la check`
 - [ ] Exact-action human approval and replay protection
 - [ ] Everything after that — see [MASTER_PLAN.md](MASTER_PLAN.md)
 
