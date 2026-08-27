@@ -23,24 +23,21 @@ here for convenience; nothing in the sections below except **Local API** and
 
 ## The gate
 
-Four commands. Run all four before every commit — `ruff check` passing is not
-the same as `ruff format --check` passing, and CI checks both.
+One command, before every commit. It runs the same four checks CI runs and
+exits non-zero if any of them fails:
 
 ```bash
-py -3 -m uv run ruff check .
+py -3 -m uv run python scripts/gate.py
 ```
 
-```bash
-py -3 -m uv run ruff format --check .
-```
+It is one command for a reason. Running the four by hand and reading their
+output is not the same as honouring their exit codes — piping `ruff check` into
+`tail` to see the last line makes the pipeline's status `tail`'s status, which
+is always zero. A lint failure was committed exactly that way: the output said
+so, and the shell said everything was fine.
 
-```bash
-py -3 -m uv run mypy
-```
-
-```bash
-py -3 -m uv run pytest
-```
+If you do run them separately, note that `ruff check` passing is not
+`ruff format --check` passing. They find different things and CI runs both.
 
 ## Verify an event
 

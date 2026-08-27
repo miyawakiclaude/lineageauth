@@ -88,7 +88,7 @@ class TestTheSchemasExistForEveryRegisteredType:
         before = {
             p.relative_to(REPO).as_posix(): p.read_bytes() for p in sorted(SCHEMAS.rglob("*.json"))
         }
-        done = subprocess.run(  # noqa: S603
+        done = subprocess.run(
             [sys.executable, str(REPO / "scripts" / "generate_schemas.py")],
             capture_output=True,
             check=False,
