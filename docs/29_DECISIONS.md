@@ -1023,6 +1023,49 @@ Git/GitHub writes require confirmation of active account + repository owner + re
   upstream the URI changes, and that is a breaking change on purpose.
 - **Migration:** Pre-1.0.
 
+## D-064: the resolver merges by union, and freshness is not completeness
+
+- **Date:** 2026-08-27
+- **Problem:** `docs/15` gives this layer one job -- collect and project signed
+  events -- and one prohibition: never become protocol authority. Both are easy
+  to break, in opposite directions.
+- **Decision:** `lineageauth.resolver` reads any number of caller-supplied
+  sources, merges them by **union**, reports `checkedAt`, `sources`,
+  `newestEventSeen`, `freshnessAge` and `conflicts`, and decides nothing.
+- **Union, never selection.** A hostile mirror can add events -- which then have
+  to verify on their own signatures, so adding junk achieves nothing -- but it
+  can never remove an event another source supplied. Selecting between copies
+  would hand that mirror the power to suppress a revocation. This is the same
+  reasoning as proof merging inside a bundle (D-036): **omission is the
+  attack**, so the merge rule has to be the one that is monotone under adding
+  sources.
+- **Freshness measures recency, never completeness.** `freshnessAge` is the gap
+  between `checkedAt` and the newest event anyone produced. A mirror that
+  withholds a revocation makes that gap larger and the view fails closed -- but
+  the same mirror forwarding one harmless recent event makes the gap small
+  again while the revocation is still missing. Every response therefore says
+  that a small age means "something recent arrived", not "nothing is missing".
+  That caveat is the difference between a freshness field and a false one.
+- **A quiet source is not an agreeing source.** A source that raises is recorded
+  as unreachable, distinguishable from a source that answered with nothing, and
+  `FreshnessPolicy(require_all_sources=True)` refuses the view: a silent mirror
+  is indistinguishable from one that is withholding.
+- **Conflicts name the source.** Any admitted event that some *answering*
+  source did not supply is reported with `presentIn` and `absentFrom`. Missing
+  `delegation.revoke`, `root.succession` or `recovery.policy` is flagged
+  `authorityCritical` and sorted first, because omitting one of those leaves
+  authority looking live. Nothing is resolved: the only preferences LAP defines
+  are the union of proofs and the ordering of epochs.
+- **A met policy has no affirmative status.** `status` is `STALE_STATUS` or
+  `None`. Freshness being satisfied is the absence of a problem, and giving it a
+  positive reason code would invite somebody to read it as a verdict about the
+  events themselves.
+- **Nothing here fetches a URL.** `docs/15` forbids auto-fetching untrusted URLs
+  without policy or human approval, so no HTTP source ships in the core. A
+  `Source` is a two-member protocol; an operator who wants a mirror writes one
+  under their own policy, outside this module.
+- **Migration:** Pre-1.0.
+
 ### Pending decision template
 
 - ID:

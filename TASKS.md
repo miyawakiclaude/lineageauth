@@ -242,9 +242,12 @@ depend on the indexer or the Explorer.)*
 - [ ] free-limit stop/degrade behavior
 - [ ] verify no automatic paid upgrades
 - [ ] local full-stack ¥0 runbook
-- [ ] multi-source resolver
-- [ ] freshness policy
-- [ ] conflict monitoring
+- [x] multi-source resolver — union merge, so no mirror can suppress a
+      revocation (D-064)
+- [x] freshness policy — `checkedAt`/`newestEventSeen`/`freshnessAge`, and
+      `STALE_STATUS` with a fail-closed `require_fresh()` for the high-risk path
+- [x] conflict monitoring — every answering source that omitted an admitted
+      event is named; missing revocations and successions sort first
 - [ ] deployment
 - [ ] optional PostgreSQL scale design (do not provision if paid)
 - [ ] optional object storage design (do not provision if paid)

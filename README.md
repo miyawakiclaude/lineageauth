@@ -111,6 +111,8 @@ real authority behind it yet.
 - [x] Delegation, attenuation, revocation, authority resolver — `la check`
 - [x] Exact-action human approval and replay protection — `check_execution`
 - [x] Event store, rebuildable SQLite index, and a read-and-verify REST API
+- [x] Multi-source resolver — merges by union, names the mirror that
+      omitted a revocation, and never calls freshness completeness
 - [x] Evidence — artifacts, signed authorship receipts, attestations
 - [x] Useful work — task lifecycle, derived state, anti-gaming signals
 - [x] Fleet transparency — voluntary disclosure that never costs the discloser
