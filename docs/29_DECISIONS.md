@@ -1366,6 +1366,31 @@ Git/GitHub writes require confirmation of active account + repository owner + re
   a diff and the tests are what check that judgement.
 - **Migration:** Pre-1.0.
 
+## D-074: an unparseable workflow looks exactly like a failing test
+
+- **Date:** 2026-08-27
+- **What happened:** the edit that added D-073's annotations broke the workflow
+  YAML -- an escaped newline became a real one and split a `printf` across two
+  lines, collapsing the block scalar. GitHub does not report that as a syntax
+  error. It **renames the workflow to its own file path**, reports zero jobs,
+  and marks the run failed. From the API that is indistinguishable from a test
+  failure, and a round was spent looking for a failing test in a workflow that
+  had never started.
+- **Decision:** tests parse every workflow file, require a `name` (its absence
+  is the tell that parsing failed), require every step to have a non-empty
+  `run` or a `uses`, and assert the gate and CI run the same four checks -- if
+  those drift, the gate stops predicting CI and stops being worth running.
+  `pyyaml` joins the test-only dependencies for this.
+- **`echo` rather than `printf`.** The bug was an escaping problem in a
+  generator writing a shell line into YAML. `echo` needs no escape, and a
+  construct that cannot be got wrong is better than one that was got wrong once.
+- **The pattern across D-072, D-073 and this one:** each was invisible where it
+  happened. A scan that could not see untracked files, a failure readable only
+  with admin rights, a workflow that reports its own breakage as somebody
+  else's. None was hard to fix; all three cost time purely because the evidence
+  was somewhere nobody was looking.
+- **Migration:** Pre-1.0.
+
 ### Pending decision template
 
 - ID:

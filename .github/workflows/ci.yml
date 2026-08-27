@@ -64,8 +64,7 @@ jobs:
           uv run pytest -q --tb=short 2>&1 | tee pytest.out || {
             echo "::group::pytest failures"
             grep -E '^(FAILED|ERROR|E   )' pytest.out | head -60 | while IFS= read -r line; do
-              printf '::error::%s
-' "${line}"
+              echo "::error::${line}"
             done
             echo "::endgroup::"
             exit 1

@@ -546,3 +546,56 @@ class TestTheScaleAndReleaseDocuments:
         text = (REPO / "RELEASE.md").read_text(encoding="utf-8")
         for suite in ("test_final_gate.py", "test_zero_cost.py", "test_conformance.py"):
             assert suite in text
+
+
+class TestTheWorkflowActuallyRuns:
+    """A workflow that does not parse does not run, and does not say so clearly.
+
+    GitHub renames an unparseable workflow to its own file path and reports no
+    jobs. From the API that looks like a run that failed, which is easy to
+    mistake for a failing test -- and it cost a round of exactly that
+    misreading, chasing a test failure in a workflow that had never started.
+    """
+
+    def _workflows(self) -> list[Path]:
+        return sorted((REPO / ".github" / "workflows").glob("*.yml"))
+
+    def test_there_is_a_workflow(self) -> None:
+        assert self._workflows()
+
+    def test_every_workflow_parses(self) -> None:
+        yaml = pytest.importorskip("yaml")
+        for path in self._workflows():
+            document = yaml.safe_load(path.read_text(encoding="utf-8"))
+            assert isinstance(document, dict), path.name
+            assert document.get("name"), f"{path.name} has no name, so a parse failure hides"
+            assert document.get("jobs"), path.name
+
+    def test_every_step_has_something_to_run(self) -> None:
+        """An empty `run:` is what a broken block scalar collapses into."""
+        yaml = pytest.importorskip("yaml")
+        for path in self._workflows():
+            document = yaml.safe_load(path.read_text(encoding="utf-8"))
+            for job_name, job in document["jobs"].items():
+                for step in job["steps"]:
+                    if "run" in step:
+                        assert step["run"].strip(), f"{path.name}:{job_name} has an empty run"
+                    else:
+                        assert step.get("uses"), f"{path.name}:{job_name} step does neither"
+
+    def test_the_gate_and_ci_check_the_same_four_things(self) -> None:
+        """If they drift, the gate stops predicting CI and stops being worth running."""
+        yaml = pytest.importorskip("yaml")
+        document = yaml.safe_load((REPO / ".github" / "workflows" / "ci.yml").read_text("utf-8"))
+        ci_commands = " ".join(
+            step.get("run", "") for job in document["jobs"].values() for step in job["steps"]
+        )
+        gate = (REPO / "scripts" / "gate.py").read_text(encoding="utf-8")
+        for command in ("ruff check", "ruff format --check", "mypy", "pytest"):
+            assert command in ci_commands, f"CI does not run {command}"
+            assert command in gate, f"the gate does not run {command}"
+
+    def test_failures_are_re_emitted_where_they_can_be_read(self) -> None:
+        """The logs endpoint needs admin rights; annotations do not."""
+        text = (REPO / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
+        assert "::error::" in text
