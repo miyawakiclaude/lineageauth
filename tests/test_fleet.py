@@ -343,3 +343,113 @@ class TestBuilderRules:
                 member=ALICE.did,
                 issued_at=AT,
             )
+
+
+class TestFleetEdgesInTheGraph:
+    """docs/17 draws fleet relationships, and they must not read as authority.
+
+    A fleet edge says an operator disclosed that it runs a DID. It grants
+    nothing. Drawing it in the same picture as delegation is useful precisely
+    because a reader can then see the difference -- so the difference has to
+    survive the drawing.
+    """
+
+    def _graph(self, *envelopes: Envelope):
+        from lineageauth.graph import build_graph
+
+        return build_graph(
+            EventBundle.from_envelopes([genesis(), *envelopes]), lineage=LINEAGE, at=AT
+        )
+
+    def test_a_binding_appears_as_an_operates_edge(self) -> None:
+        from lineageauth.graph import EdgeKind
+
+        group = fleet()
+        graph = self._graph(group, bind(group=group, member=ALICE))
+        edge = next(e for e in graph.edges if e.kind is EdgeKind.OPERATES)
+        assert edge.source == OPERATOR.did
+        assert edge.target == ALICE.did
+
+    def test_it_is_drawn_from_controller_to_member(self) -> None:
+        """The direction of the claim. The member never signed anything."""
+        from lineageauth.graph import EdgeKind
+
+        group = fleet()
+        graph = self._graph(group, bind(group=group, member=ALICE))
+        edge = next(e for e in graph.edges if e.kind is EdgeKind.OPERATES)
+        assert edge.source != ALICE.did
+
+    def test_the_edge_says_it_confers_no_authority(self) -> None:
+        from lineageauth.graph import EdgeKind
+
+        group = fleet()
+        graph = self._graph(group, bind(group=group, member=ALICE))
+        edge = next(e for e in graph.edges if e.kind is EdgeKind.OPERATES)
+        assert "confers no authority" in edge.detail
+        assert "said nothing rather than proved independence" in edge.detail
+
+    def test_the_edge_is_labelled_with_the_fleet_name(self) -> None:
+        from lineageauth.graph import EdgeKind
+
+        group = fleet()
+        graph = self._graph(group, bind(group=group, member=ALICE))
+        edge = next(e for e in graph.edges if e.kind is EdgeKind.OPERATES)
+        assert edge.label == "acme agents"
+
+    def test_both_ends_get_a_fleet_role(self) -> None:
+        from lineageauth.graph import NodeKind
+
+        group = fleet()
+        graph = self._graph(group, bind(group=group, member=ALICE))
+        by_did = {n.did: n.kinds for n in graph.nodes}
+        assert NodeKind.FLEET_CONTROLLER in by_did[OPERATOR.did]
+        assert NodeKind.FLEET_MEMBER in by_did[ALICE.did]
+
+    def test_an_unbound_relationship_leaves_no_edge(self) -> None:
+        from lineageauth.builders import build_fleet_unbind
+        from lineageauth.graph import EdgeKind
+
+        group = fleet()
+        binding = bind(group=group, member=ALICE)
+        ended = sign_payload(
+            build_fleet_unbind(
+                lineage=LINEAGE, bind=binding.event_id, controller=OPERATOR.did, issued_at=AT
+            ),
+            [OPERATOR],
+        )
+        graph = self._graph(group, binding, ended)
+        assert not [e for e in graph.edges if e.kind is EdgeKind.OPERATES]
+
+    def test_a_lineage_with_no_fleet_has_no_fleet_edges(self) -> None:
+        """Absence of the edge is absence of disclosure, not evidence of anything."""
+        from lineageauth.graph import EdgeKind
+
+        graph = self._graph()
+        assert not [e for e in graph.edges if e.kind is EdgeKind.OPERATES]
+
+    def test_a_fleet_edge_is_not_a_delegation_edge(self) -> None:
+        from lineageauth.graph import EdgeKind
+
+        group = fleet()
+        graph = self._graph(group, bind(group=group, member=ALICE))
+        kinds = {e.kind for e in graph.edges}
+        assert EdgeKind.OPERATES in kinds
+        assert EdgeKind.DELEGATED not in kinds
+
+    def test_the_api_serves_the_fleet_edges(self) -> None:
+        pytest.importorskip("fastapi")
+        from fastapi.testclient import TestClient
+
+        from lineageauth.api import create_app
+        from lineageauth.index import EventIndex
+
+        group = fleet()
+        with EventIndex() as index:
+            index.ingest_all([genesis(), group, bind(group=group, member=ALICE)])
+            client = TestClient(create_app(index))
+            body = client.get(
+                f"/v1/lineages/{LINEAGE}/graph", params={"at": "2026-08-27T12:00:00Z"}
+            ).json()
+        operates = [e for e in body["edges"] if e["kind"] == "operates"]
+        assert len(operates) == 1
+        assert operates[0]["source"] == OPERATOR.did

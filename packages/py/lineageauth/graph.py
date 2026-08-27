@@ -28,6 +28,7 @@ from lineageauth.approval import APPROVAL_RECEIPT, read_receipt
 from lineageauth.authority import describe_grants
 from lineageauth.bundle import EventBundle
 from lineageauth.errors import ReasonCode
+from lineageauth.fleet import resolve_fleets
 from lineageauth.lineage import RECOVERY_POLICY, resolve_lineage
 from lineageauth.timeutil import format_instant
 
@@ -41,6 +42,8 @@ class NodeKind(StrEnum):
     AGENT = "agent"
     RECOVERY_MEMBER = "recovery-member"
     APPROVER = "approver"
+    FLEET_CONTROLLER = "fleet-controller"
+    FLEET_MEMBER = "fleet-member"
 
 
 class EdgeKind(StrEnum):
@@ -51,6 +54,13 @@ class EdgeKind(StrEnum):
     RECOVERED = "recovered"
     APPROVED = "approved"
     RECOVERY_MEMBER_OF = "recovery-member-of"
+    OPERATES = "operates"
+    """A disclosed fleet binding (D-059).
+
+    Drawn from controller to member because that is the direction of the claim:
+    the controller said "I operate this", and the member never signed anything.
+    An edge drawn the other way would read as the member agreeing, which no
+    event here establishes."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -234,6 +244,35 @@ def build_graph(bundle: EventBundle, *, lineage: str, at: datetime) -> Authority
                     + (f"; expired at {receipt.expires_at.isoformat()}" if expired else "")
                 ),
                 label=receipt.request.action,
+            )
+        )
+
+    # ---- fleet edges: disclosure, drawn as what it is (D-059) ----
+    #
+    # A fleet edge is not an authority edge and must never read as one. It says
+    # an operator disclosed that it runs a DID; it grants nothing, and its
+    # absence proves nothing either -- an undisclosed fleet looks exactly like
+    # no fleet, which is why `live` here means "the binding is current" and
+    # nothing stronger.
+    fleets = resolve_fleets(bundle, lineage=lineage, at=at)
+    for binding in fleets.bindings:
+        role(binding.controller, NodeKind.FLEET_CONTROLLER)
+        role(binding.member, NodeKind.FLEET_MEMBER)
+        fleet = next((f for f in fleets.fleets if f.event_id == binding.fleet), None)
+        edges.append(
+            Edge(
+                source=binding.controller,
+                target=binding.member,
+                kind=EdgeKind.OPERATES,
+                event_id=binding.event_id,
+                live=True,
+                reason=ReasonCode.VALID_AUTHORITY_CHAIN,
+                detail=(
+                    "a disclosed operating relationship, signed by the controller. It "
+                    "confers no authority, and an agent with no such edge has said "
+                    "nothing rather than proved independence"
+                ),
+                label=fleet.name if fleet is not None else binding.fleet,
             )
         )
 

@@ -222,7 +222,8 @@ depend on the indexer or the Explorer.)*
 - [x] fleet.create — signed by the controller
 - [x] bind — signed by the controller, not the member (D-059)
 - [x] unbind — forward-only; only the controller that bound may unbind
-- [ ] graph — fleet edges in the authority graph projection
+- [x] graph — `operates` edges, drawn controller to member because that is the
+      direction of the claim, and labelled as conferring no authority
 - [x] router integration — siblings excluded from the independent count and
       never subtracted; disclosing costs exactly the uncounted counterparty
 - [x] clear limitations — an absent fleet is silence, not independence, and
