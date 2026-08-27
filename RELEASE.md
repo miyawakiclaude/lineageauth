@@ -53,6 +53,16 @@ found this project wrong, "the specification is implementable" remains partly an
 opinion held by whoever wrote both sides. `CONTRIBUTING.md` asks for that, and
 the vectors are published so it costs a stranger nothing to try.
 
+What has been done to make that ask answerable, rather than only stated:
+`docs/IMPLEMENTERS_GUIDE.md` compresses the verification rules to one page, so
+the entry cost is an afternoon rather than 4,000 lines of specification. The
+guide is checked against the code by `tests/test_implementers_guide.py` —
+every constant, every link, every claim about the vectors — because a
+shortcut that drifts teaches an implementation that fails the vectors and
+blames the protocol. None of that makes this line true. It removes the
+reasons a stranger would stop before starting, which is the only part of it
+this project can do by itself.
+
 ### The pre-1.0 marks are gone from the decision log
 
 Every entry in `docs/29_DECISIONS.md` says `Migration: Pre-1.0`. Reaching v1

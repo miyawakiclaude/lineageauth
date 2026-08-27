@@ -153,7 +153,15 @@ The most useful contribution right now is an **independent implementation that
 disagrees with this one**. If your verifier reaches a different verdict on the
 same event bundle, that is a finding worth an issue.
 
-Start from the [conformance vectors](conformance/README.md): every one states the rule behind its verdict, so a disagreement can be about the rule rather than about whose code it is.
+**[Write your own verifier](docs/IMPLEMENTERS_GUIDE.md)** is everything you
+need on one page — the canonicalization rules that actually bite, the exact
+signing preimage, the `did:key` decoding, and what must be refused. It is
+written so you can disagree with this implementation in an afternoon without
+reading the specification first.
+
+Then run the [conformance vectors](conformance/README.md): every one states the
+rule behind its verdict, so a disagreement can be about the rule rather than
+about whose code it is.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md). The short version: don't hand-roll
 crypto or canonical JSON, fail closed, never commit key material, and record

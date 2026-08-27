@@ -4,6 +4,10 @@
 implementation that disagrees with this one.** A disagreement is only useful if
 both sides answered the same question, so this package fixes the questions.
 
+If you are writing that implementation, start at
+[docs/IMPLEMENTERS_GUIDE.md](../docs/IMPLEMENTERS_GUIDE.md) — the rules these
+vectors test, stated once, on one page.
+
 ## What is here
 
 - `manifest.json` — every vector, the verdict a conforming implementation must

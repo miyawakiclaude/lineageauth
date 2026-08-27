@@ -420,6 +420,22 @@ footer p {
   margin: 0;
 }
 
+/* The one thing this page asks a stranger for, so it is set to be read.
+   `footer p` is deliberately dim -- 2.4:1 against the page, which is fine for a
+   note that is there to be available rather than consumed. Putting the ask in
+   that colour would have been the same mistake as burying it: technically
+   present, effectively absent. This is the body token, 11:1, at a size that
+   does not read as fine print. */
+footer .ask {
+  color: var(--body);
+  font-size: 0.85rem;
+  border-left: 3px solid var(--accent);
+  padding-left: 0.9rem;
+  margin-bottom: 1.1rem;
+}
+
+footer .ask a { color: var(--accent); }
+
 @media (max-width: 720px) {
   body { padding: 0 1.1rem 4rem; }
   .screen { padding-left: 0; }

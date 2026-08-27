@@ -194,11 +194,29 @@ class TestEveryQuestionTheExplorerAsksIsAnswered:
 
 class TestTheBuildOutput:
     def test_it_serves_from_a_path_prefix(self, site: Path) -> None:
-        """A project page lives under /<repo>/, so nothing may be rooted at /."""
+        """A project page lives under /<repo>/, so nothing may be rooted at /.
+
+        This is about what the built page *reaches for* relative to its own
+        location. An absolute outbound link is unaffected by a path prefix and
+        is checked for its destination instead, in the test below.
+        """
         page = (site / "index.html").read_text(encoding="utf-8")
-        for match in re.findall(r'(?:src|href)="([^"]+)"', page):
+        references = re.findall(r'src="([^"]+)"', page)
+        references += re.findall(r'<link[^>]*href="([^"]+)"', page)
+        references += [h for h in re.findall(r'<a[^>]*href="([^"]+)"', page) if "://" not in h]
+        assert references, "the built page references nothing at all"
+        for match in references:
             assert not match.startswith("/"), f"rooted path breaks under a prefix: {match}"
             assert "://" not in match, f"external resource: {match}"
+
+    def test_the_built_page_still_asks_for_an_outside_implementation(self, site: Path) -> None:
+        """The published page is where a stranger arrives; the ask must survive the build."""
+        page = (site / "index.html").read_text(encoding="utf-8")
+        assert "IMPLEMENTERS_GUIDE.md" in page, "the guide link did not reach the built page"
+        assert "conformance/manifest.json" in page
+        assert (site / "conformance" / "manifest.json").is_file(), (
+            "the page links the vectors relative to itself, so they must be published beside it"
+        )
 
     def test_jekyll_is_disabled(self, site: Path) -> None:
         """Pages runs Jekyll by default and would drop files beginning with _."""

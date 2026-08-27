@@ -1629,6 +1629,42 @@ Git/GitHub writes require confirmation of active account + repository owner + re
   operator's decision.
 - **Migration:** Pre-1.0.
 
+## D-082: a shortcut into the specification, wired to fail when it drifts
+
+- **Date:** 2026-08-27
+- **Problem:** the first item on `RELEASE.md`'s v1 list is an implementation by
+  somebody who is not this project, and the only thing this project can do about
+  it is lower the cost of trying. That cost was 4,059 lines of specification. A
+  stranger deciding whether to spend an afternoon does not read 4,059 lines
+  first, so the ask was being made in a place nobody reached.
+- **Decision:** `docs/IMPLEMENTERS_GUIDE.md` -- the verification rules on one
+  page: the JCS behaviour that actually bites, the byte-exact preimage, the
+  `did:key` decoding including the X25519 codec that looks correct, the refusal
+  list, and how to run the published vectors. Linked from `README.md`,
+  `CONTRIBUTING.md`, `conformance/README.md`, and the footer of the published
+  page, because a door nobody walks past is not a door.
+- **The cost of doing this, which is the part worth recording:** a summary of a
+  normative document becomes a second normative document. A guide that drifts
+  from the code is *worse than no guide*: it reads as authoritative while
+  teaching an implementation that fails the vectors, and the person it misleads
+  concludes the protocol is broken rather than the prose. Prose has no compiler,
+  so nothing would catch it.
+- **So the guide is tested against the thing it describes**
+  (`tests/test_implementers_guide.py`): every constant is compared to the
+  constant in the code, the UTF-16 ordering example is *executed* rather than
+  asserted from memory, every claim about the vectors is read out of
+  `manifest.json`, every relative link is resolved, and every published URL must
+  exist in the repository. Changing the protocol without changing the page fails
+  CI. Verified by breaking four of them and watching four tests fail.
+- **The guide tells the reader not to read the implementations first.** An
+  implementation written from another implementation inherits its misreadings,
+  which is precisely the limitation `D-080` records about `packages/js/`. What
+  is wanted is the reading that finds the specification unclear.
+- **This does not make the v1 line true**, and `RELEASE.md` now says which part
+  it does address. Removing the reasons a stranger stops before starting is the
+  whole of what one project can do about being independently implemented.
+- **Migration:** Pre-1.0.
+
 ### Pending decision template
 
 - ID:

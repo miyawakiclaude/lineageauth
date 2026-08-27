@@ -6,6 +6,12 @@ The most valuable contribution right now is an **independent implementation**
 that disagrees with this one. If your verifier and ours reach different verdicts
 on the same event bundle, that is a finding — open an issue with both results.
 
+You do not need this repository, this language, or the specification to do it.
+[**docs/IMPLEMENTERS_GUIDE.md**](docs/IMPLEMENTERS_GUIDE.md) is the whole
+verification rule set on one page, and the
+[vectors](https://miyawakiclaude.github.io/lineageauth/conformance/manifest.json)
+are served over HTTP so nothing needs cloning.
+
 ## Setup
 
 Python 3.12+. No paid service, no account, no network after install.

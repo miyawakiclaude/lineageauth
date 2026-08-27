@@ -45,6 +45,12 @@ FORBIDDEN_STATUS_LANGUAGE = ("trusted human", "official", "guaranteed safe")
 REQUIRED_STATUS_LANGUAGE = ("valid authority chain", "superseded")
 
 
+# The only destinations an anchor on this page may name. A link a person chooses
+# to follow is not a resource this page loads, but it is still a place this page
+# sends somebody, so the set is written down rather than merely same-origin.
+ALLOWED_LINK_PREFIXES = ("https://github.com/miyawakiclaude/lineageauth/",)
+
+
 class TestUntrustedContentIsNeverMarkup:
     def test_the_script_uses_no_markup_sink(self) -> None:
         source = SCRIPT.read_text(encoding="utf-8")
@@ -71,17 +77,103 @@ class TestUntrustedContentIsNeverMarkup:
         had to work under a path prefix as well as at a domain root: a leading
         slash reaches for the root and breaks on a project page. What actually
         matters is that no reference names another host.
+
+        Subresources only. An `<a href>` is a place a reader may choose to go,
+        not a thing this page fetches, and conflating the two would either ban
+        every outbound link or let a script-loading host in through the same
+        rule. They are checked separately, and more specifically, below.
         """
         html = HTML.read_text(encoding="utf-8")
-        for match in re.findall(r'(?:src|href)="([^"]+)"', html):
+        subresources = re.findall(r'src="([^"]+)"', html)
+        subresources += re.findall(r'<link[^>]*href="([^"]+)"', html)
+        assert subresources, "the page loads a stylesheet and a script; found neither"
+        for match in subresources:
             assert "://" not in match, f"external resource: {match}"
             assert not match.startswith("//"), f"protocol-relative resource: {match}"
+            assert not match.startswith("/"), f"rooted path breaks under a prefix: {match}"
+
+    def test_every_outbound_link_is_one_this_project_chose(self) -> None:
+        """Anchors may leave, but only to destinations written down here."""
+        html = HTML.read_text(encoding="utf-8")
+        for href in re.findall(r'<a[^>]*href="([^"]+)"', html):
+            if "://" not in href:
+                assert not href.startswith("/"), f"rooted path breaks under a prefix: {href}"
+                continue
+            assert href.startswith(ALLOWED_LINK_PREFIXES), f"unlisted destination: {href}"
+
+    def test_no_link_opens_a_new_window(self) -> None:
+        """`target=_blank` hands the opened page a handle back to this one."""
+        html = HTML.read_text(encoding="utf-8")
+        assert "target=" not in html
+
+    def test_no_link_is_built_from_data(self) -> None:
+        """A literal anchor is a decision; an anchor from a feed is an injection."""
+        source = SCRIPT.read_text(encoding="utf-8")
+        for api in ("href", 'createElement("a")', "createElement('a')"):
+            assert api not in source, f"the script constructs links: {api}"
 
     def test_no_request_is_rooted_at_the_domain(self) -> None:
         """A rooted path silently drops the project-page prefix."""
         source = SCRIPT.read_text(encoding="utf-8")
         assert 'fetch("/' not in source
         assert "fetch('/" not in source
+
+
+class TestTheAskIsActuallyReadable:
+    """A request nobody can read is the same as a request nobody made.
+
+    `footer p` is set to a deliberately dim grey. That is a reasonable choice
+    for a note that exists to be available rather than consumed, and a poor one
+    for the single thing this project is asking a stranger to do. The numbers
+    are pinned here because a colour token is exactly the kind of thing that
+    gets tidied back to matching its neighbours.
+    """
+
+    @staticmethod
+    def _channel(value: float) -> float:
+        return value / 12.92 if value <= 0.03928 else ((value + 0.055) / 1.055) ** 2.4
+
+    @classmethod
+    def _luminance(cls, hex_colour: str) -> float:
+        raw = hex_colour.lstrip("#")
+        r, g, b = (cls._channel(int(raw[i : i + 2], 16) / 255) for i in (0, 2, 4))
+        return 0.2126 * r + 0.7152 * g + 0.0722 * b
+
+    @classmethod
+    def _contrast(cls, a: str, b: str) -> float:
+        high, low = sorted((cls._luminance(a), cls._luminance(b)), reverse=True)
+        return (high + 0.05) / (low + 0.05)
+
+    @staticmethod
+    def _token(name: str) -> str:
+        css = STYLE.read_text(encoding="utf-8")
+        match = re.search(rf"--{name}:\s*(#[0-9a-fA-F]{{6}})", css)
+        assert match, f"palette token --{name} is gone"
+        return match.group(1)
+
+    def test_the_ask_uses_the_body_token_and_not_the_footer_grey(self) -> None:
+        css = STYLE.read_text(encoding="utf-8")
+        rule = re.search(r"footer \.ask \{([^}]*)\}", css)
+        assert rule, "the ask has no styling of its own, so it inherits the dim note"
+        assert "color: var(--body)" in rule.group(1)
+
+    def test_the_ask_clears_wcag_aa_against_the_page(self) -> None:
+        ratio = self._contrast(self._token("body"), self._token("bg"))
+        assert ratio >= 4.5, f"the ask sits at {ratio:.2f}:1 against the page background"
+
+    def test_its_links_clear_wcag_aa_too(self) -> None:
+        ratio = self._contrast(self._token("accent"), self._token("bg"))
+        assert ratio >= 4.5, f"the ask's links sit at {ratio:.2f}:1"
+
+    def test_the_ask_is_not_set_in_fine_print(self) -> None:
+        css = STYLE.read_text(encoding="utf-8")
+        ask = re.search(r"footer \.ask \{([^}]*)\}", css).group(1)
+        note = re.search(r"footer p \{([^}]*)\}", css).group(1)
+        ask_size = float(re.search(r"font-size:\s*([\d.]+)rem", ask).group(1))
+        note_size = float(re.search(r"font-size:\s*([\d.]+)rem", note).group(1))
+        assert ask_size > note_size, (
+            f"the ask ({ask_size}rem) is no larger than the footnote ({note_size}rem)"
+        )
 
 
 class TestItKeepsNoSecretsAndOpensNothing:
