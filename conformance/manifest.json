@@ -1,0 +1,70 @@
+{
+  "protocol": "lineageauth",
+  "version": "0.1",
+  "note": "Each vector states the verdict a conforming implementation must reach and the rule behind it. The negative vectors are the point: anyone can accept a valid event, and the value is in refusing the right things for the right reasons. A disagreement with this package is worth an issue -- it may well be this implementation that is wrong.",
+  "vectors": [
+    {
+      "name": "root-create-valid",
+      "file": "vectors/root-create-valid.json",
+      "expect": "must-verify",
+      "rule": "A genesis event signed by the root it names verifies."
+    },
+    {
+      "name": "delegation-grant-valid",
+      "file": "vectors/delegation-grant-valid.json",
+      "expect": "must-verify",
+      "rule": "A grant signed by the issuer it names verifies."
+    },
+    {
+      "name": "delegation-revoked",
+      "file": "vectors/delegation-revoked.json",
+      "expect": "must-verify",
+      "rule": "Every event here verifies. A conforming implementation must additionally resolve the grant as REVOKED -- integrity and authority are separate questions and a vector can require both.",
+      "authority": {
+        "agent": "did:key:z6MkqFRbThS1M62TP7pUYo8DGxizE5TD66mbf6vXh6kmyE6X",
+        "namespace": "technocore",
+        "resource": "room:lobby",
+        "action": "write",
+        "at": "2026-01-03T00:00:00Z",
+        "expect": "deny",
+        "reason": "REVOKED"
+      }
+    },
+    {
+      "name": "receipt-not-signed-by-its-worker",
+      "file": "vectors/receipt-not-signed-by-its-worker.json",
+      "expect": "must-verify",
+      "rule": "Three verdicts on one bundle, and they are not the same verdict. The envelopes VERIFY -- integrity is about signatures over payloads, and these are intact. The registration is ADMITTED with its createdBy reported as a claim nobody with that key signed (D-051). The receipt's authorship claim does NOT STAND at all: a receipt is the worker's own assertion, so one naming a worker who did not sign it must not borrow their name, and it is dropped with a warning rather than collected (D-052). An implementation that fails the envelope is wrong; one that credits the worker is wrong."
+    },
+    {
+      "name": "tampered-payload",
+      "file": "vectors/tampered-payload.json",
+      "expect": "must-refuse",
+      "rule": "One byte of the payload changed after signing. The signature covers the canonical payload, so this must fail integrity."
+    },
+    {
+      "name": "padded-base64url",
+      "file": "vectors/padded-base64url.json",
+      "expect": "must-refuse",
+      "rule": "A padded signature must be refused. base64url here is unpadded and canonical; accepting '=' would admit two encodings of one signature and break the one-event-one-id property."
+    },
+    {
+      "name": "unregistered-event-type",
+      "file": "vectors/unregistered-event-type.json",
+      "expect": "must-refuse",
+      "rule": "An unregistered type must not be given semantics. docs/24 fails closed here: an admitted event reads as a counted one."
+    },
+    {
+      "name": "wrong-multicodec-did",
+      "file": "vectors/wrong-multicodec-did.json",
+      "expect": "must-refuse",
+      "rule": "An X25519 did:key is syntactically a did:key and is not a signing key. Only the Ed25519 multicodec (0xed 0x01) is accepted."
+    },
+    {
+      "name": "no-proofs",
+      "file": "vectors/no-proofs.json",
+      "expect": "must-refuse",
+      "rule": "An envelope with no proof asserts nothing and must not be admitted."
+    }
+  ]
+}

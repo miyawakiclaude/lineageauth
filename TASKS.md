@@ -268,8 +268,11 @@ depend on the indexer or the Explorer.)*
 - [ ] backup/rebuild drill
 - [ ] dependency audit
 - [ ] fuzz
-- [ ] conformance package
-- [ ] version/migration docs
+- [x] conformance package — `conformance/`, generated and deterministic; each
+      vector states the rule behind its verdict, and a test proves this
+      implementation reaches it (D-069)
+- [x] version/migration docs — `MIGRATION.md`, and tests that fail if it
+      describes behaviour the code does not have
 - [ ] v1 release checklist
 
 ## Final gate

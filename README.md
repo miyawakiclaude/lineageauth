@@ -143,6 +143,8 @@ The most useful contribution right now is an **independent implementation that
 disagrees with this one**. If your verifier reaches a different verdict on the
 same event bundle, that is a finding worth an issue.
 
+Start from the [conformance vectors](conformance/README.md): every one states the rule behind its verdict, so a disagreement can be about the rule rather than about whose code it is.
+
 See [CONTRIBUTING.md](CONTRIBUTING.md). The short version: don't hand-roll
 crypto or canonical JSON, fail closed, never commit key material, and record
 protocol decisions in [docs/29_DECISIONS.md](docs/29_DECISIONS.md).

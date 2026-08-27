@@ -1,0 +1,14 @@
+[
+  {
+    "payload": {
+      "protocol": "lineageauth",
+      "version": "0.1",
+      "type": "root.create",
+      "lineage": "lineage:la:z6LSbysY2xFMRpGMhb7tFTLMpeuPRaqaWM1yECx2AtzE3KCc",
+      "issuedAt": "2026-01-01T00:00:00Z",
+      "root": "did:key:z6LSbysY2xFMRpGMhb7tFTLMpeuPRaqaWM1yECx2AtzE3KCc",
+      "epoch": 0
+    },
+    "proofs": []
+  }
+]

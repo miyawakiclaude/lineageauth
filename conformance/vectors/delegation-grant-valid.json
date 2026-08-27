@@ -1,0 +1,52 @@
+[
+  {
+    "payload": {
+      "protocol": "lineageauth",
+      "version": "0.1",
+      "type": "root.create",
+      "lineage": "lineage:la:z6Mkj3MFJwUVhEAMBQQ4oRsNJLrvtX3ZbKiLnnXuz8v9tfs2",
+      "issuedAt": "2026-01-01T00:00:00Z",
+      "root": "did:key:z6Mkj3MFJwUVhEAMBQQ4oRsNJLrvtX3ZbKiLnnXuz8v9tfs2",
+      "epoch": 0
+    },
+    "proofs": [
+      {
+        "alg": "Ed25519",
+        "signer": "did:key:z6Mkj3MFJwUVhEAMBQQ4oRsNJLrvtX3ZbKiLnnXuz8v9tfs2",
+        "sig": "CcqOABlyJrTCbsgivklEZMeCXJCxYhsiAX6EghfIb8E5xE2MSZd1W2S_bB4qWLw4LSIwAfw_iTzlJDBCHaJAAQ"
+      }
+    ]
+  },
+  {
+    "payload": {
+      "protocol": "lineageauth",
+      "version": "0.1",
+      "type": "delegation.grant",
+      "lineage": "lineage:la:z6Mkj3MFJwUVhEAMBQQ4oRsNJLrvtX3ZbKiLnnXuz8v9tfs2",
+      "issuedAt": "2026-01-01T00:00:00Z",
+      "issuer": "did:key:z6Mkj3MFJwUVhEAMBQQ4oRsNJLrvtX3ZbKiLnnXuz8v9tfs2",
+      "subject": "did:key:z6MkqFRbThS1M62TP7pUYo8DGxizE5TD66mbf6vXh6kmyE6X",
+      "epoch": 0,
+      "scopes": [
+        {
+          "namespace": "technocore",
+          "resource": "room:lobby",
+          "actions": [
+            "write"
+          ]
+        }
+      ],
+      "notBefore": "2025-12-31T00:00:00Z",
+      "expiresAt": "2027-01-01T00:00:00Z",
+      "maxDepth": 0,
+      "approval": "none"
+    },
+    "proofs": [
+      {
+        "alg": "Ed25519",
+        "signer": "did:key:z6Mkj3MFJwUVhEAMBQQ4oRsNJLrvtX3ZbKiLnnXuz8v9tfs2",
+        "sig": "BeYzLG6rggi76QV7eWbWvCf1_9V9chkIL92RR2gMm6dGLQNmsXSgEdm6FGYgJHXa_4ffZ4vcer8YnA7kNmnbDw"
+      }
+    ]
+  }
+]
