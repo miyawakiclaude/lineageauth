@@ -84,7 +84,9 @@ uv run pytest && uv run ruff check . && uv run mypy
 - [x] atomic reserve — primary-key insert, no read-then-write (D-044)
 - [x] TOCTOU recheck — `check_execution` re-resolves everything, then reserves
 - [x] tests — substitution, replay, races, and "approval is not authority"
-- [ ] `la approval draft` / `la execute` CLI surface
+- [x] `la approval draft` / `la execute` CLI surface — the draft prints every
+      field docs/17 requires before consent and is unsigned; `la execute`
+      defaults to `--dry-run`, because burning a receipt is a commit point
 
 ## P4 Resolver/Explorer
 - [x] immutable event store abstraction — `store.py`; content-addressed files,

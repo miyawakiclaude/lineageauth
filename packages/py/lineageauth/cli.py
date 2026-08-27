@@ -13,14 +13,16 @@ Safety rules this CLI follows:
 from __future__ import annotations
 
 import sys
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Annotated, Any
 
 import typer
 
 from lineageauth import __version__, catalog, jsonio
+from lineageauth.actions import ActionRequest
 from lineageauth.authority import AuthorityDecision, check_permission
+from lineageauth.builders import build_approval_receipt
 from lineageauth.bundle import EventBundle
 from lineageauth.envelope import Envelope
 from lineageauth.errors import LineageAuthError, ReasonCode
@@ -856,3 +858,200 @@ def passport(
 
     typer.echo("")
     typer.secho(f"  note: {projection.note}", fg=typer.colors.YELLOW)
+
+
+approval_app = typer.Typer(
+    name="approval",
+    help="Draft and inspect human approvals for one exact action.",
+    no_args_is_help=True,
+)
+app.add_typer(approval_app)
+
+
+def _action_from_options(
+    namespace: str, resource: str, action: str, destination: str, content_hash: str
+) -> ActionRequest:
+    return ActionRequest(
+        namespace=namespace,
+        resource=resource,
+        action=action,
+        destination=destination,
+        content_hash=content_hash,
+    )
+
+
+def _print_preview(request: ActionRequest, *, agent: str, approver: str, expires: str) -> None:
+    """What `docs/17` requires a human to see before consenting.
+
+    Every field on that list, in one place, in the order that matters: who is
+    acting, where the effect lands, what exactly is being done, the bytes it is
+    fixed to, and when the permission dies. An approval UI that shows less than
+    this is asking for consent to something the human cannot see.
+    """
+    typer.secho("  APPROVING ONE EXACT ACTION", bold=True)
+    typer.echo(f"    agent          {agent}")
+    typer.echo(f"    approver       {approver}")
+    typer.echo(f"    namespace      {request.namespace}")
+    typer.echo(f"    resource       {request.resource}")
+    typer.echo(f"    action         {request.action}")
+    typer.echo(f"    destination    {request.destination}")
+    typer.echo(f"    content hash   {request.content_hash}")
+    typer.echo(f"    request hash   {request.request_hash}")
+    typer.echo(f"    expires        {expires}")
+
+
+@approval_app.command("draft")
+def approval_draft(
+    lineage: Annotated[str, typer.Option("--lineage", help="Lineage identifier.")],
+    approver: Annotated[str, typer.Option("--approver", help="The approving did:key.")],
+    agent: Annotated[str, typer.Option("--agent", help="The acting agent's did:key.")],
+    namespace: Annotated[str, typer.Option("--namespace", help="Scope namespace.")],
+    resource: Annotated[str, typer.Option("--resource", help="Resource, e.g. 'room:lobby'.")],
+    action: Annotated[str, typer.Option("--action", help="Action, e.g. 'write'.")],
+    destination: Annotated[
+        str, typer.Option("--destination", help="The concrete place the effect lands.")
+    ],
+    content_hash: Annotated[
+        str, typer.Option("--content-hash", help="sha256:<64 hex> over the exact bytes.")
+    ],
+    expires_in: Annotated[
+        int, typer.Option("--expires-in", help="Seconds until the approval expires.")
+    ] = 300,
+    at: Annotated[str | None, typer.Option("--at", help="Issue time (RFC3339 UTC).")] = None,
+) -> None:
+    """Draft an unsigned approval receipt, and show what it commits to.
+
+    The draft is unsigned and this command holds no keys, so nothing here can
+    approve anything. It prints the preview a human must read first, then the
+    payload to sign wherever the approver's key actually lives.
+
+    The nonce is generated with `secrets.token_bytes`. That is the one piece of
+    randomness this tool does produce, because a nonce a caller could choose is
+    a nonce an attacker could replay.
+    """
+    import secrets
+
+    issued = parse_instant(at, field="at") if at else datetime.now(tz=UTC)
+    if expires_in <= 0:
+        typer.secho("  --expires-in must be positive", fg=typer.colors.RED, err=True)
+        raise typer.Exit(code=2)
+    expires = issued + timedelta(seconds=expires_in)
+
+    try:
+        request = _action_from_options(namespace, resource, action, destination, content_hash)
+        payload = build_approval_receipt(
+            lineage=lineage,
+            approver=approver,
+            agent=agent,
+            request=request,
+            nonce=secrets.token_bytes(32),
+            expires_at=expires,
+            issued_at=issued,
+        )
+    except LineageAuthError as exc:
+        typer.secho(f"  refused: {exc}", fg=typer.colors.RED, err=True)
+        raise typer.Exit(code=2) from exc
+
+    _print_preview(request, agent=agent, approver=approver, expires=format_instant(expires))
+    typer.echo("")
+    typer.echo(jsonio.dumps(payload, indent=2))
+    typer.echo("")
+    typer.secho(
+        "  This draft is UNSIGNED and grants nothing. Sign it where the approver's key lives.",
+        fg=typer.colors.YELLOW,
+    )
+
+
+@app.command("execute")
+def execute(
+    bundle: Annotated[str, typer.Argument(metavar="BUNDLE", help="Bundle of signed events.")],
+    lineage: Annotated[str, typer.Option("--lineage", help="Lineage identifier.")],
+    agent: Annotated[str, typer.Option("--agent", help="The acting agent's did:key.")],
+    namespace: Annotated[str, typer.Option("--namespace", help="Scope namespace.")],
+    resource: Annotated[str, typer.Option("--resource", help="Resource, e.g. 'room:lobby'.")],
+    action: Annotated[str, typer.Option("--action", help="Action, e.g. 'write'.")],
+    destination: Annotated[
+        str, typer.Option("--destination", help="The concrete place the effect lands.")
+    ],
+    content_hash: Annotated[
+        str, typer.Option("--content-hash", help="sha256:<64 hex> over the exact bytes.")
+    ],
+    spent_db: Annotated[
+        str | None,
+        typer.Option("--spent-db", help="SQLite file recording which receipts are spent."),
+    ] = None,
+    reserve: Annotated[
+        bool,
+        typer.Option(
+            "--reserve/--dry-run",
+            help="Consume the receipt, or preview the decision without consuming it.",
+        ),
+    ] = False,
+    internal: Annotated[
+        bool,
+        typer.Option("--internal", help="State that this action has no effect outside the agent."),
+    ] = False,
+    at: Annotated[str | None, typer.Option("--at", help="Evaluation time (RFC3339 UTC).")] = None,
+) -> None:
+    """Decide whether this exact action may be performed, right now.
+
+    This never performs anything. It is the check an executor runs immediately
+    before acting, and it answers only for the action described on the command
+    line -- change the destination or a byte of the content and the answer is
+    about a different action.
+
+    `--dry-run` is the default. Consuming a receipt is a commit point: once it
+    is reserved the approver would have to approve again, so a preview must not
+    be able to burn one by accident.
+    """
+    from lineageauth.approval import InMemorySpentStore, SqliteSpentStore, check_execution
+
+    moment = parse_instant(at, field="at") if at else datetime.now(tz=UTC)
+    try:
+        request = _action_from_options(namespace, resource, action, destination, content_hash)
+        events = _parse_envelopes(_read_source(bundle))
+    except LineageAuthError as exc:
+        typer.secho(f"  refused: {exc}", fg=typer.colors.RED, err=True)
+        raise typer.Exit(code=2) from exc
+
+    store = SqliteSpentStore(spent_db) if spent_db else InMemorySpentStore()
+    if reserve and spent_db is None:
+        typer.secho(
+            "  --reserve without --spent-db records the reservation in memory, so it "
+            "is forgotten when this process exits. That is not replay protection.",
+            fg=typer.colors.YELLOW,
+            err=True,
+        )
+    try:
+        decision = check_execution(
+            EventBundle.from_envelopes(events),
+            lineage=lineage,
+            agent=agent,
+            request=request,
+            at=moment,
+            store=store,
+            external=not internal,
+            reserve=reserve,
+        )
+    finally:
+        close = getattr(store, "close", None)
+        if callable(close):
+            close()
+
+    colour = typer.colors.GREEN if decision.may_execute else typer.colors.RED
+    typer.secho(f"  {'MAY EXECUTE' if decision.may_execute else 'REFUSED'}", fg=colour, bold=True)
+    typer.echo(f"    reason         {decision.reason}")
+    typer.echo(f"    detail         {decision.detail}")
+    typer.echo(f"    destination    {request.destination}")
+    typer.echo(f"    content hash   {request.content_hash}")
+    if decision.receipt_id:
+        typer.echo(f"    receipt        {decision.receipt_id}")
+        typer.echo(f"    approver       {decision.approver}")
+    typer.echo(f"    receipt spent  {decision.reserved}")
+    if not reserve:
+        typer.echo("    (dry run: nothing was consumed)")
+    for warning in decision.warnings:
+        typer.secho(f"    warning        {warning}", fg=typer.colors.YELLOW)
+    typer.echo("")
+    typer.echo(f"  note: {decision.note}")
+    raise typer.Exit(code=0 if decision.may_execute else 1)
