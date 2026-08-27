@@ -1,0 +1,52 @@
+{
+  "$defs": {
+    "Proof": {
+      "additionalProperties": false,
+      "description": "One signature over an event payload.",
+      "properties": {
+        "alg": {
+          "title": "Alg",
+          "type": "string"
+        },
+        "sig": {
+          "title": "Sig",
+          "type": "string"
+        },
+        "signer": {
+          "title": "Signer",
+          "type": "string"
+        }
+      },
+      "required": [
+        "alg",
+        "signer",
+        "sig"
+      ],
+      "title": "Proof",
+      "type": "object"
+    }
+  },
+  "$id": "https://github.com/miyawakiclaude/lineageauth/blob/main/schemas/envelope.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "A payload and the proofs over it. Proofs sit outside the payload so one payload can carry many signatures -- which is what makes a recovery quorum expressible. This schema describes shape only. A document that validates against it may still carry an invalid signature, a signer with no authority, an event id that does not match its payload, or a broken chain above it -- none of which a JSON Schema can express. Validation here is not verification; run a LineageAuth verifier.",
+  "properties": {
+    "payload": {
+      "additionalProperties": true,
+      "title": "Payload",
+      "type": "object"
+    },
+    "proofs": {
+      "items": {
+        "$ref": "#/$defs/Proof"
+      },
+      "title": "Proofs",
+      "type": "array"
+    }
+  },
+  "required": [
+    "payload"
+  ],
+  "title": "LineageAuth envelope",
+  "type": "object"
+}

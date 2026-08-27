@@ -1,0 +1,105 @@
+{
+  "$id": "https://github.com/miyawakiclaude/lineageauth/blob/main/schemas/catalog.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "Every registered event type, by family. An unregistered type is not assumed harmless: docs/24 fails closed on an unknown authority type and admits an unknown evidence type only as undisplayed raw data. This schema describes shape only. A document that validates against it may still carry an invalid signature, a signer with no authority, an event id that does not match its payload, or a broken chain above it -- none of which a JSON Schema can express. Validation here is not verification; run a LineageAuth verifier.",
+  "properties": {
+    "coreVersion": {
+      "const": "0.1"
+    },
+    "families": {
+      "properties": {
+        "authority": {
+          "items": {
+            "enum": [
+              "approval.receipt",
+              "delegation.grant",
+              "delegation.revoke",
+              "recovery.policy",
+              "root.create",
+              "root.succession"
+            ],
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "evidence": {
+          "items": {
+            "enum": [
+              "artifact.receipt",
+              "artifact.register",
+              "attestation.issue"
+            ],
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "fleet": {
+          "items": {
+            "enum": [
+              "fleet.bind",
+              "fleet.create",
+              "fleet.unbind"
+            ],
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "impact": {
+          "items": {
+            "enum": [
+              "artifact.improve",
+              "artifact.reuse",
+              "impact.attest"
+            ],
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "jury": {
+          "items": {
+            "enum": [
+              "dispute.open",
+              "jury.disclose",
+              "jury.vote"
+            ],
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "passport": {
+          "items": {
+            "enum": [
+              "availability.statement",
+              "profile.statement",
+              "skill.claim"
+            ],
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "work": {
+          "items": {
+            "enum": [
+              "claim.coordinate",
+              "task.cancel",
+              "task.claim",
+              "task.release",
+              "task.request",
+              "task.result",
+              "task.verify",
+              "work.receipt"
+            ],
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "protocol": {
+      "const": "lineageauth"
+    }
+  },
+  "title": "LineageAuth event catalog",
+  "type": "object"
+}

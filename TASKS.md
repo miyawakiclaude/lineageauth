@@ -32,7 +32,9 @@ uv run pytest && uv run ruff check . && uv run mypy
 - [x] CI — `.github/workflows/ci.yml`, free on public repos (verified 2026-08-26)
 - [x] secret-safe gitignore
 - [x] package boundaries
-- [ ] schema generation pipeline — JSON Schema emission from the event models
+- [x] schema generation pipeline — `scripts/generate_schemas.py`, deterministic,
+      one schema per registered type. Validated against real events with a real
+      validator, and every schema says validation is not verification (D-068)
 
 ## P1 Lineage
 - [x] JCS — RFC 8785 via the `rfc8785` library, never hand-rolled

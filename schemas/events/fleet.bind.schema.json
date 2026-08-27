@@ -1,0 +1,53 @@
+{
+  "$defs": {
+    "didKey": {
+      "description": "An Ed25519 did:key in canonical multibase base58btc. The pattern checks the alphabet, not the multicodec prefix or the key length -- a verifier checks those.",
+      "pattern": "^did:key:z[1-9A-HJ-NP-Za-km-z]+$",
+      "type": "string"
+    },
+    "eventId": {
+      "description": "A LineageAuth event id: sha256 over the signing preimage.",
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "instant": {
+      "description": "RFC3339 UTC, e.g. 2026-08-27T12:00:00Z. Self-asserted by the signer.",
+      "type": "string"
+    }
+  },
+  "$id": "https://github.com/miyawakiclaude/lineageauth/blob/main/schemas/events/fleet.bind.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "The common shape of a `fleet.bind` payload (fleet family). Type-specific fields are intentionally not constrained here: they are validated by the reader for that type, which can express rules a schema cannot -- that a receipt is signed by the worker it names, that a threshold is a strict majority of the seats. This schema describes shape only. A document that validates against it may still carry an invalid signature, a signer with no authority, an event id that does not match its payload, or a broken chain above it -- none of which a JSON Schema can express. Validation here is not verification; run a LineageAuth verifier.",
+  "properties": {
+    "issuedAt": {
+      "description": "RFC3339 UTC, e.g. 2026-08-27T12:00:00Z. Self-asserted by the signer.",
+      "type": "string"
+    },
+    "lineage": {
+      "pattern": "^lineage:la:z[1-9A-HJ-NP-Za-km-z]+$",
+      "type": "string"
+    },
+    "protocol": {
+      "const": "lineageauth"
+    },
+    "type": {
+      "const": "fleet.bind"
+    },
+    "version": {
+      "enum": [
+        "0.1"
+      ],
+      "type": "string"
+    }
+  },
+  "required": [
+    "protocol",
+    "version",
+    "type",
+    "lineage",
+    "issuedAt"
+  ],
+  "title": "fleet.bind",
+  "type": "object"
+}

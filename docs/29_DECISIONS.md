@@ -1171,6 +1171,40 @@ Git/GitHub writes require confirmation of active account + repository owner + re
     must catch.
 - **Migration:** Pre-1.0.
 
+## D-068: the schemas describe shape, and say so in their own description
+
+- **Date:** 2026-08-27
+- **Problem:** a JSON Schema is exactly the sort of artifact somebody wires into
+  a pipeline and then treats as approval. Shape is the least interesting
+  property of a signed event.
+- **Decision:** `scripts/generate_schemas.py` emits `schemas/envelope.schema.json`,
+  `schemas/catalog.schema.json` and one schema per registered event type, from
+  `catalog.py` and the envelope model rather than by hand. Deterministic, so a
+  diff there is a protocol change and never a formatting one.
+- **Every schema carries the disclaimer in its `description`:** a document may
+  validate and still carry an invalid signature, a signer with no authority, an
+  event id that does not match its payload, or a broken chain above it. A test
+  asserts the sentence is present in every file, and another proves it true --
+  a tampered grant validates against the envelope schema and the verifier
+  rejects it.
+- **The event schemas are open** (`additionalProperties: true`). `docs/24`
+  wants a verifier to reject an unknown *type* while still displaying unknown
+  *fields*; a closed schema would turn a forward-compatible event into a
+  validation failure.
+- **Type-specific fields are deliberately unconstrained.** The rules that
+  matter cannot be written in a schema -- that a receipt is signed by the worker
+  it names, that a jury threshold is a strict majority of the seats -- so they
+  stay in the readers that can express them, rather than being half-expressed
+  in two places that could disagree.
+- **The `did:key` pattern checks the alphabet, not the key type**, and says so.
+  A test pins it with an X25519 `did:key` that matches the regex and that
+  `public_key_from_did_key` refuses.
+- **Validated with `jsonschema`, a test-only dependency.** Hand-rolling a
+  validator would repeat the mistake JCS is delegated to a library to avoid: a
+  checker that disagrees with the specification is worse than none, because it
+  looks like one.
+- **Migration:** Pre-1.0.
+
 ### Pending decision template
 
 - ID:
