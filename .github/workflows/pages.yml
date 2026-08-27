@@ -58,9 +58,24 @@ jobs:
           echo "no key material in the build output"
 
       - name: Configure Pages
+        id: configure
+        # `enablement: true` asks the workflow token to create the Pages site.
+        # That token cannot always do it -- on a repository where Pages has
+        # never been turned on, it comes back "Resource not accessible by
+        # integration", which says nothing about what to do next.
+        continue-on-error: true
         uses: actions/configure-pages@v5
         with:
           enablement: true
+
+      - name: Say what to do about it
+        if: steps.configure.outcome == 'failure'
+        # An annotation rather than a log line: annotations are readable on the
+        # job page without signing in, and the person who has to click the
+        # setting is not necessarily the person reading logs.
+        run: |
+          echo "::error::GitHub Pages is not enabled for this repository, and this workflow's token is not allowed to enable it. Turn it on once by hand: Settings -> Pages -> Build and deployment -> Source: GitHub Actions. Then re-run this workflow. Nothing else about the build needs to change."
+          exit 1
 
       - uses: actions/upload-pages-artifact@v3
         with:

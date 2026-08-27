@@ -197,6 +197,19 @@ The same build runs in `.github/workflows/pages.yml` on every push to `main`,
 after the gate passes. A site that went up while the tests were red would be
 publishing claims the repository does not stand behind.
 
+### Enabling Pages, once
+
+The workflow asks GitHub to create the Pages site itself. That request is often
+refused — `Resource not accessible by integration` — because the workflow token
+is not allowed to turn Pages on for a repository where it has never been on.
+
+It is one click, once, by a repository admin:
+
+> **Settings → Pages → Build and deployment → Source: _GitHub Actions_**
+
+Then re-run the workflow. Nothing about the build changes; the workflow already
+says this on the job page if it happens again.
+
 ## What costs money
 
 Nothing above. The register in
