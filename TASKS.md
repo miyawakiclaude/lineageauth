@@ -236,12 +236,15 @@ depend on the indexer or the Explorer.)*
 - [ ] impact UI
 
 ## P15 Production
-- [ ] zero-cost deployment architecture
-- [ ] `docs/31_ZERO_COST_OPERATIONS.md`
-- [ ] `infra/cost-policy.yaml`
-- [ ] free-limit stop/degrade behavior
-- [ ] verify no automatic paid upgrades
-- [ ] local full-stack ¥0 runbook
+- [x] zero-cost deployment architecture — static first; compute only when a
+      third party must verify without cloning (D-065)
+- [x] `docs/31_ZERO_COST_OPERATIONS.md` — its definition of done is now
+      executed by `tests/test_zero_cost.py`
+- [x] `infra/cost-policy.yaml` — free tiers checked 2026-08-27, with dates
+- [x] free-limit stop/degrade behavior — asserted by test; nothing paid is on
+      the path to degrade from
+- [x] verify no automatic paid upgrades — the paid-service detector runs in CI
+- [x] local full-stack ¥0 runbook — `RUNBOOK.md`, every command run first
 - [x] multi-source resolver — union merge, so no mirror can suppress a
       revocation (D-064)
 - [x] freshness policy — `checkedAt`/`newestEventSeen`/`freshnessAge`, and

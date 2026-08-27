@@ -30,7 +30,7 @@ from lineageauth.verify import EventVerification, verify_event_json
 
 app = typer.Typer(
     name="la",
-    help="LineageAuth (LAP) — verify agent authority and evidence offline.",
+    help="LineageAuth (LAP) -- verify agent authority and evidence offline.",
     no_args_is_help=True,
     add_completion=False,
 )

@@ -1066,6 +1066,39 @@ Git/GitHub writes require confirmation of active account + repository owner + re
   under their own policy, outside this module.
 - **Migration:** Pre-1.0.
 
+## D-065: the zero-cost claim is executed, not asserted
+
+- **Date:** 2026-08-27
+- **Problem:** `docs/31` ends with a "zero-cost definition of done" -- a list of
+  things that must work with no paid service. A list like that stops being true
+  the moment it stops being run, and nobody notices, because a checklist in a
+  document cannot fail.
+- **Decision:** `tests/test_zero_cost.py` executes the list. Every item is
+  either exercised or named in `NOT_YET_BUILT`, and the unbuilt list is checked
+  **against the repository in both directions**: the Explorer test fails if an
+  Explorer appears, which forces the list to be corrected rather than letting it
+  understate what works.
+- **Two invariants underneath it:**
+  - *The protocol core imports no networking module.* Enforced by walking the
+    package's ASTs, with the Technocore adapter as the single, deliberate
+    exemption (it is opt-in and read-only, D-047). Verified with a negative
+    control, so the scanner is known to detect what it is looking for rather
+    than merely passing.
+  - *Nothing on the zero-cost path depends on a paid service.* `docs/31`'s
+    detector runs over the declared dependencies, where a marker would mean an
+    actual dependency rather than prose about avoiding one.
+- **Found by running it:** `la --help` crashed on a Japanese Windows console.
+  One em dash in the help text raised `UnicodeEncodeError` under `cp932` and
+  took the whole command down. A CLI that cannot print its own help on the
+  machine somebody is holding is broken there, whatever it does elsewhere --
+  and the zero-cost claim is specifically a claim about running locally, on
+  whatever that machine is. Fixed, and pinned by a test that runs the CLI under
+  `PYTHONIOENCODING=cp932`, `ascii` and `utf-8`.
+- **`RUNBOOK.md`** carries the local zero-yen path. Every command in it was run
+  before it was written, including the negative controls: the tampered example
+  must fail and the revoked delegation must be denied.
+- **Migration:** Pre-1.0.
+
 ### Pending decision template
 
 - ID:

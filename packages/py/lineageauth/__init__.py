@@ -1,4 +1,4 @@
-"""LineageAuth — Lineage Authority Protocol (LAP) reference implementation.
+"""LineageAuth -- Lineage Authority Protocol (LAP) reference implementation.
 
 Core verification is offline by design: no network, no database, no private keys.
 See CLAUDE.md section 5 ("Separation") for the trust boundary this package enforces.

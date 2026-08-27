@@ -98,6 +98,8 @@ infra/             cost policy (budget invariant: ¥0)
 
 Start with [START_HERE.md](START_HERE.md).
 
+Running it locally, end to end, for zero yen: [RUNBOOK.md](RUNBOOK.md).
+
 ## Implementation status
 
 Phase 1 (lineage) is in progress. Nothing here is production-ready; do not put
@@ -129,6 +131,8 @@ real authority behind it yet.
       marked required, and never fetches the resolver it reads
 - [x] Technocore adapter — GET-write classification, single-line sweep,
       dry-run write preparation. It cannot publish.
+- [x] Zero-cost conformance — the "works with no paid service" list is
+      executed, and names what is not built rather than passing quietly
 - [ ] Everything after that — see [MASTER_PLAN.md](MASTER_PLAN.md)
 
 ## Contributing

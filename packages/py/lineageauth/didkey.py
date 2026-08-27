@@ -8,7 +8,7 @@ Layout:
 
     did:key:z<base58btc( 0xed 0x01 || raw_ed25519_public_key_32_bytes )>
 
-CLAUDE.md 2.6 — a valid did:key proves control of the matching private key.
+CLAUDE.md 2.6 -- a valid did:key proves control of the matching private key.
 It proves nothing about legal identity, affiliation, honesty, or safety.
 """
 
