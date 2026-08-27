@@ -128,8 +128,10 @@ depend on the indexer or the Explorer.)*
       verify_approval
 - [x] draft tools — build_delegation, build_approval; both return unsigned
       drafts, and no tool can sign
-- [ ] latest A2A mapping
-- [ ] namespaced extension
+- [x] latest A2A mapping — spec re-read 2026-08-27; skills map onto
+      `a2a` / `skill:<id>` through the scope grammar (D-063)
+- [x] namespaced extension — `capabilities.extensions`, data-only, and
+      `required` is hard-coded false with no way to ask for true
 - [x] native auth coexistence tests — every permission answer states that the
       target system's own authorization still applies
 

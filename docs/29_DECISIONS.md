@@ -979,6 +979,50 @@ Git/GitHub writes require confirmation of active account + repository owner + re
   every response.
 - **Migration:** Pre-1.0.
 
+## D-063: the A2A extension is data-only, and can never be marked required
+
+- **Date:** 2026-08-27
+- **Upstream checked 2026-08-27** against the A2A specification (latest released
+  1.0.x; the extension mechanism arrived in 1.0.1, May 2026):
+  - extensions are declared at `AgentCard.capabilities.extensions`
+  - an `AgentExtension` is `{uri, description, required, params}`
+  - clients activate one through the `A2A-Extensions` request header, a
+    comma-separated list of URIs, echoed back by the agent
+  - `required: true` means the agent should reject a client that did not
+    activate the extension, and upstream says data-only extensions should not
+    be marked required
+- **Problem:** `docs/20` opens with "LineageAuth must not replace/bypass server
+  authorization", and an extension mechanism is exactly the place that rule
+  gets broken by accident.
+- **Decision:** `build_extension` hard-codes `required: false` and takes no
+  parameter that could change it. This extension carries provenance and nothing
+  else; an agent that rejected clients for failing to activate it would be
+  gating access on provenance, which is the first thing `docs/20` forbids.
+  A card that arrives marked `required: true` is **reported, not normalised** --
+  what the card says is a fact about the card, and the warning explains why it
+  is wrong.
+- **Every provenance answer carries the five-step order** from `docs/20`
+  (A2A authentication, A2A server authorization, this check, human approval,
+  execute). A provenance result without it looks exactly like an authorization
+  decision, and a caller who mistakes it for one has replaced their own server's
+  check with a stranger's card.
+- **A card is a stranger's document.** The DID must decode or the whole block is
+  refused rather than half-read; evidence references that are not event ids are
+  dropped and reported; and the `resolver` URL is carried as data and **never
+  fetched** -- `docs/18` and `docs/20` agree that a URL in a document is data,
+  never an instruction. Two blocks under one URI is a refusal, because choosing
+  between them would be this library picking an identity for the reader.
+- **Skill ids come off a published card**, so `a2a_resource_for` runs them
+  through the scope grammar and refuses separators, dot segments and wildcards.
+  A wildcard is legitimate in a *scope*; in the resource for one concrete
+  invocation it would ask a far broader question than the caller intended
+  (the same rule as `mcp_resource_for`, D-050).
+- **The extension URI is a repository URL, not a domain.** The project runs on a
+  ¥0 budget and a domain is a spend decision. The URI points at the document
+  that defines the extension and resolves today; if this is ever standardised
+  upstream the URI changes, and that is a breaking change on purpose.
+- **Migration:** Pre-1.0.
+
 ### Pending decision template
 
 - ID:

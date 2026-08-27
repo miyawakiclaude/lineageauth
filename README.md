@@ -123,6 +123,8 @@ real authority behind it yet.
 - [x] Disputes — a stated procedure, a derived outcome, and an undecided
       case when the jury splits
 - [x] MCP adapter — tools for verification, authority, and unsigned drafts
+- [x] A2A adapter — a data-only agent-card extension that can never be
+      marked required, and never fetches the resolver it reads
 - [x] Technocore adapter — GET-write classification, single-line sweep,
       dry-run write preparation. It cannot publish.
 - [ ] Everything after that — see [MASTER_PLAN.md](MASTER_PLAN.md)
