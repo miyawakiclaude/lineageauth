@@ -20,8 +20,10 @@ uv run pytest && uv run ruff check . && uv run mypy
 - [x] add repository-local Git identity guidance without inventing email
       — see START_HERE.md; `user.email` deliberately left unset, so the first
         commit is blocked until the human supplies a personal address
-- [ ] add pre-push personal-account safety check
-      — deferred until a remote exists; must check account, owner, remote, branch
+- [x] add pre-push personal-account safety check — `scripts/pre_push_check.py`,
+      installed via a tracked `.githooks/` and a repo-local `core.hooksPath`.
+      Refuses a non-personal remote, company identity or paths, and key
+      material. `--no-verify` bypasses it on purpose (D-071)
 - [x] add company contamination/release scan
       — `tests/test_final_gate.py`; runs on every test run, separates the
         company's identity from a path into its tree, and carries a control
@@ -94,7 +96,8 @@ uv run pytest && uv run ruff check . && uv run mypy
 - [x] immutable event store abstraction — `store.py`; content-addressed files,
       atomic writes, proofs unioned across copies of one id (D-036)
 - [x] SQLite index — `index.py`; derived, never authority
-- [ ] Postgres schema — documentation-only scale target, not provisioned
+- [x] Postgres schema — `infra/scale-design.md`, documentation only. Stays
+      derived; JSONB must never be the source for a signature check
 - [x] rebuild — `EventIndex.rebuild` + `checksum()` for the docs/25 drill
 - [x] REST verify — `POST /v1/verify/event`, `POST /v1/check-permission`;
       both compute an answer and store nothing
@@ -262,8 +265,9 @@ depend on the indexer or the Explorer.)*
 - [x] conflict monitoring — every answering source that omitted an admitted
       event is named; missing revocations and successions sort first
 - [ ] deployment
-- [ ] optional PostgreSQL scale design (do not provision if paid)
-- [ ] optional object storage design (do not provision if paid)
+- [x] optional PostgreSQL scale design — designed, not provisioned
+- [x] optional object storage design — designed, not provisioned; hash-only
+      receipts mean bytes usually need no host at all
 - [x] observability — `la doctor`: does the index still agree with the store?
       Local, offline, non-zero exit, `--json`. No agent and no endpoint (D-070)
 - [x] backup/rebuild drill — `scripts/rebuild_drill.py`; deletes the index
@@ -279,7 +283,8 @@ depend on the indexer or the Explorer.)*
       implementation reaches it (D-069)
 - [x] version/migration docs — `MIGRATION.md`, and tests that fail if it
       describes behaviour the code does not have
-- [ ] v1 release checklist
+- [x] v1 release checklist — `RELEASE.md`, which says plainly that v1 is not
+      close and what would have to become true first
 
 ## Final gate
 

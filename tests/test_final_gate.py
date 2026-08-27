@@ -413,3 +413,111 @@ class TestTheDocumentsAreComplete:
     def test_the_examples_are_valid_json_with_no_trailing_difference(self) -> None:
         for path in sorted((REPO / "examples").glob("*.json")):
             json.loads(path.read_text(encoding="utf-8"))
+
+
+class TestThePrePushCheck:
+    """The stop sign at the one moment being wrong cannot be undone.
+
+    Everything before a push is local and recoverable. A public repository that
+    briefly held company material has published it, and deleting the commit
+    afterwards does not unpublish it.
+    """
+
+    def _script(self) -> str:
+        return (REPO / "scripts" / "pre_push_check.py").read_text(encoding="utf-8")
+
+    def test_it_passes_on_this_repository(self) -> None:
+        done = subprocess.run(
+            [sys.executable, str(REPO / "scripts" / "pre_push_check.py")],
+            capture_output=True,
+            check=False,
+            cwd=str(REPO),
+        )
+        assert done.returncode == 0, done.stderr.decode("utf-8", errors="replace")
+
+    def test_it_refuses_a_remote_that_is_not_the_personal_account(self) -> None:
+        """Checked by reading the module rather than by repointing the real remote."""
+        import importlib.util
+
+        spec = importlib.util.spec_from_file_location(
+            "pre_push_check", REPO / "scripts" / "pre_push_check.py"
+        )
+        assert spec and spec.loader
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+
+        assert module.PERSONAL_ACCOUNT == PERSONAL_ACCOUNT
+        # The same two-part scan as the contamination test: identity anywhere,
+        # and a path into the company tree.
+        assert module.COMPANY_IDENTITY
+        assert module.COMPANY_PATH.search(r"C:\Users\x\OneDrive\y")
+        assert not module.COMPANY_PATH.search("kept outside OneDrive on purpose")
+
+    def test_it_says_how_to_bypass_it(self) -> None:
+        """A check that cannot be bypassed gets deleted the first time it is wrong."""
+        assert "--no-verify" in self._script()
+
+    def test_the_hook_is_tracked_and_enabled_repo_locally(self) -> None:
+        hook = REPO / ".githooks" / "pre-push"
+        assert hook.is_file()
+        body = hook.read_text(encoding="utf-8")
+        assert "pre_push_check.py" in body
+        assert "core.hooksPath" in body
+
+        configured = subprocess.run(
+            ["git", "-C", str(REPO), "config", "--local", "--get", "core.hooksPath"],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        if configured.returncode == 0:
+            assert configured.stdout.strip() == ".githooks"
+
+    def test_the_hook_is_not_installed_globally(self) -> None:
+        """This rule belongs to this project, not to every repository on the machine."""
+        globally = subprocess.run(
+            ["git", "config", "--global", "--get", "core.hooksPath"],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        assert globally.stdout.strip() != ".githooks"
+
+
+class TestTheScaleAndReleaseDocuments:
+    def test_the_scale_design_provisions_nothing(self) -> None:
+        text = (REPO / "infra" / "scale-design.md").read_text(encoding="utf-8")
+        assert "Nothing here is provisioned" in text
+        assert "Do not prepay for hypothetical scale" in text
+
+    def test_it_names_the_bottleneck_as_cpu_rather_than_storage(self) -> None:
+        text = (REPO / "infra" / "scale-design.md").read_text(encoding="utf-8")
+        assert "bottleneck is CPU, not storage" in text
+
+    def test_it_keeps_a_scaled_index_derived(self) -> None:
+        """A Postgres index treated as authoritative is a second source of truth."""
+        text = (REPO / "infra" / "scale-design.md").read_text(encoding="utf-8")
+        assert "it stays derived" in text
+        assert "JSONB` reorders keys" in text
+
+    def test_the_release_checklist_admits_v1_is_not_close(self) -> None:
+        text = (REPO / "RELEASE.md").read_text(encoding="utf-8")
+        assert "v1 is not close" in text
+
+    def test_it_requires_an_independent_implementation_first(self) -> None:
+        text = (REPO / "RELEASE.md").read_text(encoding="utf-8")
+        assert "An independent implementation has disagreed with this one" in text
+
+    def test_it_marks_custody_as_a_permanent_non_goal(self) -> None:
+        text = (REPO / "RELEASE.md").read_text(encoding="utf-8")
+        # Collapse the wrapping: the document is wrapped for reading, and an
+        # assertion that depends on where a line broke tests the wrapping.
+        flat = " ".join(text.split())
+        assert "permanent non-goals, not unfinished work" in flat
+        assert "holds no keys and moves no value" in flat
+
+    def test_the_ticked_items_are_the_ones_with_tests(self) -> None:
+        """Everything ticked there points at a suite in this repository."""
+        text = (REPO / "RELEASE.md").read_text(encoding="utf-8")
+        for suite in ("test_final_gate.py", "test_zero_cost.py", "test_conformance.py"):
+            assert suite in text

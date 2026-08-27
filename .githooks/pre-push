@@ -1,0 +1,14 @@
+#!/bin/sh
+# Refuse a push that would send this project somewhere it does not belong.
+#
+# Tracked in the repository and enabled with a repository-local setting:
+#
+#     git config --local core.hooksPath .githooks
+#
+# Both halves are deliberate. A hook that lives only in .git/hooks is invisible
+# in review and gone on a fresh clone; a global setting would reach every other
+# repository on the machine, and this rule belongs to this project alone.
+#
+# `git push --no-verify` skips it. That is on purpose: a check that cannot be
+# bypassed gets deleted the first time it is wrong.
+exec py -3 -m uv run python scripts/pre_push_check.py

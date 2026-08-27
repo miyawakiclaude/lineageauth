@@ -1276,6 +1276,43 @@ Git/GitHub writes require confirmation of active account + repository owner + re
   hide the depth limit instead of documenting it.
 - **Migration:** Pre-1.0.
 
+## D-071: the stop sign goes where being wrong cannot be undone
+
+- **Date:** 2026-08-27
+- **Problem:** `CLAUDE.md` 2.8 keeps this project off every company resource.
+  Everything before a push is local and recoverable. A push is not: a public
+  repository that briefly held company material has published it, and deleting
+  the commit afterwards does not unpublish it.
+- **Decision:** `scripts/pre_push_check.py`, wired as a `pre-push` hook. It
+  checks the remote is the personal account, the committer address is not a
+  company address, and the tree carries no company identity, no path into the
+  company tree, and no key material.
+- **Tracked in `.githooks/` and enabled with a repo-local `core.hooksPath`.**
+  Both halves matter: a hook living only in `.git/hooks` is invisible in review
+  and gone on a fresh clone, and a global setting would reach every other
+  repository on this machine when the rule belongs to this project alone.
+- **`git push --no-verify` bypasses it, and the script says so.** A check that
+  cannot be bypassed gets deleted the first time it is wrong; one that says out
+  loud how to bypass it gets read instead.
+- **Proved by making it fail.** A probe file containing a company path was
+  staged, the check refused, and the probe was removed -- the same lesson as
+  D-067: a scanner that never fires is indistinguishable from a clean tree.
+- **`git` is resolved with `shutil.which` rather than left to PATH.** This runs
+  as a hook in whatever environment the push had, and a check redirectable by a
+  PATH entry is not much of a check. The linter flagged it and the linter was
+  right.
+- **Scale targets are designed, not provisioned** (`infra/scale-design.md`).
+  `docs/31` says growth is a success signal and forbids prepaying for
+  hypothetical scale, so the document is the shape of the answer for when there
+  are real numbers. Two things in it are load-bearing: a scaled index **stays
+  derived** or the restore drill stops meaning anything, and **`JSONB` reorders
+  keys**, so it must never be the source for a signature check.
+- **`RELEASE.md` says v1 is not close.** The item that cannot be done from
+  inside this repository is first on the list: an independent implementation
+  that has actually run the conformance vectors. Until then, "the specification
+  is implementable" is an opinion held by whoever wrote both sides.
+- **Migration:** Pre-1.0.
+
 ### Pending decision template
 
 - ID:
