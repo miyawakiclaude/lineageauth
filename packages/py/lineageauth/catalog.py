@@ -41,6 +41,8 @@ WORK_EVENT_TYPES: frozenset[str] = frozenset(
         "task.release",
         "task.result",
         "task.verify",
+        "task.cancel",
+        "claim.coordinate",
         "work.receipt",
     }
 )

@@ -46,6 +46,7 @@ TASK_CLAIM = "task.claim"
 TASK_RELEASE = "task.release"
 TASK_RESULT = "task.result"
 TASK_VERIFY = "task.verify"
+TASK_CANCEL = "task.cancel"
 
 ACCEPTED = "accepted"
 REJECTED = "rejected"
@@ -63,6 +64,7 @@ class TaskStatus(StrEnum):
 
     OPEN = "OPEN"
     CLAIMED = "CLAIMED"
+    CANCELLED = "CANCELLED"
     SUBMITTED = "SUBMITTED"
     VERIFIED_ACCEPTED = "VERIFIED_ACCEPTED"
     VERIFIED_REJECTED = "VERIFIED_REJECTED"
@@ -95,6 +97,14 @@ class Task:
     deadline: datetime | None
     reward_reference: str | None
     issued_at: datetime
+    cancellable: bool = True
+    coordinator: str | None = None
+    """The DID whose `claim.coordinate` settles which claim wins (docs/11).
+
+    Optional, and named by the requester in advance. Without one, competing
+    claims on a single-claimant task are reported as competing and nothing here
+    picks a winner -- `docs/11` asks the protocol to expose its coordinator
+    dependency honestly rather than to invent an ordering."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -172,6 +182,18 @@ def read_task(event: AdmittedEvent) -> Task | str:
     if reward is not None and not isinstance(reward, str):
         return "rewardReference must be an opaque string when present"
 
+    cancellable = event.get("cancellable")
+    if cancellable is None:
+        cancellable = True
+    if not isinstance(cancellable, bool):
+        return "cancellable must be a boolean when present"
+
+    coordinator = event.get("coordinator")
+    if coordinator is not None:
+        coordinator = _as_did(coordinator)
+        if coordinator is None:
+            return "coordinator must be a usable Ed25519 did:key when present"
+
     return Task(
         event_id=event.event_id,
         requester=requester,
@@ -181,6 +203,8 @@ def read_task(event: AdmittedEvent) -> Task | str:
         deadline=deadline,
         reward_reference=reward,
         issued_at=event.issued_at,
+        cancellable=cancellable,
+        coordinator=coordinator,
     )
 
 
@@ -311,6 +335,14 @@ class TaskState:
     released_claims: tuple[str, ...] = ()
     results: tuple[Result, ...] = ()
     verifications: tuple[Verification, ...] = ()
+    cancelled_by: str | None = None
+    """The `task.cancel` event that took effect, if one did.
+
+    A cancellation is admitted only while nothing is protected: no live claim
+    and no submitted result. That is checked against the bundle at the
+    evaluation time rather than against timestamps, because a requester who
+    could cancel by backdating would be able to erase work already done."""
+
     warnings: tuple[str, ...] = field(default_factory=tuple)
 
     @property
@@ -485,7 +517,44 @@ def resolve_task(bundle: EventBundle, *, lineage: str, task_id: str, at: datetim
             continue
         verifications.append(parsed_verification)
 
-    status, detail = _derive_status(request, claims, released, results, verifications, at=at)
+    live_claims = [c for c in claims if c.event_id not in set(released) and at < c.expires_at]
+    cancelled_by: str | None = None
+    for event in bundle.of_type(TASK_CANCEL, lineage=lineage):
+        if event.get("task") != task_id:
+            continue
+        requester = _as_did(event.get("requester"))
+        if requester is None or not event.signed_by(requester):
+            warnings.append(f"task.cancel {event.event_id} ignored: malformed or unsigned")
+            continue
+        if requester != request.requester:
+            warnings.append(
+                f"task.cancel {event.event_id} ignored: signed by {requester}, but this "
+                f"task was requested by {request.requester}"
+            )
+            continue
+        if not request.cancellable:
+            # The requester bound themselves when they published the task. A
+            # commitment that can be withdrawn is not one.
+            warnings.append(
+                f"task.cancel {event.event_id} ignored: this task was published as "
+                "not cancellable"
+            )
+            continue
+        if live_claims or results:
+            # docs/11: cancel only while no protected state exists. Checked
+            # against the bundle rather than issuedAt, or a backdated cancel
+            # could erase work somebody had already done.
+            warnings.append(
+                f"task.cancel {event.event_id} ignored: {len(live_claims)} live claim(s) "
+                f"and {len(results)} result(s) exist, and cancelling would take back a "
+                "task somebody is already holding"
+            )
+            continue
+        cancelled_by = event.event_id
+
+    status, detail = _derive_status(
+        request, claims, released, results, verifications, cancelled=cancelled_by, at=at
+    )
     if len(claims) > request.allowed_claims:
         warnings.append(
             f"{len(claims)} claims exist but the task allows {request.allowed_claims}; "
@@ -501,6 +570,7 @@ def resolve_task(bundle: EventBundle, *, lineage: str, task_id: str, at: datetim
         released_claims=tuple(sorted(set(released))),
         results=tuple(sorted(results, key=lambda r: r.event_id)),
         verifications=tuple(sorted(verifications, key=lambda v: v.event_id)),
+        cancelled_by=cancelled_by,
         warnings=tuple(warnings),
     )
 
@@ -512,15 +582,17 @@ def _derive_status(
     results: list[Result],
     verifications: list[Verification],
     *,
+    cancelled: str | None,
     at: datetime,
 ) -> tuple[TaskStatus, str]:
     accepted = [v for v in verifications if v.accepted]
     rejected = [v for v in verifications if not v.accepted]
 
     if accepted and rejected:
-        # Both verdicts exist and this protocol does not adjudicate. Reporting
-        # either one alone would be picking a side; docs/12 is where disputes
-        # get resolved, and it is not built.
+        # Both verdicts exist and this layer does not adjudicate. Reporting
+        # either one alone would be picking a side. `lineageauth.jury` resolves
+        # disputes, and deliberately reports its outcome beside this status
+        # rather than replacing it (D-061).
         return (
             TaskStatus.CONTESTED,
             f"{len(accepted)} verifier(s) accepted and {len(rejected)} rejected; "
@@ -538,6 +610,9 @@ def _derive_status(
         )
     if results:
         return (TaskStatus.SUBMITTED, f"{len(results)} result(s) submitted, none verified yet")
+
+    if cancelled is not None:
+        return (TaskStatus.CANCELLED, "the requester withdrew the task while nothing was claimed")
 
     live = [c for c in claims if c.event_id not in released and at < c.expires_at]
     if live:

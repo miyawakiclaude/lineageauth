@@ -182,12 +182,18 @@ depend on the indexer or the Explorer.)*
 - [ ] search UI
 
 ## P11 Task Exchange
-- [ ] task registry
-- [ ] claim coordinator
-- [ ] task states
-- [ ] moderation
-- [ ] API/UI
-- [ ] independent-agent test
+- [x] task registry — `browse`, filtered by status, requester, claimability
+- [x] claim coordinator — competing claims all listed and none awarded unless
+      the coordinator named in the task settles it (D-062)
+- [x] task states — `CANCELLED` added; `DISPUTED` layered as a listing view
+      that never overwrites the task's own status
+- [x] cancellation — checked against the bundle, not against timestamps, so a
+      backdated cancel cannot erase submitted work
+- [x] moderation — reader-supplied blocklists that hide, count, and delete
+      nothing
+- [x] `GET /v1/exchange`
+- [ ] UI
+- [x] independent-agent test — three unrelated keys through the whole loop
 
 ## P12 Jury
 - [x] `dispute.open` — carries its own policy, so the quorum cannot be chosen

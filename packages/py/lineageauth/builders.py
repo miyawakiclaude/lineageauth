@@ -544,6 +544,8 @@ def build_task_request(
     deadline: datetime | None = None,
     reward_reference: str | None = None,
     required_authority: list[dict[str, Any]] | None = None,
+    cancellable: bool = True,
+    coordinator: str | None = None,
     issued_at: datetime,
 ) -> dict[str, Any]:
     """Draft a `task.request` (D-055).
@@ -552,6 +554,12 @@ def build_task_request(
     escrows nothing, pays nothing, and validates no token value -- whatever a
     reward reference points at is somebody else's system, and treating it as a
     promise here would be the protocol claiming something it cannot deliver.
+
+    `cancellable=False` binds the requester: a task published that way can never
+    be withdrawn, which is worth something to whoever is deciding whether to
+    start work. `coordinator` names in advance the one key whose
+    `claim.coordinate` settles competing claims -- naming it afterwards would
+    let the requester pick whoever awards the claim they prefer.
     """
     public_key_from_did_key(requester)
     _check_display_text("title", title, MAX_TITLE)
@@ -575,6 +583,11 @@ def build_task_request(
         "acceptanceCriteria": list(acceptance_criteria),
         "allowedClaims": allowed_claims,
     }
+    if not cancellable:
+        payload["cancellable"] = False
+    if coordinator is not None:
+        public_key_from_did_key(coordinator)
+        payload["coordinator"] = coordinator
     if deadline is not None:
         payload["deadline"] = format_instant(deadline)
     if reward_reference is not None:
@@ -707,6 +720,56 @@ def build_task_verify(
     if evidence_refs:
         payload["evidenceRefs"] = sorted(set(evidence_refs))
     return payload
+
+
+
+TASK_CANCEL = "task.cancel"
+CLAIM_COORDINATE = "claim.coordinate"
+
+
+def build_task_cancel(
+    *, lineage: str, task: str, requester: str, reason: str, issued_at: datetime
+) -> dict[str, Any]:
+    """Draft a `task.cancel`: the requester withdrawing a task.
+
+    Drafting one is always allowed; whether it *takes effect* is decided by
+    `resolve_task` against the bundle, not here. `docs/11` permits cancellation
+    only while no protected state exists, and a resolver that checked timestamps
+    instead would let a requester backdate a cancellation over work already
+    done.
+    """
+    if not is_event_id(task):
+        raise MalformedEventError("task must be the event id of a task.request")
+    public_key_from_did_key(requester)
+    _check_display_text("reason", reason, MAX_SUMMARY)
+    return _common(TASK_CANCEL, lineage, issued_at) | {
+        "task": task,
+        "requester": requester,
+        "reason": reason,
+    }
+
+
+def build_claim_coordinate(
+    *, lineage: str, task: str, coordinator: str, claim: str, issued_at: datetime
+) -> dict[str, Any]:
+    """Draft a `claim.coordinate`: the named coordinator awarding one claim.
+
+    `docs/11` allows a coordinator receipt to settle which claim wins on a
+    single-claimant task, and asks that the dependency be exposed honestly. So
+    the coordinator is named by the requester inside `task.request` before any
+    claim exists, and everything downstream reports that the award rests on that
+    key's say-so rather than on anything cryptography establishes about who was
+    first.
+    """
+    for label, ref in (("task", task), ("claim", claim)):
+        if not is_event_id(ref):
+            raise MalformedEventError(f"{label} must be an event id")
+    public_key_from_did_key(coordinator)
+    return _common(CLAIM_COORDINATE, lineage, issued_at) | {
+        "task": task,
+        "coordinator": coordinator,
+        "claim": claim,
+    }
 
 
 AVAILABILITY_STATEMENT = "availability.statement"

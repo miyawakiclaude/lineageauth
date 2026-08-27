@@ -932,6 +932,53 @@ Git/GitHub writes require confirmation of active account + repository owner + re
   requires conflict disclosure and `docs/03` never named its event.
 - **Migration:** Pre-1.0.
 
+## D-062: the exchange awards nothing it cannot justify, and hides nothing quietly
+
+- **Date:** 2026-08-27
+- **Problem:** `docs/11` wants a coordination marketplace and hands over two
+  constraints that most implementations quietly break: *"protocol must expose
+  coordinator dependency honestly"*, and *"protocol preserves signed evidence;
+  indexing can moderate visibility"*.
+- **Decision:**
+  - `task.cancel` -- `task`, `requester`, `reason`; signed by the requester
+  - `claim.coordinate` -- `task`, `coordinator`, `claim`; signed by the
+    coordinator the requester named inside `task.request`
+  - `task.request` gains optional `cancellable` (default true) and
+    `coordinator`
+  - `TaskStatus.CANCELLED`; `lineageauth.exchange` adds a listing view with
+    `DISPUTED` layered over the task's own status
+- **Competing claims stay competing.** When more claims are live than the task
+  allows, every one is listed and none is awarded. `issuedAt` is self-asserted,
+  so ordering by it hands the task to whoever backdates best -- the same reason
+  the succession layer refuses timestamp tie-breaks (D-034).
+- **A coordinator is named in advance or not at all.** Naming one afterwards
+  would let the requester pick whoever awards the claim they wanted. Every
+  award says out loud that it rests on that key's say-so and that this protocol
+  cannot check whether the coordinator applied any rule at all. A coordinator
+  who awards twice awards nothing: choosing between their two awards would be
+  the ordering this layer just refused to invent.
+- **Cancellation is checked against the bundle, never against timestamps.** A
+  `task.cancel` takes effect only while no live claim and no result exist at
+  the evaluation time. Checking `issuedAt` instead would let a requester who
+  has seen the work publish a backdated cancellation and erase it.
+  `cancellable: false` binds the requester permanently, which is worth
+  something to whoever is deciding whether to start.
+- **`DISPUTED` is a view, not a rewrite.** The listing shows `DISPUTED` while a
+  case is open and undecided, and carries the task's own `taskStatus`
+  unchanged beside it. `resolve_task` never learns about juries, which is what
+  keeps D-061 true: a jury cannot rewrite what the verifications said.
+- **Moderation belongs to the reader and is always counted.** Blocklists come
+  from the caller, never from an event, and hide rather than delete: the events
+  stay in the store and stay verifiable. The response reports every hidden
+  listing, because a filter that silently shrank the results is
+  indistinguishable from an empty exchange.
+- **An unknown status filter is an error, not an empty page.** Returning
+  nothing would read as "no such tasks".
+- **Still not custody.** `rewardReference` remains an opaque string. Nothing
+  escrows, distributes, guarantees or values anything, and the note says so on
+  every response.
+- **Migration:** Pre-1.0.
+
 ### Pending decision template
 
 - ID:

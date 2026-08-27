@@ -27,15 +27,17 @@ Optional dependency: this imports FastAPI, which the core deliberately does not.
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from typing import Any
+from typing import Annotated, Any
 
 from fastapi import FastAPI, HTTPException, Request, Response
+from fastapi import Query as FastQuery
 from pydantic import BaseModel, ConfigDict, Field
 
 from lineageauth import __version__, catalog
 from lineageauth.authority import check_permission
 from lineageauth.envelope import Envelope
 from lineageauth.errors import LineageAuthError
+from lineageauth.exchange import Moderation, browse
 from lineageauth.graph import build_graph
 from lineageauth.index import EventIndex
 from lineageauth.jury import UnknownCaseError, resolve_dispute
@@ -289,6 +291,38 @@ def create_app(index: EventIndex, *, title: str = "LineageAuth") -> FastAPI:
                 index.bundle(lineage=lineage), lineage=lineage, did=did, at=moment
             ).to_dict()
         except LineageAuthError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    @app.get(f"/{API_VERSION}/exchange")
+    def get_exchange(
+        lineage: str,
+        at: str | None = None,
+        status: Annotated[list[str] | None, FastQuery()] = None,
+        requester: str | None = None,
+        claimable_only: bool = False,
+        blocked_did: Annotated[list[str] | None, FastQuery()] = None,
+        blocked_task: Annotated[list[str] | None, FastQuery()] = None,
+    ) -> dict[str, Any]:
+        """List tasks, filtered the way the caller asked.
+
+        `blocked_did` and `blocked_task` are the caller's own blocklist. They
+        hide listings from this response and delete nothing: the events stay in
+        the store, stay verifiable by anybody, and the response reports how many
+        entries the filter removed.
+        """
+        moment = _moment(at)
+        try:
+            moderation = Moderation.of(dids=blocked_did or [], tasks=blocked_task or [])
+            return browse(
+                index.bundle(lineage=lineage),
+                lineage=lineage,
+                at=moment,
+                status=status,
+                requester=requester,
+                claimable_only=claimable_only,
+                moderation=moderation,
+            ).to_dict()
+        except ValueError as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     @app.get(f"/{API_VERSION}/disputes/{{case_id}}")
