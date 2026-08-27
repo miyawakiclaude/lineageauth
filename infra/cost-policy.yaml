@@ -58,6 +58,28 @@ services:
       eventually incur charges. Making this repository private is therefore a
       budget decision, not just a visibility one.
 
+  - name: github-pages
+    purpose: publishing the static Explorer, conformance vectors and schemas
+    required: false
+    cost_mode: free
+    billing_enabled: false
+    free_tier_checked: "2026-08-27"
+    fallback: the site is a build artifact; `scripts/build_site.py` reproduces it
+    shutdown_behavior: >
+      Turn the source off in repository settings. Nothing depends on the site
+      being reachable -- everything it serves is in the repository, and the
+      protocol's own rule is that a public URL is not required to prove
+      correctness (docs/31).
+    notes: >
+      Free on PUBLIC repositories, verified 2026-08-27: 1 GB published site,
+      100 GB/month bandwidth (soft), 10 builds/hour (soft). Making this
+      repository private would end that, so visibility is a budget decision
+      here as well as for Actions.
+
+      Registered the same day the site went live rather than before it, which
+      is the wrong order -- the rule says free tiers are verified BEFORE
+      deployment (D-078).
+
 # Not selected. Listed so that "we already decided this" is never assumed.
 # Each would need a free-tier verification date and human approval first.
 #

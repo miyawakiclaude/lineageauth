@@ -25,6 +25,7 @@ import subprocess
 import sys
 import tomllib
 from pathlib import Path
+from typing import ClassVar
 
 import pytest
 
@@ -599,3 +600,57 @@ class TestTheWorkflowActuallyRuns:
         """The logs endpoint needs admin rights; annotations do not."""
         text = (REPO / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
         assert "::error::" in text
+
+
+class TestEveryActionRefResolves:
+    """A workflow pinned to a tag that does not exist fails at the first step.
+
+    `astral-sh/setup-uv` publishes releases as `v10.0.1` while its moving major
+    tags stop at `v7`, so `@v10` looks obviously right and resolves to nothing.
+    It was written that way here after reading the latest *release* rather than
+    the tags that exist, and the check that should have caught it printed an
+    empty field which was read as "fine".
+
+    This test needs no network: it pins the versions the workflows may use to a
+    list somebody verified, so bumping one is a deliberate act with a date
+    attached rather than a guess at what the newest number is.
+    """
+
+    # Verified 2026-08-27: each ref resolves and each runs on node24.
+    VERIFIED_ACTIONS: ClassVar[frozenset[str]] = frozenset(
+        {
+            "actions/checkout@v7",
+            "astral-sh/setup-uv@v7",
+            "actions/configure-pages@v6",
+            "actions/upload-pages-artifact@v5",
+            "actions/deploy-pages@v5",
+        }
+    )
+
+    def _used(self) -> set[str]:
+        yaml = pytest.importorskip("yaml")
+        used: set[str] = set()
+        for path in sorted((REPO / ".github" / "workflows").glob("*.yml")):
+            document = yaml.safe_load(path.read_text(encoding="utf-8"))
+            for job in document["jobs"].values():
+                for step in job["steps"]:
+                    if "uses" in step:
+                        used.add(step["uses"])
+        return used
+
+    def test_every_action_used_was_verified(self) -> None:
+        unverified = self._used() - self.VERIFIED_ACTIONS
+        assert unverified == set(), (
+            f"these refs were never checked to exist: {sorted(unverified)}. "
+            "Confirm the tag resolves before pinning to it -- a latest release "
+            "number is not the same thing as a moving major tag."
+        )
+
+    def test_the_verified_list_has_no_dead_entries(self) -> None:
+        """Otherwise the list grows into a record of what used to be used."""
+        assert self.VERIFIED_ACTIONS - self._used() == set()
+
+    def test_every_action_is_pinned_to_a_version(self) -> None:
+        for ref in self._used():
+            assert "@" in ref, f"{ref} floats on the default branch"
+            assert not ref.endswith("@main"), f"{ref} follows somebody else's main"

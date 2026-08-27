@@ -1501,6 +1501,49 @@ Git/GitHub writes require confirmation of active account + repository owner + re
   somebody else's, and now a probe that cannot tell the two answers apart.
 - **Migration:** Pre-1.0.
 
+## D-078: the site went up before its free tier was in the register
+
+- **Date:** 2026-08-27
+- **What happened:** GitHub Pages was deployed and *then* its free tier was
+  checked and written into `infra/cost-policy.yaml`. The rule in `docs/31` and
+  in the register's own header is that a service is verified **before** it is
+  used. The order was wrong by about twenty minutes.
+- **Recorded rather than quietly fixed,** because the register exists to make
+  spending decisions deliberate, and back-dating a check into it would make the
+  register lie about when somebody looked.
+- **Verified 2026-08-27:** free on public repositories, 1 GB published site,
+  100 GB/month bandwidth (soft), 10 builds/hour (soft). Making this repository
+  private would end that -- visibility is a budget decision for Pages as well as
+  for Actions.
+- **Nothing depends on the site being reachable.** Everything it serves is in
+  the repository, `scripts/build_site.py` reproduces it, and `docs/31` already
+  says a public URL is not required to prove correctness. So the shutdown
+  behaviour is "turn the source off", with no fallback to design.
+
+## D-079: a latest release number is not a tag that exists
+
+- **Date:** 2026-08-27
+- **What happened:** bumping the workflow actions, I read
+  `astral-sh/setup-uv`'s latest *release* -- `v10.0.1` -- and pinned `@v10`.
+  That tag does not exist: the moving major tags stop at `v7`. Every workflow
+  would have failed at its first step.
+- **Two probes failed to catch it, in the same way.** A `runs=` field came back
+  empty and was read as "no inputs used" rather than "the fetch returned
+  nothing", and a regex over the fetched file found no inputs, which looked like
+  an answer instead of a parse failure. Both were 404 responses being read as
+  data -- the same mistake as D-077, twice more, within an hour.
+- **What made it visible:** asking `git/ref/tags/{tag}` directly, which
+  distinguishes "exists" from "does not". That is a probe with two possible
+  answers, which is the property D-077 says to check for first.
+- **Decision:** `tests/test_final_gate.py` pins the set of action refs the
+  workflows may use, with the date they were verified. Bumping one is then a
+  deliberate act, and a typo'd or invented tag fails locally instead of on the
+  first push. The test needs no network -- it compares the workflows against a
+  list a person checked.
+- **Also required:** every `uses` is pinned and none follows `@main`. Somebody
+  else's default branch is not a version.
+- **Migration:** Pre-1.0.
+
 ### Pending decision template
 
 - ID:

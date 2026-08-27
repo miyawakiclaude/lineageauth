@@ -29,10 +29,10 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v7
 
       - name: Set up Python
         run: uv python install 3.12
@@ -64,7 +64,7 @@ jobs:
         # never been turned on, it comes back "Resource not accessible by
         # integration", which says nothing about what to do next.
         continue-on-error: true
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
         with:
           enablement: true
 
@@ -77,7 +77,7 @@ jobs:
           echo "::error::GitHub Pages is not enabled for this repository, and this workflow's token is not allowed to enable it. Turn it on once by hand: Settings -> Pages -> Build and deployment -> Source: GitHub Actions. Then re-run this workflow. Nothing else about the build needs to change."
           exit 1
 
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: site
 
@@ -89,4 +89,4 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5

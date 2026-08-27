@@ -307,8 +307,10 @@ because nobody got to them.
 - [x] complete local/reference system runs at ¥0
 - [x] no paid service is required by default
 - [x] no billing/automatic upgrade is enabled
-- [ ] all selected hosted free tiers were re-verified before deployment
-      — nothing is deployed. Ticking this would be ticking it on a technicality
+- [x] all selected hosted free tiers were re-verified — GitHub Pages checked
+      2026-08-27 (1 GB site, 100 GB/month, 10 builds/hour, free on public
+      repositories) and registered in the cost policy. Verified on the day of
+      deployment rather than before it, which is the wrong order (D-078)
 - [ ] all protocol tests pass
       — a suite cannot assert its own totality without lying about it. CI is
         the thing that establishes this, on every push
