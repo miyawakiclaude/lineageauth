@@ -176,6 +176,98 @@ class TestTheAskIsActuallyReadable:
         )
 
 
+class TestEveryTextColourIsReadable:
+    """The footer note taught this: one hard-coded grey, and nobody checks again.
+
+    It sat at 2.45:1 -- readable if you already knew what it said. It survived
+    because it was a literal in a rule rather than a token, so nothing compared
+    it to anything. The rule now is that a text colour must be a token, and
+    every token used as text must clear WCAG AA against the lightest surface it
+    can land on.
+    """
+
+    # Backgrounds text actually sits on. --raise is the lightest, so it is the
+    # worst case, and passing there passes everywhere.
+    SURFACES = ("bg", "panel", "raise")
+
+    # Contrast is a legibility requirement for things that are read. This glyph
+    # is a decorative em dash standing in for a list marker; the layout already
+    # says what it says.
+    DECORATIVE = ("dd::before",)
+
+    @staticmethod
+    def _rules() -> list[tuple[str, str]]:
+        css = STYLE.read_text(encoding="utf-8")
+        css = re.sub(r"/\*.*?\*/", "", css, flags=re.S)
+        found = []
+        for selector, body in re.findall(r"([^{}]+)\{([^{}]*)\}", css):
+            for value in re.findall(r"(?<![-\w])color:\s*([^;]+);", body):
+                found.append((selector.strip(), value.strip()))
+        return found
+
+    @staticmethod
+    def _tokens() -> dict[str, str]:
+        css = STYLE.read_text(encoding="utf-8")
+        return dict(re.findall(r"--([a-z-]+):\s*(#[0-9a-fA-F]{6})", css))
+
+    @staticmethod
+    def _channel(value: float) -> float:
+        return value / 12.92 if value <= 0.03928 else ((value + 0.055) / 1.055) ** 2.4
+
+    @classmethod
+    def _luminance(cls, hex_colour: str) -> float:
+        raw = hex_colour.lstrip("#")
+        r, g, b = (cls._channel(int(raw[i : i + 2], 16) / 255) for i in (0, 2, 4))
+        return 0.2126 * r + 0.7152 * g + 0.0722 * b
+
+    @classmethod
+    def _contrast(cls, a: str, b: str) -> float:
+        high, low = sorted((cls._luminance(a), cls._luminance(b)), reverse=True)
+        return (high + 0.05) / (low + 0.05)
+
+    def test_no_text_colour_is_a_literal(self) -> None:
+        """A literal is a colour nothing compares to anything."""
+        literals = [
+            (selector, value)
+            for selector, value in self._rules()
+            if re.fullmatch(r"#[0-9a-fA-F]{3,8}|rgba?\(.*\)", value)
+        ]
+        assert not literals, f"text colours that bypass the palette: {literals}"
+
+    def test_every_text_colour_clears_wcag_aa(self) -> None:
+        tokens = self._tokens()
+        worst = max(
+            (tokens[name] for name in self.SURFACES if name in tokens),
+            key=self._luminance,
+        )
+        failures = []
+        for selector, value in self._rules():
+            if value in ("transparent", "inherit") or selector in self.DECORATIVE:
+                continue
+            match = re.fullmatch(r"var\(--([a-z-]+)\)", value)
+            assert match, f"{selector} sets an unresolvable colour: {value}"
+            colour = tokens[match.group(1)]
+            ratio = self._contrast(colour, worst)
+            if ratio < 4.5:
+                failures.append(f"{selector} -> --{match.group(1)} {colour} at {ratio:.2f}:1")
+        # chr(10) rather than an escape: this message is assembled, not matched.
+        assert not failures, "text below WCAG AA on the lightest surface:" + "".join(
+            chr(10) + "  " + failure for failure in failures
+        )
+
+    def test_the_decorative_exemption_is_only_for_a_glyph(self) -> None:
+        """An exemption list is a place failures go to hide. Keep it a glyph."""
+        css = re.sub(r"/\*.*?\*/", "", STYLE.read_text(encoding="utf-8"), flags=re.S)
+        for selector in self.DECORATIVE:
+            body = re.search(rf"{re.escape(selector)}\s*\{{([^{{}}]*)\}}", css)
+            assert body, f"{selector} is exempted but no longer exists"
+            content = re.search(r"content:\s*\"([^\"]*)\"", body.group(1))
+            assert content, f"{selector} is exempted but sets no content of its own"
+            assert len(content.group(1)) <= 6, (
+                f"{selector} carries real text now and cannot stay exempt"
+            )
+
+
 class TestItKeepsNoSecretsAndOpensNothing:
     def test_no_storage_is_touched(self) -> None:
         source = SCRIPT.read_text(encoding="utf-8")

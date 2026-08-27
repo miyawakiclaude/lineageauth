@@ -1665,6 +1665,37 @@ Git/GitHub writes require confirmation of active account + repository owner + re
   whole of what one project can do about being independently implemented.
 - **Migration:** Pre-1.0.
 
+## D-083: a text colour is a token, and a token has to be legible
+
+- **Date:** 2026-08-27
+- **Problem:** `D-082` put the project's one request to strangers in the footer,
+  and measuring it found the footer set at **2.45:1** against the page. Text at
+  that ratio is readable only by someone who already knows what it says. The
+  colour survived because it was a **literal in a rule rather than a token**, so
+  nothing ever compared it to anything.
+- **Decision:** two rules, both tested (`tests/test_explorer.py`):
+  - a `color:` declaration must name a palette token, never a literal
+  - every token used as text clears **WCAG AA (4.5:1)** against the lightest
+    surface it can land on, so passing there passes everywhere
+- **What that immediately caught:** `input::placeholder` at **2.16:1** -- the
+  only instruction the event-id field gives, set as decoration -- and `--dim` at
+  4.35:1, used for hints and section labels across eight screens. `--dim` moved
+  to `#788393` (5.2:1 on the page, 4.8:1 on the lightest panel).
+- **One exemption, and it is bounded:** `dd::before` is a decorative em dash
+  standing in for a list marker. A test asserts the exemption still points at a
+  rule whose `content` is at most a few characters, because an exemption list is
+  where failures go to hide.
+- **The measurement error worth recording.** A first pass in the browser
+  reported seven failures in the notice block, including text at 1.00:1. All
+  seven were wrong: the notice background is `rgba(217, 164, 65, 0.04)`, and the
+  checker read the nearest non-transparent layer as if it were opaque -- turning
+  a 4% tint into solid amber. **A contrast checker has to composite the stack
+  the way the browser paints it.** Corrected, the rendered page reports zero
+  failures across 278 text elements on all eight screens. Had the first number
+  been believed, the fix would have been to change colours that were already
+  correct.
+- **Migration:** Pre-1.0.
+
 ### Pending decision template
 
 - ID:

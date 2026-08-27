@@ -19,7 +19,7 @@
 
   --ink: #ffffff;
   --body: #b9c2cf;
-  --dim: #6b7684;
+  --dim: #788393;   /* 5.2:1 on the page, 4.8:1 on the lightest panel */
   --ghost: #1a2531;
 
   --accent: #3fa9e0;
@@ -205,7 +205,9 @@ input[type="text"]:focus {
   border-color: var(--accent);
 }
 
-input::placeholder { color: #3d4855; }
+/* The placeholder is the only instruction the field gives -- it says what shape
+   an event id has. At 2.16:1 it was decoration. */
+input::placeholder { color: var(--dim); }
 
 form button {
   font-family: ui-monospace, "Cascadia Code", "Consolas", monospace;
@@ -413,8 +415,8 @@ footer {
 }
 
 footer p {
-  color: #46505d;
-  font-size: 0.74rem;
+  color: var(--dim);
+  font-size: 0.78rem;
   line-height: 1.65;
   max-width: 54rem;
   margin: 0;
