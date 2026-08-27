@@ -29,15 +29,14 @@
   <button type="button" data-screen="inspector">Inspector</button>
 </nav>
 
-<p id="snapshot" hidden class="warn">
-  <strong>Static snapshot.</strong> There is no API behind this page. Every
-  answer below was computed once, at build time, from a fixed demo lineage whose
-  keys are <strong>public and reproducible</strong> — no DID here belongs to
-  anybody and none of it may be used for anything real. Nothing on this page is
-  live, and nothing on this page verifies a signature. To check any of it, clone
-  the repository and run <code>la verify</code>, which needs no network and no
-  service.
-</p>
+<aside id="snapshot" hidden class="notice">
+  <p class="notice-lead">Static snapshot &mdash; nothing here is live.</p>
+  <ul class="notice-facts">
+    <li><b>Demo keys.</b> Public and reproducible. No DID here belongs to anybody, and none may be used for anything real.</li>
+    <li><b>No API.</b> Every answer was computed once, at build time.</li>
+    <li><b>Verified in your browser.</b> By a second implementation, written to disagree with the one that made these events.</li>
+  </ul>
+</aside>
 
 <p id="offline" hidden class="warn">
   Nothing answered on this origin. The Explorer reads a local API and does not
@@ -52,6 +51,10 @@
     <h2>Lineages</h2>
     <p class="slug">// resolve the current root</p>
     <p class="hint">Every lineage the index holds. Pick one to fill the other screens.</p>
+    <p>
+      <button type="button" id="verify-all">Verify this snapshot</button>
+    </p>
+    <div id="verify-out"></div>
     <ul id="lineage-list" class="rows"></ul>
     <div id="lineage-detail"></div>
   </section>
@@ -153,6 +156,6 @@
   </p>
 </footer>
 
-<script src="explorer/app.js"></script>
+<script type="module" src="explorer/app.js"></script>
 </body>
 </html>

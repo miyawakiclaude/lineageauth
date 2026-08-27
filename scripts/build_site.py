@@ -328,6 +328,11 @@ def main() -> int:
     shutil.copy2(explorer / "index.html", out / "index.html")
     shutil.copy2(explorer / "app.css", out / "explorer" / "app.css")
     shutil.copy2(explorer / "app.js", out / "explorer" / "app.js")
+    # The second implementation, shipped beside the page that runs it. Same
+    # origin, so `script-src 'self'` covers it and no CSP change is needed.
+    shutil.copy2(
+        REPO_ROOT / "packages" / "js" / "lineageauth.js", out / "explorer" / "lineageauth.js"
+    )
 
     # Published as-is: they are already static, already deterministic, and the
     # point of a conformance package is that somebody else can fetch it.
@@ -348,7 +353,7 @@ def main() -> int:
 
     # The guard rails this build is not allowed to ship without.
     banner = (out / "index.html").read_text(encoding="utf-8")
-    for required in ("Static snapshot", "public and reproducible", "verifies a signature"):
+    for required in ("Static snapshot", "Public and reproducible", "Verified in your browser"):
         if required not in banner:
             print(f"refusing to build: the page does not say {required!r}", file=sys.stderr)
             return 1

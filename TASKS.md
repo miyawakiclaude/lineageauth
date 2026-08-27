@@ -288,6 +288,19 @@ depend on the indexer or the Explorer.)*
 - [x] v1 release checklist — `RELEASE.md`, which says plainly that v1 is not
       close and what would have to become true first
 
+## Second implementation
+- [x] `packages/js/` — dependency-free verifier, re-derived from the spec rather
+      than ported; JCS, base58btc, multicodec, preimage and event id all written
+      out so a mistake in either implementation becomes visible (D-080)
+- [x] differential test — identical JCS and identical event ids over generated
+      payloads, including the pair that separates UTF-16 code-unit ordering from
+      code-point ordering
+- [x] conformance runner — `node packages/js/run-conformance.mjs`, in CI, fails
+      the build on any disagreement
+- [x] the published Explorer verifies with it, in the reader's browser
+- [ ] an implementation by somebody who is not this project — the half that
+      matters, and the one that cannot be done from inside the repository
+
 ## Final gate
 
 Each line is a claim about this repository, and a claim nobody re-checks stops

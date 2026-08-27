@@ -96,10 +96,26 @@ class TestItKeepsNoSecretsAndOpensNothing:
             assert api not in source
 
     def test_no_key_material_is_generated_in_the_browser(self) -> None:
-        """docs/17 excludes it from the MVP until it is separately threat-modelled."""
-        source = SCRIPT.read_text(encoding="utf-8")
-        for api in ("crypto.subtle", "generateKey", "getRandomValues"):
-            assert api not in source
+        """docs/17 excludes key generation from the MVP. Verification is not that.
+
+        The page now *verifies* in the browser, which needs `crypto.subtle`, so
+        the old blanket ban on that name was measuring the wrong thing. What
+        docs/17 actually excludes is producing key material, and that is what is
+        checked: no keypair generation, no randomness, nothing private.
+        """
+        sources = [
+            SCRIPT.read_text(encoding="utf-8"),
+            (REPO / "packages" / "js" / "lineageauth.js").read_text(encoding="utf-8"),
+        ]
+        for source in sources:
+            for api in ("generateKey", "getRandomValues", "exportKey", "privateKey"):
+                assert api not in source
+
+    def test_the_verifier_only_ever_verifies(self) -> None:
+        """It imports a verify usage and nothing else."""
+        source = (REPO / "packages" / "js" / "lineageauth.js").read_text(encoding="utf-8")
+        assert '"verify"' in source
+        assert '"sign"' not in source
 
 
 class TestStatusLanguage:

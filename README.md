@@ -140,8 +140,11 @@ real authority behind it yet.
       dry-run write preparation. It cannot publish.
 - [x] Zero-cost conformance — the "works with no paid service" list is
       executed, and names what is not built rather than passing quietly
-- [x] Explorer — a local viewer that renders every value as text, verifies
-      nothing, and says so on the page
+- [x] Explorer — renders every value as text, and verifies the signatures it
+      shows using the second implementation, in the browser
+- [x] Second implementation — `packages/js/`, dependency-free, re-derived
+      from the specification rather than ported, and CI fails if the two
+      ever disagree on a canonical byte
 - [ ] Everything after that — see [MASTER_PLAN.md](MASTER_PLAN.md)
 
 ## Contributing

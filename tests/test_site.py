@@ -68,18 +68,45 @@ class TestTheThingsAReaderMustNotGetWrong:
         # Collapse the wrapping first. The page is wrapped for reading, and an
         # assertion that depends on where a line broke is testing the wrapping.
         page = flat(site / "index.html")
-        assert "public and reproducible" in page
-        assert "no DID here belongs to anybody" in page
+        assert "Public and reproducible" in page
+        assert "No DID here belongs to anybody" in page
         assert "may be used for anything real" in page
 
         note = data["unsafeKeysNote"]
         assert "reproducible test keys" in note
         assert "belongs to any person or organisation" in note
 
-    def test_the_page_says_it_verifies_nothing(self, site: Path) -> None:
+    def test_the_page_verifies_in_the_browser_and_says_by_what(self, site: Path) -> None:
+        """This used to say the page verified nothing. It does now.
+
+        The claim got stronger, so the guard had to move with it -- a banner
+        left saying "verifies no signature" would now be understating the page,
+        which is a different failure from overstating it and just as wrong.
+        """
         page = flat(site / "index.html")
-        assert "verifies a signature" in page
-        assert "la verify" in page
+        assert "Verified in your browser" in page
+        assert "written to disagree" in page
+        assert (site / "explorer" / "lineageauth.js").is_file()
+
+    def test_it_still_says_what_verification_does_not_establish(self) -> None:
+        """A signature covering a payload is not the signer holding authority."""
+        source = (EXPLORER / "app.js").read_text(encoding="utf-8")
+        assert "establishes nothing about whether" in source
+        assert "signer held authority" in source
+
+    def test_the_notice_is_scannable_rather_than_a_paragraph(self) -> None:
+        """A caveat nobody finishes is a caveat that did not land.
+
+        The first version said all of this correctly, in one dense block, at the
+        top of the page. Saying it correctly and saying it readably are not the
+        same thing, and only the second one works.
+        """
+        page = (EXPLORER / "index.html").read_text(encoding="utf-8")
+        notice = page[page.index('id="snapshot"') : page.index("</aside>")]
+        facts = notice.count("<li>")
+        assert facts >= 3, "the notice collapsed back into prose"
+        for line in re.findall(r"<li>(.*?)</li>", notice, re.S):
+            assert len(" ".join(line.split())) < 130, f"one fact is a paragraph: {line[:60]}"
 
     def test_it_says_it_is_a_snapshot_and_stamps_when(self, data: dict) -> None:
         """A page serving stale answers as current is the thing freshness rules stop."""
@@ -90,7 +117,7 @@ class TestTheThingsAReaderMustNotGetWrong:
         """The guard is in the builder, not only in review."""
         source = BUILDER.read_text(encoding="utf-8")
         assert "refusing to build" in source
-        for required in ("Static snapshot", "public and reproducible", "verifies a signature"):
+        for required in ("Static snapshot", "Public and reproducible", "Verified in your browser"):
             assert f'"{required}"' in source or f"'{required}'" in source
 
 
@@ -183,6 +210,7 @@ class TestTheBuildOutput:
             "index.html",
             "explorer/app.css",
             "explorer/app.js",
+            "explorer/lineageauth.js",
             "data/site.json",
             "conformance/manifest.json",
             "schemas/envelope.schema.json",

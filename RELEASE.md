@@ -30,14 +30,28 @@ see `tests/test_final_gate.py`, `tests/test_zero_cost.py`,
 
 ## Required for v1, and not yet true
 
-### An independent implementation has disagreed with this one
+### An independent implementation, by somebody who is not this project
 
-The single most valuable thing on this page, and the only one that cannot be
-done from inside this repository. Until somebody else's verifier has run
-`conformance/` and either agreed or found this one wrong, "the specification is
-implementable" is an opinion held by the person who wrote both.
+**Half done, and the half that is done is the smaller half.**
 
-`CONTRIBUTING.md` asks for exactly this.
+`packages/js/` is a second implementation. It re-derives RFC 8785
+canonicalization, base58btc, the multicodec check, the signing preimage and the
+event id from the specification rather than porting them, and it takes only
+SHA-256 and Ed25519 from WebCrypto. It agrees with the first implementation on
+all nine conformance vectors and on canonical output for every payload
+hypothesis can generate, including the shapes that separate UTF-16 code-unit
+ordering from code-point ordering. CI fails if they ever diverge.
+
+That establishes the specification is implementable **twice**. It does not
+establish that it is implementable **by somebody else**, and the second is what
+this line is really asking for: both of these were written by the same author in
+the same week, so they can share a misreading of the document without either
+being wrong about the other.
+
+Until an outside implementation has run `conformance/` and either agreed or
+found this project wrong, "the specification is implementable" remains partly an
+opinion held by whoever wrote both sides. `CONTRIBUTING.md` asks for that, and
+the vectors are published so it costs a stranger nothing to try.
 
 ### The pre-1.0 marks are gone from the decision log
 

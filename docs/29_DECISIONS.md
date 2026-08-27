@@ -1544,6 +1544,54 @@ Git/GitHub writes require confirmation of active account + repository owner + re
   else's default branch is not a version.
 - **Migration:** Pre-1.0.
 
+## D-080: a second implementation, written to disagree
+
+- **Date:** 2026-08-27
+- **Why:** `CONTRIBUTING.md` asks for an independent implementation and
+  `RELEASE.md` puts it first for v1. Until a second verifier has run the
+  vectors, "the specification is implementable" is an opinion held by whoever
+  wrote the only one.
+- **Decision:** `packages/js/lineageauth.js` -- dependency-free, no build step,
+  runs unchanged in Node and in a browser.
+- **Independence is the whole value, so the awkward parts are re-derived rather
+  than ported:** RFC 8785 canonicalization, base58btc, the multicodec check, the
+  signing preimage and the event id. The Python side delegates JCS to a library
+  precisely so it cannot be got subtly wrong; this side writes it out precisely
+  so a subtle mistake in **either** becomes visible. **Two implementations
+  calling the same library agree by construction and prove nothing.**
+- **SHA-256 and Ed25519 come from WebCrypto.** Those are primitives with
+  published test vectors and nothing to disagree about, and hand-rolling a curve
+  would add risk without adding evidence.
+- **The differential test compares canonical output, not verdicts.** Vectors
+  compare verify/refuse, which is coarse: two implementations can both say
+  "verify" while disagreeing about the bytes they verified, and that surfaces
+  much later as an event id nobody can resolve. Hypothesis generates payloads
+  and both sides must produce identical JCS and identical event ids.
+- **The discriminating test case took two attempts.** "z" against U+1F600 proves
+  nothing -- 0x7A is below both 0xD83D and 0x1F600, so code-unit and code-point
+  ordering agree and a wrong implementation passes. The pair that separates them
+  is U+FFFD against U+1F600. The first version of that test used the useless
+  pair *and* asserted the wrong direction.
+- **A bug in the harness, found by the property test itself:** results crossed
+  the process boundary as JSON lines split with Python's `splitlines()`, which
+  also breaks on U+0085, U+2028 and U+2029 -- and `JSON.stringify` emits those
+  raw because they are above U+001F. A payload with U+0085 in a key arrived cut
+  in half. Fixed to `split("
+")`.
+- **The published Explorer now verifies.** It imports this implementation and
+  checks every signature and every event id in the snapshot, in the reader's
+  browser. The banner changed from "verifies no signature" to what it now does
+  -- a claim that got *stronger*, so the guard had to move with it, because a
+  banner understating the page is a different failure from one overstating it
+  and just as wrong.
+- **What it still does not establish,** and the page says so: a signature
+  covering a payload is not the signer holding authority.
+- **Half the v1 item, and the smaller half.** Both implementations were written
+  by the same author in the same week, so they can share a misreading of the
+  document without either being wrong about the other. `RELEASE.md` now says
+  that rather than claiming the line is closed.
+- **Migration:** Pre-1.0.
+
 ### Pending decision template
 
 - ID:

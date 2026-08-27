@@ -353,6 +353,57 @@ pre {
   color: var(--accent);
 }
 
+/* ---------------------------------------------------------------- notice */
+
+/* The first thing anybody reads, so it has to be readable. An earlier version
+ * said all of this correctly and said it as one dense paragraph, which is a way
+ * of not saying it: a caveat nobody finishes is a caveat that did not land. */
+
+.notice {
+  border: 1px solid var(--caution);
+  border-left-width: 3px;
+  border-radius: 2px;
+  background: rgba(217, 164, 65, 0.04);
+  padding: 0.85rem 1.1rem;
+  margin: 0 0 2rem;
+  max-width: 52rem;
+}
+
+.notice-lead {
+  font-family: ui-monospace, "Cascadia Code", "Consolas", monospace;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--caution);
+  margin: 0 0 0.6rem;
+}
+
+.notice-facts {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.3rem;
+}
+
+.notice-facts li {
+  font-size: 0.84rem;
+  line-height: 1.55;
+  color: var(--body);
+  padding-left: 1rem;
+  position: relative;
+}
+
+.notice-facts li::before {
+  content: "4";
+  position: absolute;
+  left: 0;
+  color: var(--caution);
+}
+
+.notice-facts b { color: var(--ink); font-weight: 600; }
+.notice-facts code { color: var(--accent); }
+
 /* ---------------------------------------------------------------- footer */
 
 footer {

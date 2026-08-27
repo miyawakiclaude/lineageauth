@@ -78,6 +78,12 @@ jobs:
           uv run pytest -q
           uv sync --extra dev --extra api --extra mcp --frozen
 
+      - name: The second implementation agrees
+        # The whole point of having two. A disagreement here is the most useful
+        # thing this repository can produce, so it fails the build rather than
+        # being a note somebody reads later.
+        run: node packages/js/run-conformance.mjs
+
       - name: Examples are deterministic
         # Regeneration must be byte-identical. A diff here means the protocol
         # changed without the vectors being updated deliberately.

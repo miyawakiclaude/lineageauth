@@ -192,6 +192,20 @@ def create_app(index: EventIndex, *, title: str = "LineageAuth") -> FastAPI:
     def explorer_js() -> Response:
         return _explorer_file("app.js", "text/javascript")
 
+    @app.get("/explorer/lineageauth.js")
+    def explorer_verifier() -> Response:
+        """The second implementation, so the local Explorer verifies too.
+
+        Served from `packages/js/` rather than copied, because a copy would be
+        a second thing to keep in step with the one the tests exercise.
+        """
+        path = Path(__file__).resolve().parents[3] / "packages" / "js" / "lineageauth.js"
+        if not path.is_file():
+            raise HTTPException(status_code=404, detail="the JavaScript verifier is not present")
+        response = PlainTextResponse(path.read_text(encoding="utf-8"), media_type="text/javascript")
+        response.headers["Content-Security-Policy"] = EXPLORER_CSP
+        return response
+
     @app.get(f"/{API_VERSION}/meta")
     def meta() -> dict[str, Any]:
         """What this service is, and what it refuses to be."""

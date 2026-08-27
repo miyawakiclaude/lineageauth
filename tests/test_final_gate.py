@@ -530,9 +530,23 @@ class TestTheScaleAndReleaseDocuments:
         text = (REPO / "RELEASE.md").read_text(encoding="utf-8")
         assert "v1 is not close" in text
 
-    def test_it_requires_an_independent_implementation_first(self) -> None:
-        text = (REPO / "RELEASE.md").read_text(encoding="utf-8")
-        assert "An independent implementation has disagreed with this one" in text
+    def test_it_still_requires_an_outside_implementation(self) -> None:
+        """A second implementation by the same author is not the thing asked for.
+
+        `packages/js/` closed half of this line and the document now says which
+        half. Two implementations written by one person in one week can share a
+        misreading of the specification without either being wrong about the
+        other, so the item stays open and says why.
+        """
+        text = " ".join((REPO / "RELEASE.md").read_text(encoding="utf-8").split())
+        assert "by somebody who is not this project" in text
+        assert "implementable **twice**" in text
+        assert "does not establish that it is implementable **by somebody else**" in text
+
+    def test_the_second_implementation_exists_and_is_exercised(self) -> None:
+        assert (REPO / "packages" / "js" / "lineageauth.js").is_file()
+        ci = (REPO / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
+        assert "run-conformance.mjs" in ci, "CI does not run the second implementation"
 
     def test_it_marks_custody_as_a_permanent_non_goal(self) -> None:
         text = (REPO / "RELEASE.md").read_text(encoding="utf-8")

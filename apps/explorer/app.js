@@ -1,4 +1,4 @@
-"use strict";
+import { IMPLEMENTATION, verifyEvent } from "./lineageauth.js";
 
 /* The Explorer.
  *
@@ -251,6 +251,95 @@ async function showLineage(id, where) {
   }
   where.appendChild(box);
 }
+
+/* -- verification --------------------------------------------------------
+ *
+ * This is the part that stops the page being a viewer. Every event it can show
+ * is verified here, in the browser, by `packages/js/lineageauth.js` -- a second
+ * implementation whose whole purpose is to be able to disagree with the one
+ * that produced these events.
+ *
+ * It is a real check, and it is still not the whole story: it establishes that
+ * a signature covers the payload shown, and says nothing about whether the
+ * signer held any authority, which is a separate question this page also
+ * displays and also does not decide.
+ */
+
+document.getElementById("verify-all").addEventListener("click", async () => {
+  const where = document.getElementById("verify-out");
+  clear(where);
+  where.appendChild(el("p", "verifying...", "note"));
+
+  const events = [];
+  const source = staticData ? staticData.routes : null;
+  if (source) {
+    for (const key of Object.keys(source)) {
+      if (key.startsWith("v1/events/")) {
+        events.push([key.replace("v1/events/", ""), source[key]]);
+      }
+    }
+  }
+
+  clear(where);
+  if (events.length === 0) {
+    where.appendChild(
+      note(
+        "Verification runs over the events this snapshot carries. A live API " +
+          "serves them one at a time, so use the Inspector screen instead."
+      )
+    );
+    return;
+  }
+
+  const box = card("Verified in this browser");
+  let good = 0;
+  const failures = [];
+  for (const [id, envelope] of events) {
+    let result;
+    try {
+      result = await verifyEvent(envelope);
+    } catch (error) {
+      result = { ok: false, reason: "THREW", detail: error.message };
+    }
+    if (result.ok) {
+      good += 1;
+      // The id is recomputed from the payload, so a mismatch would mean the
+      // route key and the event disagree about which event this is.
+      if (result.eventId !== decodeURIComponent(id)) {
+        failures.push(`${id}: recomputed id is ${result.eventId}`);
+      }
+    } else {
+      failures.push(`${id}: ${result.reason} -- ${result.detail}`);
+    }
+  }
+
+  box.appendChild(
+    status(
+      failures.length === 0 ? "signature verified" : "did not verify",
+      failures.length === 0 ? "allow" : "deny"
+    )
+  );
+  box.appendChild(
+    pairs([
+      ["events", String(events.length)],
+      ["verified", String(good)],
+      ["implementation", IMPLEMENTATION.name],
+    ])
+  );
+  for (const failure of failures) {
+    box.appendChild(el("p", failure, "warn"));
+  }
+  box.appendChild(note(IMPLEMENTATION.note));
+  box.appendChild(
+    note(
+      "This establishes that each signature covers the payload shown and that " +
+        "each event id is the hash of it. It establishes nothing about whether " +
+        "any signer held authority -- that is a different question, and this page " +
+        "does not decide it either."
+    )
+  );
+  where.appendChild(box);
+});
 
 /* -- authority graph ----------------------------------------------------- */
 
@@ -622,11 +711,30 @@ document.getElementById("event-form").addEventListener("submit", async (event) =
     const body = await api("/v1/events/" + encodeURIComponent(id));
     clear(where);
     const box = card("Envelope");
+
+    let result;
+    try {
+      result = await verifyEvent(body);
+    } catch (error) {
+      result = { ok: false, reason: "THREW", detail: error.message };
+    }
+    box.appendChild(status(result.ok ? "signature verified" : "did not verify", result.ok ? "allow" : "deny"));
+    box.appendChild(
+      pairs([
+        ["reason", result.reason],
+        ["detail", result.detail],
+        ["recomputed id", result.eventId || "--"],
+        ["signers", (result.signers || []).join(", ") || "--"],
+      ])
+    );
+
+    box.appendChild(el("h3", "raw event"));
     box.appendChild(json(body));
     box.appendChild(
       note(
-        "The raw event, so the id can be recomputed and the signatures checked " +
-          "somewhere that actually checks them. This page does not."
+        "Checked in this browser by a second implementation. That covers the " +
+          "signature and the event id; whether the signer held authority is a " +
+          "separate question, answered on the other screens and by nothing here."
       )
     );
     where.appendChild(box);
