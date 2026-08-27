@@ -1730,6 +1730,50 @@ Git/GitHub writes require confirmation of active account + repository owner + re
   word list would have gone on failing for the wrong reason forever.
 - **Migration:** Pre-1.0.
 
+## D-085: a runbook is a thing somebody has executed
+
+- **Date:** 2026-08-27
+- **Problem:** `RELEASE.md` listed "recovery has been rehearsed, not only
+  tested" as a v1 blocker, and it was right to. `tests/test_lineage.py` covers
+  succession, quorums and `CONFLICTED` with payloads built in memory. **None of
+  that can catch a procedure that cannot be followed** -- where the code is
+  correct and the person holding three recovery files still cannot get back,
+  because a required step was never written down.
+- **Decision:** `scripts/recovery_drill.py` runs the disaster on files: real
+  encrypted keys, the root **deleted**, and everything afterwards read out of
+  the published bundle rather than out of the variables that produced it.
+  `docs/RECOVERY.md` is the procedure, written from what the drill had to do.
+  `tests/test_recovery_drill.py` runs it every suite and checks the runbook
+  still describes what the drill still does.
+- **It passed. That was the least useful thing about it.** Five findings no
+  test would have produced:
+  1. **`docs/05` is a specification, not a procedure** -- fields and rules, no
+     steps, nothing about the day it is needed.
+  2. **`recoveryPolicyRef` is mandatory and undocumented.** It is the policy
+     event's id. Nothing said so and nothing prints it, so a survivor holding
+     the right files still stalls.
+  3. **No CLI issues anything.** `la` verifies and inspects. Opening a lineage
+     or signing a succession is Python, and a runbook that implies otherwise
+     strands its reader at the worst moment. Said plainly instead.
+  4. **`getpass` on Windows opens the console rather than reading stdin**, so a
+     piped passphrase *hangs* rather than failing. Every operator script in this
+     repository had grown a stdin fallback for that reason; the shipped CLI had
+     not. That made the one procedure nobody can afford to get wrong also the
+     one procedure nobody could rehearse unattended. Fixed, with the argument
+     form still refused -- piping is the operator choosing to, an argument is
+     visible to everyone whether they chose it or not.
+  5. **Five facts a survivor cannot reconstruct** afterwards. Four are readable
+     out of the published bundle, which is now named as the artifact to back up.
+- **The drill has a negative control**, because a drill that cannot fail proves
+  nothing about the day it matters: weakening the policy to threshold 1 makes
+  the first refusal stop refusing, and the drill exits non-zero. That is a test.
+- **The refusals are the drill, not a footnote.** Below-threshold, a non-member,
+  **the same member signing twice to look like two**, and a quorum pointing at a
+  policy that does not exist -- all refused, and in each case the lineage holds
+  at the old root rather than erroring, which is what fail-closed looks like
+  from the operator's side.
+- **Migration:** Pre-1.0.
+
 ### Pending decision template
 
 - ID:

@@ -1172,18 +1172,41 @@ key_app = typer.Typer(
 app.add_typer(key_app)
 
 
+def _read_secret(prompt: str) -> str:
+    """One passphrase, from the terminal when there is one and stdin when not.
+
+    `getpass` opens the console directly on Windows rather than reading stdin,
+    so a piped passphrase hangs forever instead of failing. That makes the one
+    procedure nobody can afford to get wrong -- recovering a lost root -- also
+    the one procedure nobody can rehearse unattended.
+
+    Falling back to stdin when stdin is not a terminal keeps it rehearsable.
+    Piping is the operator choosing to; an argument would be visible to everyone
+    on the machine whether they chose it or not, which is why that stays out.
+    """
+    import getpass
+
+    if sys.stdin is not None and sys.stdin.isatty():
+        return getpass.getpass(prompt)
+    typer.echo(prompt, nl=False, err=True)
+    line = sys.stdin.readline()
+    if not line:
+        typer.secho("  no passphrase on stdin", fg=typer.colors.RED, err=True)
+        raise typer.Exit(code=2)
+    typer.echo("", err=True)
+    return line.rstrip(chr(13) + chr(10))
+
+
 def _ask_passphrase(*, confirm: bool) -> str:
     """Read a passphrase from a prompt, never from an argument.
 
     A command line is visible in the process table and lands in shell history.
     Nothing about a passphrase survives being put there.
     """
-    import getpass
-
-    first = getpass.getpass("passphrase: ")
+    first = _read_secret("passphrase: ")
     if not confirm:
         return first
-    second = getpass.getpass("passphrase (again): ")
+    second = _read_secret("passphrase (again): ")
     if first != second:
         typer.secho("  the two passphrases differ", fg=typer.colors.RED, err=True)
         raise typer.Exit(code=2)

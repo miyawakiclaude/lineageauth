@@ -83,12 +83,33 @@ reader. Several real defects in this repository were found by writing a test
 that disagreed with the code — the class of bug that survives is the one where
 the test and the code share an assumption, and only a second person breaks that.
 
-### Recovery has been rehearsed, not only tested
+### ~~Recovery has been rehearsed, not only tested~~ — done, 2026-08-27
 
-`tests/test_lineage.py` covers succession, recovery quorums and `CONFLICTED`.
-Nobody has rehearsed losing a root key and coming back with the actual
-procedure, on real files, following only what is written down. Until that has
-happened, the recovery documentation is a design and not a runbook.
+`scripts/recovery_drill.py` creates real encrypted key files, opens a lineage,
+**deletes the root key**, and rebuilds authority from the published bundle and a
+2-of-3 quorum -- reading everything after the deletion out of the bundle rather
+than out of the variables that produced it. It also checks the four refusals,
+and `tests/test_recovery_drill.py` runs the whole thing on every suite, so
+"rehearsed" keeps meaning "still rehearsed".
+
+The rehearsal was worth more than the result. It passed, but only after finding
+five things no test could have:
+
+- **`docs/05` is a specification, not a procedure.** It lists the fields and
+  never says what to do on the day. `docs/RECOVERY.md` is the procedure, written
+  from what the drill actually had to do, and tested against it.
+- **`recoveryPolicyRef` is mandatory and undocumented.** It is the policy
+  event's *id*. Nothing said so, and nothing prints it.
+- **There is no CLI that issues anything.** `la` verifies and inspects; opening
+  a lineage or signing a succession is Python. The runbook says so rather than
+  implying a command exists.
+- **`getpass` on Windows opens the console rather than reading stdin**, so a
+  piped passphrase hung instead of failing. Every operator script here had
+  grown a stdin fallback; the shipped CLI had not, which made the one procedure
+  nobody can afford to get wrong also the one nobody could rehearse unattended.
+- **A survivor needs five facts written down** that cannot be reconstructed
+  afterwards. The runbook lists them, and four of the five are readable out of
+  the published bundle -- which is now stated as the artifact to back up.
 
 ### Performance is measured rather than assumed
 

@@ -113,6 +113,10 @@ so an independent implementation can fetch them without cloning anything.
 
 Running it locally, end to end, for zero yen: [RUNBOOK.md](RUNBOOK.md).
 
+Losing a root key, and coming back from it:
+[docs/RECOVERY.md](docs/RECOVERY.md) — rehearsed by
+`scripts/recovery_drill.py`, which deletes a real root key on every test run.
+
 ## Implementation status
 
 **The reference implementation is feature-complete for the current pre-1.0

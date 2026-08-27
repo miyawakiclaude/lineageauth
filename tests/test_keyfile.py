@@ -171,6 +171,35 @@ class TestTheCliSurface:
         source = (PACKAGE / "cli.py").read_text(encoding="utf-8")
         assert "getpass" in source
 
+    def test_a_piped_passphrase_is_read_rather_than_hanging(self, tmp_path: Path) -> None:
+        """The drill found this: `getpass` on Windows opens the console, not stdin.
+
+        A piped passphrase there does not fail, it hangs -- which made the one
+        procedure nobody can afford to get wrong also the one procedure nobody
+        could rehearse unattended. Every operator script in this repository grew
+        a stdin fallback for exactly that reason; the shipped CLI had not.
+
+        Piping is the operator choosing to. An argument would be visible to
+        everyone on the machine whether they chose it or not, which is why
+        `test_no_command_takes_a_passphrase_or_a_seed_as_an_argument` still
+        stands above this one.
+        """
+        target = tmp_path / "piped.json"
+        result = runner.invoke(
+            app, ["key", "create", str(target)], input=f"{PASSPHRASE}\n{PASSPHRASE}\n"
+        )
+        assert result.exit_code == 0, result.stdout
+        assert target.is_file()
+
+        reopened = runner.invoke(app, ["key", "show", str(target)])
+        assert reopened.exit_code == 0
+
+    def test_an_empty_stdin_refuses_instead_of_waiting(self, tmp_path: Path) -> None:
+        """A scheduled task with no input must fail, not block until it is killed."""
+        result = runner.invoke(app, ["key", "create", str(tmp_path / "nope.json")], input="")
+        assert result.exit_code != 0
+        assert not (tmp_path / "nope.json").exists()
+
     def test_key_show_prints_only_the_did(self, created: tuple[Path, str]) -> None:
         path, did = created
         result = runner.invoke(app, ["key", "show", str(path)])
