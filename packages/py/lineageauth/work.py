@@ -536,8 +536,7 @@ def resolve_task(bundle: EventBundle, *, lineage: str, task_id: str, at: datetim
             # The requester bound themselves when they published the task. A
             # commitment that can be withdrawn is not one.
             warnings.append(
-                f"task.cancel {event.event_id} ignored: this task was published as "
-                "not cancellable"
+                f"task.cancel {event.event_id} ignored: this task was published as not cancellable"
             )
             continue
         if live_claims or results:

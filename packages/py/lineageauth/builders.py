@@ -722,7 +722,6 @@ def build_task_verify(
     return payload
 
 
-
 TASK_CANCEL = "task.cancel"
 CLAIM_COORDINATE = "claim.coordinate"
 
