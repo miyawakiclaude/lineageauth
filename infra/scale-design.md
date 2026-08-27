@@ -123,14 +123,46 @@ If bytes really must be hosted:
 **Cost:** free allowances exist and are metered by egress, which is the line
 item that surprises people. Not without approval.
 
+## Measured: a public verify endpoint does not fit a free Worker
+
+This was carried as an open caveat and is now a number.
+`scripts/benchmark.py`, native CPython, against the 10 ms CPU a Cloudflare
+Worker gets per request on the free plan (checked 2026-08-27):
+
+| operation | cost | of a 10 ms budget |
+|---|---:|---:|
+| verify one event | 0.6 ms | 6% |
+| admit a bundle of 11 events | 5.0 ms | 50% |
+| admit a bundle of 51 events | 25.6 ms | **256%** |
+| admit a bundle of 201 events | 138.6 ms | **1386%** |
+| one request: admit 51 events, then check | 43.7 ms | **437%** |
+
+**Admission dominates and is linear in events**, because every event in a bundle
+is verified and *the caller chooses how many to send*. An endpoint that admits a
+caller-supplied bundle pays whatever the caller asks it to pay. That is a
+denial-of-service shape before it is a cost problem, and it does not stop being
+one on a paid plan — it just starts costing money instead of failing.
+
+There is a second, independent blocker. Python Workers run under Pyodide, which
+is WebAssembly, and **`cryptography` is a native package that cannot be imported
+there**. So the verifier cannot run on Workers at all today, whatever the CPU
+budget. Doing it would mean an Ed25519 and RFC 8785 implementation in JS or WASM
+— which is a genuinely valuable thing to exist (`CONTRIBUTING.md` asks for an
+independent implementation) but is a project, not a deployment.
+
+**Conclusion: the ¥0 answer is precomputed static files, and that was already
+the answer.** A passport and an event bundle are static JSON. Static hosting has
+no CPU budget to exceed and no bundle a stranger can inflate.
+
+If a dynamic endpoint is ever genuinely needed, the order is: cache verification
+by event id (an id is a hash of the signed payload, so a verified id stays
+verified and the key cannot be forged without forging the hash), cap the
+accepted bundle size, and only then look at what it costs.
+
 ## Not selected, and why the register says so
 
 [`cost-policy.yaml`](cost-policy.yaml) lists the candidates under
-`candidates_not_selected` with the free tiers checked on 2026-08-27 and one real
-constraint recorded there: Cloudflare Workers allow 10 ms CPU per request on the
-free plan, and Ed25519 verification over a whole bundle **has not been measured
-against that**. If it does not fit, the ¥0 answer is precomputed static files,
-not a paid plan.
+`candidates_not_selected` with the free tiers checked on 2026-08-27.
 
 ## The rule, once more
 

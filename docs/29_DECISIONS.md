@@ -1391,6 +1391,47 @@ Git/GitHub writes require confirmation of active account + repository owner + re
   was somewhere nobody was looking.
 - **Migration:** Pre-1.0.
 
+## D-075: measured, and the answer changed -- no verify endpoint on a Worker
+
+- **Date:** 2026-08-27
+- **Why now:** a Cloudflare account was registered. Registering costs nothing and
+  commits nothing, but it made the open caveat in `infra/scale-design.md`
+  actionable, and a caveat that stays a caveat eventually gets treated as a
+  detail.
+- **Measured** (`scripts/benchmark.py`, native CPython, against the 10 ms CPU a
+  free-plan Worker gets per request):
+
+  | operation | cost | of budget |
+  |---|---:|---:|
+  | verify one event | 0.6 ms | 6% |
+  | admit 11 events | 5.0 ms | 50% |
+  | admit 51 events | 25.6 ms | **256%** |
+  | one request (admit 51, then check) | 43.7 ms | **437%** |
+
+- **Decision: no public verify endpoint on a free Worker.** Two independent
+  grounds, either sufficient:
+  1. **CPU.** Admission dominates and is linear in events, and *the caller
+     chooses how many to send*. An endpoint admitting a caller-supplied bundle
+     pays whatever it is asked to pay. That is a denial-of-service shape before
+     it is a cost problem, and a paid plan does not fix it -- it converts
+     failing into spending.
+  2. **Runtime.** Python Workers run under Pyodide, which is WebAssembly, and
+     `cryptography` is a native package that cannot be imported there. The
+     verifier will not run at all, whatever the budget says.
+- **What this does not rule out:** static hosting. A passport and an event
+  bundle are static JSON, there is no CPU budget to exceed and no bundle a
+  stranger can inflate. That was already the recommendation and the measurement
+  strengthens it rather than changing it.
+- **If a dynamic endpoint is ever genuinely needed,** the order is: cache
+  verification by event id (an id is a hash of the signed payload, so a verified
+  id stays verified and the key cannot be forged without forging the hash), cap
+  the accepted bundle size, then look at cost. Not the other way round.
+- **A JS or WASM verifier would be valuable for a different reason.** It is what
+  `CONTRIBUTING.md` asks for and what `RELEASE.md` puts first for v1: an
+  independent implementation that can disagree with this one. That is a project,
+  not a deployment, and conflating the two is how it would get built badly.
+- **Migration:** Pre-1.0.
+
 ### Pending decision template
 
 - ID:

@@ -77,13 +77,19 @@ candidates_not_selected:
   - cloudflare-pages       # Explorer hosting. 500 builds/month; static requests
                            # unmetered. Pages Functions are Workers and share the
                            # Workers cap below.
-  - cloudflare-workers     # small read API. 100,000 requests/day and 10 ms CPU
-                           # per invocation on the free plan. The CPU ceiling is
-                           # the real constraint, not the request count: Ed25519
-                           # verification plus JCS over a whole bundle has to be
-                           # measured against 10 ms before this is chosen, and if
-                           # it does not fit, the zero-cost answer is to
-                           # precompute static bundles rather than to pay.
+  - cloudflare-workers     # small read API. MEASURED 2026-08-27 and RULED OUT
+                           # for a verify endpoint, on two independent grounds:
+                           #   1. CPU. The free plan gives 10 ms per request.
+                           #      Admitting a 51-event bundle costs 25.6 ms on
+                           #      native CPython; a whole request costs 43.7 ms.
+                           #      Admission is linear in events and the caller
+                           #      picks the count, so the endpoint pays whatever
+                           #      it is asked to. See scripts/benchmark.py.
+                           #   2. Runtime. Python Workers run under Pyodide
+                           #      (WebAssembly) and `cryptography` is a native
+                           #      package that cannot be imported there, so the
+                           #      verifier will not run at all.
+                           # The zero-cost answer is precomputed static files.
   - cloudflare-d1          # shared derived index. 5 GB and 5M reads/writes per
                            # month. Only needed if the index must be shared; it
                            # is rebuildable from events by design, so a local
