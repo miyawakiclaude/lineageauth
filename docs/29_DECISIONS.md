@@ -1472,6 +1472,35 @@ Git/GitHub writes require confirmation of active account + repository owner + re
   particular mistakes are visible.
 - **Migration:** Pre-1.0.
 
+## D-077: a 404 from an endpoint that needs auth is not evidence of absence
+
+- **Date:** 2026-08-27
+- **What happened:** while diagnosing the failed Pages deploy I checked
+  `GET /repos/{owner}/{repo}/pages` unauthenticated, got 404, and reported that
+  Pages was not enabled. The conclusion was right; **the evidence was not**. The
+  conclusive evidence was the workflow's own error, `Create Pages site failed:
+  Resource not accessible by integration`.
+- **Verified afterwards:** `pages-themes/cayman` serves a live Pages site and
+  its `/pages` API returns 404 to an unauthenticated caller. The endpoint
+  requires authentication and 404s either way, so **that check can never
+  distinguish enabled from disabled**.
+- **Why it matters beyond the incident:** the same 404 was then useless for
+  confirming that enabling Pages had worked. A check that returns the same
+  answer in both states is not a check, and reading it as one produces
+  confident wrong statements -- which is worse than having no check, because a
+  missing check gets replaced.
+- **The rule:** before treating an absence as evidence, confirm the observation
+  can distinguish the two cases. The cheap way is a positive control -- find
+  something known to be in the state you are testing for and check that the
+  probe reports it. That is the same discipline as D-067's contamination-scan
+  control and D-072's untracked-file control, arriving for the third time from
+  a different direction.
+- **Pattern, now four deep** (D-072 through D-077): every recent mistake has
+  been about *where the evidence is*, not about the code. A scan blind to new
+  files, a log needing admin rights, a workflow reporting its own breakage as
+  somebody else's, and now a probe that cannot tell the two answers apart.
+- **Migration:** Pre-1.0.
+
 ### Pending decision template
 
 - ID:
