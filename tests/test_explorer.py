@@ -65,9 +65,23 @@ class TestUntrustedContentIsNeverMarkup:
         assert not re.search(r"\son\w+\s*=", html), "no inline event handler attributes"
 
     def test_nothing_is_loaded_from_another_origin(self) -> None:
+        """Same origin, and relative rather than rooted.
+
+        The rule used to be "must start with /", which was wrong once this page
+        had to work under a path prefix as well as at a domain root: a leading
+        slash reaches for the root and breaks on a project page. What actually
+        matters is that no reference names another host.
+        """
         html = HTML.read_text(encoding="utf-8")
         for match in re.findall(r'(?:src|href)="([^"]+)"', html):
-            assert match.startswith("/"), f"external or relative resource: {match}"
+            assert "://" not in match, f"external resource: {match}"
+            assert not match.startswith("//"), f"protocol-relative resource: {match}"
+
+    def test_no_request_is_rooted_at_the_domain(self) -> None:
+        """A rooted path silently drops the project-page prefix."""
+        source = SCRIPT.read_text(encoding="utf-8")
+        assert 'fetch("/' not in source
+        assert "fetch('/" not in source
 
 
 class TestItKeepsNoSecretsAndOpensNothing:

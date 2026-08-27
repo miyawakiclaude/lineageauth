@@ -172,6 +172,31 @@ wired in here — deliberately, under the zero-cost rule. So the audit that runs
 is the offline one: what is depended on, why, and whether that list is still a
 decision somebody made. Treat CVE checking as a separate step you run yourself.
 
+## Build the published site
+
+```bash
+py -3 -m uv run python scripts/build_site.py --out site
+```
+
+Produces the static Explorer plus the conformance vectors and schemas. There is
+no API on a static host, so every answer the Explorer can ask for is
+precomputed into `data/site.json` and the page shows a banner saying it is a
+snapshot, that its keys are public, and that it verifies nothing.
+
+To check it the way a project page serves it — under a path prefix, which is
+where rooted paths break:
+
+```bash
+py -3 -m uv run python -m http.server 8801 --directory .
+```
+
+Then open `http://127.0.0.1:8801/site/`. The prefix is the point: a link
+starting with `/` works at a domain root and breaks under `/lineageauth/`.
+
+The same build runs in `.github/workflows/pages.yml` on every push to `main`,
+after the gate passes. A site that went up while the tests were red would be
+publishing claims the repository does not stand behind.
+
 ## What costs money
 
 Nothing above. The register in

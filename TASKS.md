@@ -264,7 +264,9 @@ depend on the indexer or the Explorer.)*
       `STALE_STATUS` with a fail-closed `require_fresh()` for the high-risk path
 - [x] conflict monitoring — every answering source that omitted an admitted
       event is named; missing revocations and successions sort first
-- [ ] deployment
+- [x] deployment — GitHub Pages, approved by the project owner 2026-08-27.
+      Static only: the Explorer as a snapshot, plus the conformance vectors and
+      schemas. Gate runs before deploy; ¥0 and no new service (D-076)
 - [x] optional PostgreSQL scale design — designed, not provisioned
 - [x] optional object storage design — designed, not provisioned; hash-only
       receipts mean bytes usually need no host at all

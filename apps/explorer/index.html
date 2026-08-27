@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>LineageAuth Explorer</title>
-<link rel="stylesheet" href="/explorer/app.css">
+<link rel="stylesheet" href="explorer/app.css">
 </head>
 <body>
 
@@ -28,6 +28,16 @@
   <button type="button" data-screen="dispute">Dispute</button>
   <button type="button" data-screen="inspector">Inspector</button>
 </nav>
+
+<p id="snapshot" hidden class="warn">
+  <strong>Static snapshot.</strong> There is no API behind this page. Every
+  answer below was computed once, at build time, from a fixed demo lineage whose
+  keys are <strong>public and reproducible</strong> — no DID here belongs to
+  anybody and none of it may be used for anything real. Nothing on this page is
+  live, and nothing on this page verifies a signature. To check any of it, clone
+  the repository and run <code>la verify</code>, which needs no network and no
+  service.
+</p>
 
 <p id="offline" hidden class="warn">
   Nothing answered on this origin. The Explorer reads a local API and does not
@@ -143,6 +153,6 @@
   </p>
 </footer>
 
-<script src="/explorer/app.js"></script>
+<script src="explorer/app.js"></script>
 </body>
 </html>

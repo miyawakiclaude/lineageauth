@@ -1,0 +1,224 @@
+"""The static site published to GitHub Pages.
+
+Publishing is the part that cannot be taken back, so most of this file is about
+what the page must say before it says anything else, and about the one bug
+class a static build introduces that a live one hides.
+
+That bug class is worth naming. In live mode a server decodes the request path
+before routing, so `lineage%3Ala%3A...` and `lineage:la:...` are the same
+request. In static mode the route key is matched **literally**, so they are not.
+The first build got this wrong: the client encodes with `encodeURIComponent`
+and the builder wrote raw keys, every screen past the first failed with "not
+precomputed", and nothing in the live deployment could ever have shown it.
+
+`test_every_route_the_explorer_can_build_exists` is the cross-check. It derives
+the keys the way the client does and asserts the build produced them.
+"""
+
+from __future__ import annotations
+
+import json
+import re
+import subprocess
+import sys
+from pathlib import Path
+from urllib.parse import quote
+
+import pytest
+
+REPO = Path(__file__).resolve().parents[1]
+BUILDER = REPO / "scripts" / "build_site.py"
+EXPLORER = REPO / "apps" / "explorer"
+
+
+def flat(path: Path) -> str:
+    """File text with runs of whitespace collapsed.
+
+    Prose in this repository is wrapped for reading. Asserting on a phrase that
+    happens to straddle a line break tests the wrapping instead of the phrase,
+    and it has broken a test twice now.
+    """
+    return " ".join(path.read_text(encoding="utf-8").split())
+
+
+@pytest.fixture(scope="module")
+def site(tmp_path_factory) -> Path:
+    out = tmp_path_factory.mktemp("site") / "build"
+    done = subprocess.run(
+        [sys.executable, str(BUILDER), "--out", str(out)],
+        capture_output=True,
+        check=False,
+        cwd=str(REPO),
+    )
+    assert done.returncode == 0, done.stderr.decode("utf-8", errors="replace")
+    return out
+
+
+@pytest.fixture(scope="module")
+def data(site: Path) -> dict:
+    return json.loads((site / "data" / "site.json").read_text(encoding="utf-8"))
+
+
+# ------------------------------------------------------------ what it must say
+
+
+class TestTheThingsAReaderMustNotGetWrong:
+    def test_the_keys_are_declared_public(self, site: Path, data: dict) -> None:
+        """Anybody can reproduce these signatures. Nobody should mistake them."""
+        # Collapse the wrapping first. The page is wrapped for reading, and an
+        # assertion that depends on where a line broke is testing the wrapping.
+        page = flat(site / "index.html")
+        assert "public and reproducible" in page
+        assert "no DID here belongs to anybody" in page
+        assert "may be used for anything real" in page
+
+        note = data["unsafeKeysNote"]
+        assert "reproducible test keys" in note
+        assert "belongs to any person or organisation" in note
+
+    def test_the_page_says_it_verifies_nothing(self, site: Path) -> None:
+        page = flat(site / "index.html")
+        assert "verifies a signature" in page
+        assert "la verify" in page
+
+    def test_it_says_it_is_a_snapshot_and_stamps_when(self, data: dict) -> None:
+        """A page serving stale answers as current is the thing freshness rules stop."""
+        assert "static snapshot" in data["snapshotNote"].lower()
+        assert re.fullmatch(r"20\d\d-\d\d-\d\dT[\d:.]+Z", data["builtAt"]), data["builtAt"]
+
+    def test_the_builder_refuses_to_ship_a_page_missing_the_banner(self, tmp_path: Path) -> None:
+        """The guard is in the builder, not only in review."""
+        source = BUILDER.read_text(encoding="utf-8")
+        assert "refusing to build" in source
+        for required in ("Static snapshot", "public and reproducible", "verifies a signature"):
+            assert f'"{required}"' in source or f"'{required}'" in source
+
+
+# ------------------------------------------------------------ the route keys
+
+
+class TestEveryQuestionTheExplorerAsksIsAnswered:
+    def _routes(self, data: dict) -> dict:
+        return data["routes"]
+
+    def test_every_route_the_explorer_can_build_exists(self, data: dict) -> None:
+        """Derived the way the client derives them: encodeURIComponent, then no leading slash.
+
+        This is the cross-check that the first build failed. A live server
+        decodes the path before routing; a static lookup does not, so the two
+        sides have to agree on encoding and only a static build can tell.
+        """
+        routes = self._routes(data)
+        lineage = data["routes"]["v1/lineages"]["lineages"][0]
+        key = quote(lineage, safe="")
+
+        required = [
+            "v1/meta",
+            "v1/lineages",
+            f"v1/lineages/{key}",
+            f"v1/lineages/{key}/graph",
+            f"v1/exchange?lineage={key}",
+            "v1/router/search",
+        ]
+        for path in required:
+            assert path in routes, f"the Explorer would ask for {path!r} and get nothing"
+
+    def test_the_keys_are_percent_encoded_rather_than_raw(self, data: dict) -> None:
+        """The exact mistake: a raw colon where the client sends %3A."""
+        routes = self._routes(data)
+        lineage = routes["v1/lineages"]["lineages"][0]
+        assert f"v1/lineages/{lineage}" not in routes, "raw key: the client never asks for this"
+        assert f"v1/lineages/{quote(lineage, safe='')}" in routes
+
+    def test_a_passport_and_a_did_route_exist_for_every_signer_shown(self, data: dict) -> None:
+        routes = self._routes(data)
+        lineage_key = quote(routes["v1/lineages"]["lineages"][0], safe="")
+        dids = {k.removeprefix("v1/dids/") for k in routes if k.startswith("v1/dids/")}
+        assert dids, "no DID was precomputed"
+        for did in dids:
+            assert f"v1/passports/{did}?lineage={lineage_key}" in routes
+
+    def test_every_event_in_the_demo_is_fetchable(self, data: dict) -> None:
+        routes = self._routes(data)
+        events = [k for k in routes if k.startswith("v1/events/")]
+        assert len(events) >= 10
+        for key in events:
+            assert "payload" in routes[key]
+            assert "proofs" in routes[key]
+
+    def test_the_dispute_route_matches_the_case_in_the_exchange(self, data: dict) -> None:
+        """The Explorer reaches the dispute from the exchange listing, so they must agree."""
+        routes = self._routes(data)
+        lineage_key = quote(routes["v1/lineages"]["lineages"][0], safe="")
+        listings = routes[f"v1/exchange?lineage={lineage_key}"]["listings"]
+        cases = [c for listing in listings for c in listing["openDisputes"]]
+        assert cases, "the demo has no open dispute, so that screen shows nothing"
+        for case in cases:
+            assert f"v1/disputes/{quote(case, safe='')}?lineage={lineage_key}" in routes
+
+    def test_an_unprecomputed_question_says_so_rather_than_looking_empty(self) -> None:
+        """An empty answer and 'not tracked' are different facts, on a static host too."""
+        source = (EXPLORER / "app.js").read_text(encoding="utf-8")
+        assert "was not precomputed" in source
+
+
+# ------------------------------------------------------------ the shape on disk
+
+
+class TestTheBuildOutput:
+    def test_it_serves_from_a_path_prefix(self, site: Path) -> None:
+        """A project page lives under /<repo>/, so nothing may be rooted at /."""
+        page = (site / "index.html").read_text(encoding="utf-8")
+        for match in re.findall(r'(?:src|href)="([^"]+)"', page):
+            assert not match.startswith("/"), f"rooted path breaks under a prefix: {match}"
+            assert "://" not in match, f"external resource: {match}"
+
+    def test_jekyll_is_disabled(self, site: Path) -> None:
+        """Pages runs Jekyll by default and would drop files beginning with _."""
+        assert (site / ".nojekyll").is_file()
+
+    @pytest.mark.parametrize(
+        "relative",
+        [
+            "index.html",
+            "explorer/app.css",
+            "explorer/app.js",
+            "data/site.json",
+            "conformance/manifest.json",
+            "schemas/envelope.schema.json",
+        ],
+    )
+    def test_the_file_is_present(self, site: Path, relative: str) -> None:
+        assert (site / relative).is_file()
+
+    def test_the_conformance_package_is_published_whole(self, site: Path) -> None:
+        """The point of vectors is that somebody else can fetch them."""
+        manifest = json.loads((site / "conformance" / "manifest.json").read_text("utf-8"))
+        for entry in manifest["vectors"]:
+            assert (site / "conformance" / entry["file"]).is_file()
+
+    def test_nothing_secret_reached_the_build(self, site: Path) -> None:
+        patterns = (
+            re.compile(r"-----BEGIN [A-Z ]*PRIVATE KEY-----"),
+            re.compile(r'"d"\s*:\s*"[A-Za-z0-9_-]{20,}"'),
+            re.compile(r"\bgh[pousr]_[A-Za-z0-9]{20,}"),
+        )
+        for path in site.rglob("*"):
+            if not path.is_file() or path.suffix.lower() not in {".json", ".html", ".js", ".css"}:
+                continue
+            text = path.read_text(encoding="utf-8", errors="replace")
+            for pattern in patterns:
+                assert not pattern.search(text), f"{path.name} matches {pattern.pattern}"
+
+    def test_no_private_seed_appears_anywhere_in_the_output(self, site: Path) -> None:
+        """The test keys are derived from a public string; the seeds still never ship."""
+        from tests.testkeys import ROOT_A, unsafe_seed
+
+        seed = unsafe_seed(ROOT_A)
+        needles = {seed.hex(), seed.hex().upper()}
+        for path in site.rglob("*"):
+            if not path.is_file():
+                continue
+            text = path.read_text(encoding="utf-8", errors="replace")
+            for needle in needles:
+                assert needle not in text, f"a private seed reached {path.name}"

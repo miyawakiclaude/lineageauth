@@ -98,6 +98,13 @@ infra/             cost policy (budget invariant: ¥0)
 
 Start with [START_HERE.md](START_HERE.md).
 
+**[Explorer](https://miyawakiclaude.github.io/lineageauth/)** — a published
+static snapshot. It verifies nothing and its keys are public and reproducible,
+which the page says before it says anything else. It also serves the
+[conformance vectors](https://miyawakiclaude.github.io/lineageauth/conformance/manifest.json)
+and the [schemas](https://miyawakiclaude.github.io/lineageauth/schemas/envelope.schema.json),
+so an independent implementation can fetch them without cloning anything.
+
 Running it locally, end to end, for zero yen: [RUNBOOK.md](RUNBOOK.md).
 
 ## Implementation status

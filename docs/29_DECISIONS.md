@@ -1432,6 +1432,46 @@ Git/GitHub writes require confirmation of active account + repository owner + re
   not a deployment, and conflating the two is how it would get built badly.
 - **Migration:** Pre-1.0.
 
+## D-076: publishing a snapshot, and the bug only a static host can show
+
+- **Date:** 2026-08-27
+- **Approved by the project owner**, who chose GitHub Pages over Cloudflare.
+  That matches D-075: the measured verdict ruled out a Worker verify endpoint,
+  and static hosting was already the answer. Pages is free on a public
+  repository and adds no service, no account and no billing surface.
+- **What is published:** the Explorer as a static snapshot, plus the conformance
+  vectors and the JSON Schemas -- so an independent implementation can fetch
+  what it needs without cloning anything, which is the point of publishing them
+  at all.
+- **Three things the page says before it says anything else,** in order of how
+  much damage getting them wrong would do:
+  1. **the keys are public and reproducible.** The demo is signed with the
+     project's test keys. No DID on the site belongs to anybody, and the
+     *builder refuses to produce a page missing that sentence* -- a guard in the
+     build, not only in review.
+  2. **it verifies nothing.** It renders precomputed answers; `la verify` is
+     where checking happens.
+  3. **it is a snapshot,** stamped with its build time. A page serving stale
+     answers as if they were current is doing precisely what this protocol's
+     freshness rules exist to stop.
+- **The gate runs before the deploy.** A site that went up while the tests were
+  red would be publishing claims the repository does not stand behind.
+- **The bug a live deployment could never have shown.** A server decodes the
+  request path before routing, so `lineage%3Ala%3A...` and `lineage:la:...` are
+  the same request. A static lookup matches the key **literally**, so they are
+  not. The client encodes with `encodeURIComponent`; the first builder wrote raw
+  keys; every screen past the first failed with "not precomputed". Fixed by
+  encoding both sides the same way, and pinned by a test that derives the keys
+  the way the client derives them and asserts the build produced them.
+- **Relative paths throughout.** A project page lives under `/<repo>/`, and a
+  leading slash reaches for the domain root instead. The Explorer test that used
+  to require paths to *start* with `/` was asserting the wrong property; what
+  matters is that no reference names another host.
+- **Verified by serving it under a prefix and driving every screen** before
+  anything was pushed, because that is the only configuration where these
+  particular mistakes are visible.
+- **Migration:** Pre-1.0.
+
 ### Pending decision template
 
 - ID:

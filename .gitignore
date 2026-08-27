@@ -40,6 +40,9 @@ node_modules/
 out/
 *.tsbuildinfo
 
+# The published site is a build artifact, rebuildable from the repository.
+/site/
+
 # Local derived state (rebuildable from immutable events)
 *.sqlite
 *.sqlite3

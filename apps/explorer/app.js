@@ -90,14 +90,63 @@ function json(value) {
 
 let currentLineage = null;
 
+/* Two modes, one code path.
+ *
+ * Live: a local API answers on this origin. Static: there is no API, and every
+ * answer was precomputed at build time into one file. The screens below do not
+ * know which mode they are in, because the difference is a property of the
+ * deployment and not of what a passport means.
+ *
+ * The difference the reader is not allowed to miss is that a static page is a
+ * snapshot. A page that quietly served stale answers as if they were current
+ * would be doing the exact thing this protocol's freshness rules exist to stop,
+ * so static mode turns on a banner that says so before anything else is shown.
+ */
+let staticData = null;
+
+/* Relative, never rooted. On a project page the site lives under a path prefix,
+ * and a leading slash would reach for the domain root instead. */
+function relative(path) {
+  return path.replace(/^\//, "");
+}
+
 async function api(path, options) {
-  const response = await fetch(path, options);
+  if (staticData) {
+    const key = relative(path);
+    if (Object.prototype.hasOwnProperty.call(staticData.routes, key)) {
+      return staticData.routes[key];
+    }
+    throw new Error(
+      "This is a static snapshot and that question was not precomputed. Clone " +
+        "the repository and run the local API to ask it."
+    );
+  }
+  const response = await fetch(relative(path), options);
   const body = await response.json().catch(() => ({}));
   if (!response.ok) {
     const detail = body && body.detail ? body.detail : response.status;
     throw new Error(String(detail));
   }
   return body;
+}
+
+async function detectMode() {
+  try {
+    await api("/v1/meta");
+    return;
+  } catch {
+    /* fall through to the snapshot */
+  }
+  try {
+    const response = await fetch("data/site.json");
+    if (!response.ok) {
+      throw new Error(String(response.status));
+    }
+    staticData = await response.json();
+    document.getElementById("snapshot").hidden = false;
+  } catch {
+    document.getElementById("offline").hidden = false;
+  }
 }
 
 function needLineage(where) {
@@ -361,11 +410,13 @@ document.getElementById("router-form").addEventListener("submit", async (event) 
     .map((item) => item.trim())
     .filter((item) => item.length > 0);
   try {
-    const body = await api("/v1/router/search", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ lineage: currentLineage, skills: skills }),
-    });
+    const body = staticData
+      ? await api("/v1/router/search")
+      : await api("/v1/router/search", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ lineage: currentLineage, skills: skills }),
+        });
     clear(where);
 
     const weights = card("Published weights");
@@ -605,4 +656,6 @@ async function showMeta() {
   }
 }
 
-void loadLineages();
+/* Mode first: every screen below asks the same `api()` either way, so the one
+ * thing that has to happen before anything renders is knowing which it is. */
+void detectMode().then(loadLineages);

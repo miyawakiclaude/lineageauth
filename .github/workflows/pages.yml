@@ -1,0 +1,77 @@
+name: Pages
+
+# Publishes the static Explorer, the conformance vectors and the schemas.
+#
+# Publishing is the irreversible half of this project, so the gate runs first
+# and the deploy only happens if it passed. A site that went up while the tests
+# were red would be publishing claims the repository does not stand behind.
+#
+# Nothing here costs anything: GitHub Pages is free on a public repository, and
+# the build is the same script anybody can run locally.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One deploy at a time, and never cancel one in flight: a half-replaced site is
+# worse than an old one.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      - name: Install dependencies
+        run: uv sync --extra dev --extra api --extra mcp --frozen
+
+      - name: Gate
+        # The same four checks CI runs. A red suite must not reach a public URL.
+        run: uv run python scripts/gate.py
+
+      - name: Build the site
+        run: uv run python scripts/build_site.py --out site
+
+      - name: Refuse to publish key material
+        # Belt and braces over the test that already checks this. The cost of a
+        # published private key is not comparable to the cost of one more grep.
+        run: |
+          if grep -rEl -- "-----BEGIN [A-Z ]*PRIVATE KEY-----" site; then
+            echo "::error::private key material in the build output"
+            exit 1
+          fi
+          echo "no key material in the build output"
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
