@@ -1,0 +1,19 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "explorer",
+      "runtimeExecutable": "py",
+      "runtimeArgs": [
+        "-3",
+        "-m",
+        "uv",
+        "run",
+        "python",
+        "scripts/serve_explorer.py"
+      ],
+      "port": 8791,
+      "autoPort": true
+    }
+  ]
+}

@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LineageAuth Explorer</title>
+<link rel="stylesheet" href="/explorer/app.css">
+</head>
+<body>
+
+<header>
+  <h1>LineageAuth Explorer</h1>
+  <p class="standing">
+    This page shows what a local, read-only API found in a bundle of signed
+    events. It holds no keys, sends nothing, and cannot make any event
+    authoritative. A valid authority chain is provenance, never permission from
+    whatever system the action would touch.
+  </p>
+</header>
+
+<nav aria-label="Screens">
+  <button type="button" data-screen="lineages" class="on">Lineages</button>
+  <button type="button" data-screen="graph">Authority graph</button>
+  <button type="button" data-screen="did">DID</button>
+  <button type="button" data-screen="passport">Passport</button>
+  <button type="button" data-screen="router">Router</button>
+  <button type="button" data-screen="exchange">Exchange</button>
+  <button type="button" data-screen="dispute">Dispute</button>
+  <button type="button" data-screen="inspector">Inspector</button>
+</nav>
+
+<p id="offline" hidden class="warn">
+  Nothing answered on this origin. The Explorer reads a local API and does not
+  verify anything itself, so it needs one running:
+  <code>py -3 -m uv run uvicorn lineageauth.api:create_app --factory --port 8000</code>
+  then open <code>http://127.0.0.1:8000/</code>.
+</p>
+
+<main>
+
+  <section id="screen-lineages" class="screen" data-index="01">
+    <h2>Lineages</h2>
+    <p class="slug">// resolve the current root</p>
+    <p class="hint">Every lineage the index holds. Pick one to fill the other screens.</p>
+    <ul id="lineage-list" class="rows"></ul>
+    <div id="lineage-detail"></div>
+  </section>
+
+  <section id="screen-graph" class="screen" data-index="02" hidden>
+    <h2>Authority graph</h2>
+    <p class="slug">// keys, roles, and the edges between them</p>
+    <p class="hint">Roots, agents and the edges between them, as the resolver sees them.</p>
+    <div id="graph-out"></div>
+  </section>
+
+  <section id="screen-did" class="screen" data-index="03" hidden>
+    <h2>DID detail</h2>
+    <p class="slug">// decode a did:key, prove nothing about its holder</p>
+    <form id="did-form">
+      <label for="did-input">did:key</label>
+      <input id="did-input" type="text" spellcheck="false" placeholder="did:key:z6Mk...">
+      <button type="submit">Look up</button>
+    </form>
+    <div id="did-out"></div>
+  </section>
+
+  <section id="screen-passport" class="screen" data-index="04" hidden>
+    <h2>Passport</h2>
+    <p class="slug">// four categories, never merged</p>
+    <p class="hint">
+      Four categories, deliberately never merged. There is no combined number
+      here and there is not going to be one.
+    </p>
+    <form id="passport-form">
+      <label for="passport-did">did:key</label>
+      <input id="passport-did" type="text" spellcheck="false" placeholder="did:key:z6Mk...">
+      <button type="submit">Show passport</button>
+    </form>
+    <div id="passport-out"></div>
+  </section>
+
+  <section id="screen-router" class="screen" data-index="05" hidden>
+    <h2>Router</h2>
+    <p class="slug">// discovery with a published formula</p>
+    <p class="hint">
+      Ranked by a published formula. Every contribution to a relevance number is
+      listed beside it, so the ranking can be recomputed rather than believed.
+    </p>
+    <form id="router-form">
+      <label for="router-skills">skills, comma separated</label>
+      <input id="router-skills" type="text" spellcheck="false" placeholder="summarise, index">
+      <button type="submit">Search</button>
+    </form>
+    <div id="router-out"></div>
+  </section>
+
+  <section id="screen-exchange" class="screen" data-index="06" hidden>
+    <h2>Task exchange</h2>
+    <p class="slug">// coordination without custody</p>
+    <p class="hint">
+      No custody, no escrow, no reward validation. A rewardReference points at
+      somebody else's system and means whatever that system means by it.
+    </p>
+    <div id="exchange-out"></div>
+  </section>
+
+  <section id="screen-dispute" class="screen" data-index="07" hidden>
+    <h2>Dispute</h2>
+    <p class="slug">// a procedure, not arbitration</p>
+    <p class="hint">
+      A jury outcome is what a stated procedure produced from signed votes. It
+      is not arbitration, and it does not overwrite what the verifications said.
+    </p>
+    <form id="dispute-form">
+      <label for="dispute-case">case event id</label>
+      <input id="dispute-case" type="text" spellcheck="false" placeholder="sha256:...">
+      <button type="submit">Resolve</button>
+    </form>
+    <div id="dispute-out"></div>
+  </section>
+
+  <section id="screen-inspector" class="screen" data-index="08" hidden>
+    <h2>Protocol inspector</h2>
+    <p class="slug">// the raw signed event</p>
+    <form id="event-form">
+      <label for="event-id">event id</label>
+      <input id="event-id" type="text" spellcheck="false" placeholder="sha256:...">
+      <button type="submit">Fetch</button>
+    </form>
+    <div id="event-out"></div>
+    <h3>Service</h3>
+    <div id="meta-out"></div>
+  </section>
+
+</main>
+
+<footer>
+  <p>
+    This page renders every value as text and never as markup. Room names, task
+    titles, statements and profile text are written by strangers, and a viewer
+    that executed them would be a worse problem than anything it was built to
+    display.
+  </p>
+</footer>
+
+<script src="/explorer/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,378 @@
+/* Dark, gridded, cyan-accented -- the visual language of the Technocore /
+ * Flop material this protocol is built to plug into.
+ *
+ * Deliberately no logo and no borrowed wordmark. Looking like it belongs in
+ * that world is fine; passing for somebody else's product is not,
+ * and a page about provenance would be a poor place to blur that line.
+ *
+ * Dark only, on purpose. A security surface that changes colour with the
+ * operating system also changes which warnings look urgent. */
+
+:root {
+  color-scheme: dark;
+
+  --bg: #05080c;
+  --panel: #0a0f16;
+  --raise: #0d141d;
+  --line: #16202c;
+  --line-soft: #101821;
+
+  --ink: #ffffff;
+  --body: #b9c2cf;
+  --dim: #6b7684;
+  --ghost: #1a2531;
+
+  --accent: #3fa9e0;
+  --accent-dim: #22536f;
+
+  --allow: #46c4a0;
+  --deny: #e06a6a;
+  --caution: #d9a441;
+
+  --grid: rgba(63, 169, 224, 0.045);
+}
+
+* { box-sizing: border-box; }
+
+html { background: var(--bg); }
+
+body {
+  margin: 0 auto;
+  padding: 0 2rem 5rem;
+  max-width: 68rem;
+  color: var(--body);
+  background-color: var(--bg);
+  background-image:
+    repeating-linear-gradient(to right, var(--grid) 0 1px, transparent 1px 44px),
+    repeating-linear-gradient(to bottom, var(--grid) 0 1px, transparent 1px 44px);
+  font: 15px/1.6 ui-sans-serif, "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---------------------------------------------------------------- header */
+
+header { padding: 3rem 0 1.5rem; }
+
+header::before {
+  content: "LINEAGEAUTH.PROTOCOL";
+  display: block;
+  font-family: ui-monospace, "Cascadia Code", "Consolas", monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.28em;
+  color: var(--accent);
+  margin-bottom: 1.6rem;
+}
+
+h1 {
+  font-size: clamp(1.9rem, 4vw, 2.9rem);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  margin: 0 0 1rem;
+  font-weight: 700;
+}
+
+.standing {
+  color: var(--body);
+  font-size: 0.95rem;
+  max-width: 46rem;
+  margin: 0;
+}
+
+/* ------------------------------------------------------------------- nav */
+
+nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  padding: 0.9rem 0;
+  margin: 2rem 0 2.2rem;
+}
+
+nav button {
+  font-family: ui-monospace, "Cascadia Code", "Consolas", monospace;
+  font-size: 0.74rem;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  padding: 0.4rem 0.85rem;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  background: transparent;
+  color: var(--dim);
+  cursor: pointer;
+  transition: color 120ms, border-color 120ms;
+}
+
+nav button:hover { color: var(--body); border-color: var(--accent-dim); }
+
+nav button.on {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+/* --------------------------------------------------------------- screens */
+
+.screen { position: relative; padding-left: 6.5rem; min-height: 20rem; }
+
+/* The ghost numerals from the Flop layout: an outlined figure sitting in the
+ * left margin, present enough to structure the page and quiet enough that
+ * nothing competes with the content. */
+.screen::before {
+  counter-increment: none;
+  content: attr(data-index);
+  position: absolute;
+  left: 0;
+  top: -0.35rem;
+  font-family: ui-monospace, "Cascadia Code", "Consolas", monospace;
+  font-size: 3.4rem;
+  font-weight: 700;
+  line-height: 1;
+  color: transparent;
+  -webkit-text-stroke: 1px var(--ghost);
+  letter-spacing: -0.04em;
+  pointer-events: none;
+  user-select: none;
+}
+
+h2 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--ink);
+  margin: 0 0 0.35rem;
+}
+
+.slug {
+  font-family: ui-monospace, "Cascadia Code", "Consolas", monospace;
+  font-size: 0.78rem;
+  color: var(--accent);
+  margin: 0 0 1rem;
+}
+
+h3 {
+  font-size: 0.76rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--dim);
+  margin: 1.4rem 0 0.55rem;
+}
+
+.hint {
+  color: var(--dim);
+  font-size: 0.86rem;
+  max-width: 46rem;
+  margin: 0 0 1.6rem;
+}
+
+/* ---------------------------------------------------------------- inputs */
+
+form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 1.6rem;
+  padding-bottom: 1.4rem;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+label {
+  font-family: ui-monospace, "Cascadia Code", "Consolas", monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+
+input[type="text"] {
+  font-family: ui-monospace, "Cascadia Code", "Consolas", monospace;
+  font-size: 0.82rem;
+  padding: 0.5rem 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  background: var(--panel);
+  color: var(--ink);
+  min-width: 24rem;
+  flex: 1 1 24rem;
+}
+
+input[type="text"]:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+input::placeholder { color: #3d4855; }
+
+form button {
+  font-family: ui-monospace, "Cascadia Code", "Consolas", monospace;
+  font-size: 0.74rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 0.5rem 1.1rem;
+  border: 1px solid var(--accent);
+  border-radius: 2px;
+  background: transparent;
+  color: var(--accent);
+  cursor: pointer;
+}
+
+form button:hover { background: rgba(63, 169, 224, 0.09); }
+
+/* ----------------------------------------------------------------- cards */
+
+.card {
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: var(--panel);
+  padding: 1rem 1.15rem;
+  margin-bottom: 0.75rem;
+}
+
+.card .card { background: var(--raise); margin-top: 0.85rem; }
+.card > h3:first-child { margin-top: 0; }
+
+.rows { list-style: none; padding: 0; margin: 0 0 1.4rem; }
+
+.rows li {
+  border: 1px solid var(--line);
+  border-left: 2px solid var(--accent-dim);
+  border-radius: 2px;
+  background: var(--panel);
+  padding: 0.6rem 0.85rem;
+  margin-bottom: 0.4rem;
+}
+
+.rows li button {
+  font-family: ui-monospace, "Cascadia Code", "Consolas", monospace;
+  font-size: 0.8rem;
+  border: 0;
+  background: none;
+  color: var(--body);
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+  word-break: break-all;
+}
+
+.rows li button:hover { color: var(--accent); }
+
+/* -------------------------------------------------------------- key/value */
+
+dl {
+  display: grid;
+  grid-template-columns: minmax(8.5rem, max-content) 1fr;
+  gap: 0.3rem 1.4rem;
+  margin: 0.55rem 0 0;
+}
+
+dt {
+  font-family: ui-monospace, "Cascadia Code", "Consolas", monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--dim);
+  padding-top: 0.12rem;
+}
+
+/* The dash markers from the Flop list layout. */
+dd {
+  margin: 0;
+  font-size: 0.86rem;
+  color: var(--body);
+  word-break: break-word;
+  position: relative;
+  padding-left: 1rem;
+}
+
+dd::before {
+  content: "\2014";
+  position: absolute;
+  left: 0;
+  color: var(--accent-dim);
+}
+
+code, .mono {
+  font-family: ui-monospace, "Cascadia Code", "Consolas", monospace;
+  font-size: 0.8rem;
+  color: var(--body);
+  word-break: break-all;
+}
+
+pre {
+  font-family: ui-monospace, "Cascadia Code", "Consolas", monospace;
+  font-size: 0.76rem;
+  line-height: 1.55;
+  color: var(--body);
+  background: #060a0f;
+  border: 1px solid var(--line-soft);
+  border-radius: 2px;
+  padding: 0.85rem;
+  overflow-x: auto;
+  margin: 0.5rem 0 0;
+}
+
+/* ---------------------------------------------------------------- status */
+
+.status {
+  display: inline-block;
+  font-family: ui-monospace, "Cascadia Code", "Consolas", monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 0.22rem 0.6rem;
+  border-radius: 2px;
+  border: 1px solid currentColor;
+  margin-bottom: 0.3rem;
+}
+
+.status.allow { color: var(--allow); }
+.status.deny { color: var(--deny); }
+.status.caution { color: var(--caution); }
+
+.note, .warn {
+  font-size: 0.82rem;
+  line-height: 1.6;
+  border-left: 2px solid var(--line);
+  padding-left: 0.9rem;
+  margin: 0.9rem 0 0;
+  color: var(--dim);
+}
+
+.warn {
+  color: var(--caution);
+  border-left-color: var(--caution);
+}
+
+#offline code {
+  display: block;
+  margin-top: 0.4rem;
+  color: var(--accent);
+}
+
+/* ---------------------------------------------------------------- footer */
+
+footer {
+  border-top: 1px solid var(--line);
+  margin-top: 3.5rem;
+  padding-top: 1.2rem;
+}
+
+footer p {
+  color: #46505d;
+  font-size: 0.74rem;
+  line-height: 1.65;
+  max-width: 54rem;
+  margin: 0;
+}
+
+@media (max-width: 720px) {
+  body { padding: 0 1.1rem 4rem; }
+  .screen { padding-left: 0; }
+  .screen::before { position: static; display: block; margin-bottom: 0.4rem; font-size: 2.4rem; }
+  dl { grid-template-columns: 1fr; gap: 0.1rem; }
+  dt { margin-top: 0.5rem; }
+}

@@ -27,10 +27,12 @@ Optional dependency: this imports FastAPI, which the core deliberately does not.
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from pathlib import Path
 from typing import Annotated, Any
 
 from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi import Query as FastQuery
+from fastapi.responses import HTMLResponse, PlainTextResponse
 from pydantic import BaseModel, ConfigDict, Field
 
 from lineageauth import __version__, catalog
@@ -60,6 +62,26 @@ SECURITY_HEADERS = {
     "Permissions-Policy": "geolocation=(), microphone=(), camera=()",
     "Cross-Origin-Resource-Policy": "same-origin",
 }
+
+EXPLORER_ROOT = Path(__file__).resolve().parents[3] / "apps" / "explorer"
+
+# The Explorer's own policy, stricter than a default page would get and looser
+# than the API's `default-src 'none'` in exactly two places: its stylesheet and
+# its script, both same-origin files. There is no 'unsafe-inline' -- the page
+# carries no inline script or style, which is why it does not need one
+# (docs/17: strict CSP). `connect-src 'self'` lets it read this API and nothing
+# else; `form-action 'none'` means no form on the page can post anywhere.
+EXPLORER_CSP = (
+    "default-src 'none'; "
+    "script-src 'self'; "
+    "style-src 'self'; "
+    "connect-src 'self'; "
+    "img-src 'none'; "
+    "font-src 'none'; "
+    "frame-ancestors 'none'; "
+    "base-uri 'none'; "
+    "form-action 'none'"
+)
 
 STANDING_NOTE = (
     "This service helps you find signed events. It cannot make one authoritative. "
@@ -133,6 +155,42 @@ def create_app(index: EventIndex, *, title: str = "LineageAuth") -> FastAPI:
     @app.get("/healthz")
     def healthz() -> dict[str, Any]:
         return {"status": "ok", "protocol": catalog.PROTOCOL, "version": catalog.CORE_VERSION}
+
+    def _explorer_file(name: str, media_type: str) -> Response:
+        path = EXPLORER_ROOT / name
+        if not path.is_file():
+            raise HTTPException(
+                status_code=404,
+                detail=(
+                    "the Explorer is not present in this installation; it lives in "
+                    "apps/explorer/ in the repository"
+                ),
+            )
+        response: Response
+        if media_type == "text/html":
+            response = HTMLResponse(path.read_text(encoding="utf-8"))
+        else:
+            response = PlainTextResponse(path.read_text(encoding="utf-8"), media_type=media_type)
+        response.headers["Content-Security-Policy"] = EXPLORER_CSP
+        return response
+
+    @app.get("/", response_class=HTMLResponse)
+    def explorer() -> Response:
+        """Serve the Explorer from this origin.
+
+        Same origin on purpose. The page reads this API and nothing else, so it
+        needs no cross-origin permission and this service needs no CORS header
+        it would then have to be careful about.
+        """
+        return _explorer_file("index.html", "text/html")
+
+    @app.get("/explorer/app.css")
+    def explorer_css() -> Response:
+        return _explorer_file("app.css", "text/css")
+
+    @app.get("/explorer/app.js")
+    def explorer_js() -> Response:
+        return _explorer_file("app.js", "text/javascript")
 
     @app.get(f"/{API_VERSION}/meta")
     def meta() -> dict[str, Any]:

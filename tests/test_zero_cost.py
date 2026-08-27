@@ -339,6 +339,20 @@ class TestDefinitionOfDone:
         view = collect([MemorySource("local", [genesis()])], checked_at=AT)
         assert view.fresh
 
+    def test_local_explorer(self) -> None:
+        """Served by the local API, from the same origin, under its own strict CSP."""
+        pytest.importorskip("fastapi")
+        from fastapi.testclient import TestClient
+
+        from lineageauth.api import create_app
+
+        with EventIndex() as index:
+            index.ingest_all([genesis()])
+            client = TestClient(create_app(index))
+            page = client.get("/")
+            assert page.status_code == 200
+            assert "unsafe-inline" not in page.headers["content-security-policy"]
+
     def test_local_api_is_optional_and_works_when_present(self) -> None:
         """Optional on purpose: nothing above needed it to reach this line."""
         pytest.importorskip("fastapi")
@@ -355,23 +369,23 @@ class TestDefinitionOfDone:
 class TestWhatIsNotBuiltYet:
     """The honest half of the checklist.
 
-    `docs/31` lists a local Explorer. It does not exist, so it is named here
-    rather than quietly passing. The assertion runs the other way too: when
-    somebody builds it, this test fails and forces the list to be corrected.
+    It is empty now. It was not: `docs/31` lists a local Explorer, and until the
+    Explorer existed it was named here rather than quietly passing. The
+    assertion ran the other way too, and that is what emptied this list -- the
+    moment an Explorer appeared the test failed and forced the correction,
+    instead of letting the checklist go on understating what works.
+
+    A list that can only be corrected by hand goes stale. This one fails.
     """
 
-    NOT_YET_BUILT = ("local Explorer UI",)
+    NOT_YET_BUILT: tuple[str, ...] = ()
 
-    def test_the_explorer_is_not_built(self) -> None:
-        assert "local Explorer UI" in self.NOT_YET_BUILT
-        assert not list((REPO / "apps").rglob("*.html")), (
-            "an Explorer appeared; remove it from NOT_YET_BUILT so the checklist "
-            "stops understating what works"
-        )
+    def test_every_named_gap_is_still_a_gap(self) -> None:
+        assert self.NOT_YET_BUILT == (), "add a test below for anything named here"
 
-    def test_the_unbuilt_list_matches_the_task_file(self) -> None:
-        tasks = (REPO / "TASKS.md").read_text(encoding="utf-8")
-        assert "- [ ] UI" in tasks or "Explorer" in tasks
+    def test_the_explorer_exists_and_is_therefore_not_a_gap(self) -> None:
+        assert (REPO / "apps" / "explorer" / "index.html").is_file()
+        assert "local Explorer UI" not in self.NOT_YET_BUILT
 
 
 # ------------------------------------------------------------ the invariants

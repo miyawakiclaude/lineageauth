@@ -133,6 +133,8 @@ real authority behind it yet.
       dry-run write preparation. It cannot publish.
 - [x] Zero-cost conformance — the "works with no paid service" list is
       executed, and names what is not built rather than passing quietly
+- [x] Explorer — a local viewer that renders every value as text, verifies
+      nothing, and says so on the page
 - [ ] Everything after that — see [MASTER_PLAN.md](MASTER_PLAN.md)
 
 ## Contributing

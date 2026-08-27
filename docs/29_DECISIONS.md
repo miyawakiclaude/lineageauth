@@ -1099,6 +1099,49 @@ Git/GitHub writes require confirmation of active account + repository owner + re
   must fail and the revoked delegation must be denied.
 - **Migration:** Pre-1.0.
 
+## D-066: the Explorer displays and verifies nothing, and says so
+
+- **Date:** 2026-08-27
+- **Problem:** every value this page shows -- room names, task titles, dispute
+  statements, profile text, fleet names -- is written by somebody else. A
+  viewer for a provenance protocol is exactly the wrong place to execute a
+  string.
+- **Decision:** `apps/explorer/` is one HTML file, one stylesheet and one
+  script, served by the local API from the same origin.
+  - **No string ever becomes markup.** Text reaches the page through
+    `textContent` and nothing else. A test reads the source and fails on every
+    construct that could turn a string into markup -- which is why none of them
+    are spelled out even in a comment, since the first version of that comment
+    failed its own test.
+  - **Strict CSP with no `unsafe-inline`.** The page carries no inline script
+    and no inline style, which is what earns it `script-src 'self'` instead.
+    The API's own `default-src 'none'` still applies to every data endpoint;
+    the Explorer's looser policy is set per-route and does not leak.
+  - **Same origin, so no CORS.** Serving the page from the API means it needs
+    no cross-origin permission, and the API needs no header it would then have
+    to be careful about.
+  - **It verifies nothing** and repeats that on the page. A viewer that looks
+    like a verifier gets believed like one.
+  - No storage, no `window.open`, no navigation, no key generation in the
+    browser (`docs/17` excludes the last until it is separately
+    threat-modelled). Each is pinned by a test.
+- **Status language:** `docs/17` forbids "trusted human", "official" and
+  "guaranteed safe". A test asserts all three appear nowhere in the UI files,
+  and it caught two of my own comments before it caught anything else.
+- **Visual design** follows the Technocore/Flop material this protocol plugs
+  into -- dark gridded ground, cyan accent, monospace slugs, outlined section
+  numerals -- with **no logo and no borrowed wordmark**. Looking like it belongs
+  in that world is fine; passing for somebody else's product is not, and a page
+  about provenance is a poor place to blur that. Dark only: a security surface
+  that changes colour with the operating system also changes which warnings
+  look urgent.
+- **The zero-cost ratchet fired.** `tests/test_zero_cost.py` named the Explorer
+  as not built and asserted the *absence* of one. Building it broke that test
+  and forced the checklist to be corrected, which is the behaviour D-065 was
+  designed for: a list that can only be corrected by hand goes stale, and this
+  one fails instead.
+- **Migration:** Pre-1.0.
+
 ### Pending decision template
 
 - ID:

@@ -97,7 +97,10 @@ uv run pytest && uv run ruff check . && uv run mypy
       behind it so a client can reach its own verdict
 - [x] graph projection — `graph.py`, `la graph`, `GET /v1/lineages/{id}/graph`;
       every status read off the resolver so the picture cannot disagree with it
-- [ ] Next.js explorer
+- [x] explorer — plain HTML, CSS and one script, served by the API from the
+      same origin. Not Next.js: a build step would add a second toolchain and a
+      node_modules tree to a project whose zero-cost claim is checked by test,
+      and the page needs neither (D-066)
 - [x] security headers — CSP, nosniff, DENY, no-referrer on every response
 - [x] no key storage — asserted: no private key material reaches the index
 
@@ -168,7 +171,7 @@ depend on the indexer or the Explorer.)*
 - [x] passport projection — `build_passport`; skill support needs both a signed
       receipt and an independent attester
 - [x] passport API — `GET /v1/passports/{did}` + `la passport`
-- [ ] passport UI
+- [x] passport UI — an Explorer screen (D-066)
 
 ## P10 Router
 - [x] query schema — skills, authority requirements, approval ceiling, availability
@@ -181,7 +184,7 @@ depend on the indexer or the Explorer.)*
 - [x] fleet independence signals — independent counterparties, attestation
       concentration, reciprocal verifier pairs; reported, never a Sybil verdict
 - [x] search API — `POST /v1/router/search`
-- [ ] search UI
+- [x] search UI — an Explorer screen, contributions shown summing to the relevance
 
 ## P11 Task Exchange
 - [x] task registry — `browse`, filtered by status, requester, claimability
@@ -194,7 +197,7 @@ depend on the indexer or the Explorer.)*
 - [x] moderation — reader-supplied blocklists that hide, count, and delete
       nothing
 - [x] `GET /v1/exchange`
-- [ ] UI
+- [x] UI — an Explorer screen; DISPUTED shown over the task's own status
 - [x] independent-agent test — three unrelated keys through the whole loop
 
 ## P12 Jury
@@ -208,7 +211,8 @@ depend on the indexer or the Explorer.)*
 - [x] verdict — derived; a split jury is UNDECIDED and nothing breaks the tie
 - [x] passport display — beside the four claim categories, never inside one
 - [x] `GET /v1/disputes/{case}` — the procedure served with the outcome
-- [ ] UI
+- [x] UI — an Explorer screen showing the tally, every juror's conflicts,
+      and what the outcome would have been without them
 - [x] tests
 
 ## P13 Fleet
@@ -233,7 +237,7 @@ depend on the indexer or the Explorer.)*
       one key are one adopter
 - [x] fraud heuristics presentation — reported with reasons, never as proof
 - [x] passport `downstreamUse`
-- [ ] impact UI
+- [x] impact UI — downstream use on the passport screen
 
 ## P15 Production
 - [x] zero-cost deployment architecture — static first; compute only when a
