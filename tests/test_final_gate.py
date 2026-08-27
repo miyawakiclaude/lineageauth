@@ -53,9 +53,10 @@ COMPANY_PATH = re.compile(
     re.IGNORECASE,
 )
 
-# The scan names what it looks for, so it necessarily contains those strings.
+# A scan necessarily contains the strings it scans for. These two are the scan.
 CONTAMINATION_SCAN_EXEMPT = {
     "tests/test_final_gate.py",
+    "scripts/pre_push_check.py",
 }
 
 SECRET_PATTERNS = (
@@ -87,9 +88,17 @@ SKIP_DIRS = {".git", ".venv", "__pycache__", ".mypy_cache", ".ruff_cache", ".pyt
 
 
 def tracked_files() -> list[Path]:
-    """Every file git tracks. Untracked scratch is not what ships."""
+    """Every file git would ship: tracked, plus new files that are not ignored.
+
+    `--others --exclude-standard` is the part that matters and it was missing at
+    first. A plain `ls-files` shows only what is already committed or staged, so
+    the scan could not see a file until after it had been added -- and the
+    window where contamination is easiest to catch is the one right after
+    somebody creates the file. This scan passed on a repository whose newest
+    file named the company, because the file was not tracked yet.
+    """
     out = subprocess.run(
-        ["git", "-C", str(REPO), "ls-files"],
+        ["git", "-C", str(REPO), "ls-files", "--cached", "--others", "--exclude-standard"],
         capture_output=True,
         text=True,
         check=False,
@@ -185,6 +194,22 @@ class TestPersonalIsolation:
             assert COMPANY_PATH.search(text), f"the scan missed {text!r}"
         for text in must_stay_quiet:
             assert not COMPANY_PATH.search(text), f"the scan fired on prose: {text!r}"
+
+    def test_the_scan_sees_a_file_that_is_not_committed_yet(self, tmp_path: Path) -> None:
+        """The window that matters is right after somebody creates the file.
+
+        Not a hypothetical: this scan passed on a repository whose newest file
+        named the company, because `ls-files` without `--others` cannot see a
+        file until it is staged.
+        """
+        listed = {p.relative_to(REPO).as_posix() for p in tracked_files()}
+        probe = REPO / ".contamination-scan-control.md"
+        probe.write_text("a file nobody has staged\n", encoding="utf-8")
+        try:
+            after = {p.relative_to(REPO).as_posix() for p in tracked_files()}
+        finally:
+            probe.unlink()
+        assert after - listed == {".contamination-scan-control.md"}
 
     def test_no_company_cloud_or_billing_environment_is_required(self) -> None:
         project = tomllib.loads((REPO / "pyproject.toml").read_text(encoding="utf-8"))["project"]

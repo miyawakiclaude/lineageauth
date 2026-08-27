@@ -92,7 +92,10 @@ def git(*args: str) -> str:
 
 def tracked_text() -> list[tuple[str, str]]:
     files: list[tuple[str, str]] = []
-    for name in git("ls-files").splitlines():
+    # `--others --exclude-standard` so a file that exists and has never been
+    # staged is still seen. A push does not send it, but somebody about to push
+    # is somebody about to commit, and the cheap moment to catch this is now.
+    for name in git("ls-files", "--cached", "--others", "--exclude-standard").splitlines():
         if not name or name in EXEMPT:
             continue
         path = REPO / name
@@ -120,7 +123,12 @@ def check_remote() -> list[str]:
 def check_identity() -> list[str]:
     email = git("config", "--get", "user.email").lower()
     if not email:
-        return ["no committer address is configured"]
+        # Not a violation. An unset address is not a company address, and git
+        # will not let a commit happen without one anyway. Treating "unset" as a
+        # failure was a false positive -- it fired in CI, where nobody is
+        # committing -- and a check that cries wolf is a check somebody
+        # bypasses and then deletes.
+        return []
     return [
         f"the committer address {email} looks like a company identity"
         for marker in COMPANY_IDENTITY

@@ -1276,6 +1276,37 @@ Git/GitHub writes require confirmation of active account + repository owner + re
   hide the depth limit instead of documenting it.
 - **Migration:** Pre-1.0.
 
+## D-072: a scan that cannot see a new file has a blind spot where it matters most
+
+- **Date:** 2026-08-27
+- **Found by:** CI, on the commit that added the pre-push check.
+- **What happened:** the contamination scan used `git ls-files`, which lists
+  only what is committed or staged. `scripts/pre_push_check.py` names the
+  company by necessity -- it is the scanner -- and when the local gate ran, the
+  file was **not tracked yet**, so the scan could not see it. The gate said
+  PASS. The commit landed. CI, working from a checkout where the file *was*
+  tracked, failed immediately.
+- **Two separate mistakes, and the second is the interesting one:**
+  1. the scanner was not in the exemption list, alongside the test that has the
+     same problem for the same reason. Fixed by adding it.
+  2. **the scan had a blind spot exactly where contamination is easiest to
+     catch** -- the moment after somebody creates a file and before they think
+     about it. Both scans now use
+     `ls-files --cached --others --exclude-standard`, and a control test proves
+     a brand-new unstaged file is seen.
+- **A related false positive, found the same way:** the pre-push check treated
+  an unset `user.email` as a violation. It is not one -- an unset address is not
+  a company address, and git will not commit without one anyway. It fired in CI,
+  where nobody is committing. A check that cries wolf is a check somebody
+  bypasses and then deletes.
+- **Why the local gate could not have caught this:** the gate runs the same four
+  commands CI runs, but not against the same file set, because untracked files
+  are invisible to a `ls-files` scan and CI always works from a full checkout.
+  Widening the scan closes that gap for this check specifically; the general
+  lesson is that a check reading `git ls-files` is reading a different
+  repository before and after `git add`.
+- **Migration:** Pre-1.0.
+
 ## D-071: the stop sign goes where being wrong cannot be undone
 
 - **Date:** 2026-08-27
