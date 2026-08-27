@@ -1142,6 +1142,35 @@ Git/GitHub writes require confirmation of active account + repository owner + re
   one fails instead.
 - **Migration:** Pre-1.0.
 
+## D-067: the release checklist is a test, and three boxes stay unticked
+
+- **Date:** 2026-08-27
+- **Problem:** `TASKS.md` ends with a release checklist. Every line is a claim
+  about the repository, and a claim nobody re-checks stops being true quietly.
+- **Decision:** `tests/test_final_gate.py` executes the checklist, and a box is
+  ticked only where a test establishes it. Three stay unticked on purpose:
+  - *free tiers re-verified before deployment* -- nothing is deployed, so
+    ticking it would be ticking it on a technicality
+  - *all protocol tests pass* -- a suite cannot assert its own totality without
+    lying about it; CI establishes this on every push
+  - *the account is personal* is ticked, but the test says what it actually
+    checks: the remote URL. Whether that GitHub account is personal is a fact
+    about GitHub, not about this checkout
+- **The contamination scan runs on every test run**, not on request, because a
+  scan somebody has to remember is not a control.
+- **Its first version was wrong in both directions and both were caught:**
+  - It fired on `TASKS.md` documenting the isolation rule. A scan that punishes
+    writing the rule down teaches people to stop writing it down, so the
+    company's *identity* (which may appear nowhere) is now separated from a
+    *path into the company tree* (which is the actual contamination).
+  - The path pattern matched only forward slashes, so it was blind to every
+    Windows path -- the shape contamination would actually arrive in. **It
+    passed the suite anyway.** A negative control caught it, and that control is
+    now a test: a scanner that never fires is indistinguishable from a clean
+    repository, and the only way to tell them apart is to feed it something it
+    must catch.
+- **Migration:** Pre-1.0.
+
 ### Pending decision template
 
 - ID:

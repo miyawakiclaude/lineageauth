@@ -22,9 +22,10 @@ uv run pytest && uv run ruff check . && uv run mypy
         commit is blocked until the human supplies a personal address
 - [ ] add pre-push personal-account safety check
       — deferred until a remote exists; must check account, owner, remote, branch
-- [ ] add company contamination/release scan
-      — CI scans for private key material; the contamination scan
-        (company org names, internal domains, RPO paths) is still to be written
+- [x] add company contamination/release scan
+      — `tests/test_final_gate.py`; runs on every test run, separates the
+        company's identity from a path into its tree, and carries a control
+        proving the scan catches what it claims to (D-067)
 - [x] monorepo scaffold
 - [x] Python 3.12 uv project
 - [x] lint/type/test — ruff, mypy (strict), pytest, hypothesis
@@ -267,25 +268,43 @@ depend on the indexer or the Explorer.)*
 - [ ] v1 release checklist
 
 ## Final gate
-- [ ] repository is owned/targeted by personal account `miyawakiclaude`
-- [ ] no company RPO remote/account is used for writes
-- [ ] no company secrets/code/customer data are present
-- [ ] no company cloud/billing environment is required
-- [ ] complete local/reference system runs at ¥0
-- [ ] no paid service is required by default
-- [ ] no billing/automatic upgrade is enabled
+
+Each line is a claim about this repository, and a claim nobody re-checks stops
+being true quietly. `tests/test_final_gate.py` executes them, and a box is
+ticked here only where a test there establishes it. The unticked ones below are
+unticked because they cannot be established from inside a test run -- not
+because nobody got to them.
+
+- [x] repository is owned/targeted by personal account `miyawakiclaude`
+      — the remote URL is checked. Whether that GitHub account is really
+        personal is a fact about GitHub, not about this checkout
+- [x] no company RPO remote/account is used for writes
+- [x] no company secrets/code/customer data are present
+      — a contamination scan runs on every test run, and a control proves the
+        scan catches what it claims to (it did not, at first)
+- [x] no company cloud/billing environment is required
+- [x] complete local/reference system runs at ¥0
+- [x] no paid service is required by default
+- [x] no billing/automatic upgrade is enabled
 - [ ] all selected hosted free tiers were re-verified before deployment
+      — nothing is deployed. Ticking this would be ticking it on a technicality
 - [ ] all protocol tests pass
-- [ ] property tests pass
-- [ ] conformance vectors publishable
-- [ ] no secrets
-- [ ] no unapproved external side effect
-- [ ] DB rebuild validated
-- [ ] recovery conflicts tested
-- [ ] exact approval demo
-- [ ] useful-work demo
-- [ ] passport/router demo
-- [ ] Technocore adapter safe
-- [ ] MCP current
-- [ ] A2A current
-- [ ] README/security/limitations complete
+      — a suite cannot assert its own totality without lying about it. CI is
+        the thing that establishes this, on every push
+- [x] property tests pass
+- [x] conformance vectors publishable
+      — the generator is deterministic and every vector verifies, or fails, as
+        labelled
+- [x] no secrets
+- [x] no unapproved external side effect
+      — the API accepts no events over HTTP, the Technocore adapter has no
+        send path, and no MCP tool can sign
+- [x] DB rebuild validated
+- [x] recovery conflicts tested
+- [x] exact approval demo
+- [x] useful-work demo
+- [x] passport/router demo
+- [x] Technocore adapter safe
+- [x] MCP current
+- [x] A2A current
+- [x] README/security/limitations complete
