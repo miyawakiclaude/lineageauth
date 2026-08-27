@@ -55,7 +55,21 @@ jobs:
         run: uv run mypy
 
       - name: Tests
-        run: uv run pytest
+        # Failures are re-emitted as workflow annotations, which are visible on
+        # the job page without signing in. The logs endpoint needs admin rights,
+        # so a failure that only exists in the log is a failure the person most
+        # likely to fix it cannot read.
+        run: |
+          set -o pipefail
+          uv run pytest -q --tb=short 2>&1 | tee pytest.out || {
+            echo "::group::pytest failures"
+            grep -E '^(FAILED|ERROR|E   )' pytest.out | head -60 | while IFS= read -r line; do
+              printf '::error::%s
+' "${line}"
+            done
+            echo "::endgroup::"
+            exit 1
+          }
 
       - name: Core passes without the optional extras
         # CLAUDE.md 2.7.2: nothing needed to verify an event, resolve a lineage,
