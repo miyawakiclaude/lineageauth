@@ -47,6 +47,19 @@ app.add_typer(lineage_app)
 STDIN_SENTINEL = "-"
 
 
+# PowerShell writes UTF-16 with a BOM when output is redirected with `>`, which
+# is how a Windows operator naturally saves a signed event. Read as UTF-8 that
+# raises UnicodeDecodeError, and Typer prints a traceback -- on, of all days, the
+# one where somebody is following docs/RECOVERY.md with a lost root key. The
+# bytes are recognised here so the message can name the cause and the fix.
+_BYTE_ORDER_MARKS = (
+    (bytes([0xFF, 0xFE, 0x00, 0x00]), "UTF-32 (little endian)"),
+    (bytes([0x00, 0x00, 0xFE, 0xFF]), "UTF-32 (big endian)"),
+    (bytes([0xFF, 0xFE]), "UTF-16 (little endian) -- PowerShell writes this for `>`"),
+    (bytes([0xFE, 0xFF]), "UTF-16 (big endian)"),
+)
+
+
 def _read_source(path: str) -> str:
     if path == STDIN_SENTINEL:
         return sys.stdin.read()
@@ -54,7 +67,25 @@ def _read_source(path: str) -> str:
     if not source.is_file():
         typer.secho(f"error: no such file: {path}", fg=typer.colors.RED, err=True)
         raise typer.Exit(code=2)
-    return source.read_text(encoding="utf-8")
+    try:
+        # utf-8-sig so a UTF-8 BOM, which several Windows editors add without
+        # saying so, is consumed rather than left in front of the opening brace.
+        return source.read_text(encoding="utf-8-sig")
+    except UnicodeDecodeError as exc:
+        head = source.read_bytes()[:4]
+        described = next((name for mark, name in _BYTE_ORDER_MARKS if head.startswith(mark)), None)
+        typer.secho(f"error: {path} is not UTF-8 text.", fg=typer.colors.RED, err=True)
+        if described:
+            typer.secho(f"  it looks like {described}", fg=typer.colors.RED, err=True)
+            typer.secho(
+                "  re-save it as UTF-8. In PowerShell, write the file with "
+                "`| Set-Content -Encoding utf8 FILE` rather than `> FILE`.",
+                fg=typer.colors.YELLOW,
+                err=True,
+            )
+        else:
+            typer.secho(f"  {exc}", fg=typer.colors.RED, err=True)
+        raise typer.Exit(code=2) from exc
 
 
 def _result_as_dict(result: EventVerification) -> dict[str, object]:

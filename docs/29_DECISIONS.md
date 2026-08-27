@@ -1774,6 +1774,40 @@ Git/GitHub writes require confirmation of active account + repository owner + re
   from the operator's side.
 - **Migration:** Pre-1.0.
 
+## D-086: the file the operator actually produced
+
+- **Date:** 2026-08-27
+- **Found by:** verifying that the operator's real recovery keys open, which is
+  the half of `D-085` a drill with throwaway keys cannot cover. Two signatures
+  were produced with `la sign ... > proof.json` and neither would load.
+- **Problem:** **PowerShell writes UTF-16 with a byte order mark when you
+  redirect with `>`.** That is the natural way to save a file on Windows, the
+  runbook tells people to save files, and reading the result as UTF-8 raised
+  `UnicodeDecodeError` -- which Typer rendered as a traceback. On, of all days,
+  the one where somebody has lost a root key and is following `docs/RECOVERY.md`
+  line by line.
+- **Decision:** `_read_source` recognises UTF-16 and UTF-32 byte order marks and
+  reports what the file is and how to re-save it, naming
+  `Set-Content -Encoding utf8`. It does **not** re-decode the file: silently
+  accepting bytes the operator did not mean to produce is not a kindness here,
+  and a runbook step that appears to work while writing the wrong encoding is
+  worse than one that stops.
+- **A UTF-8 BOM is different and is consumed.** Several Windows editors add one
+  without saying so. That is a stray character in front of the opening brace,
+  not an encoding the tool cannot read, and refusing the file for it would
+  strand somebody whose only mistake was using Notepad.
+- **The test for that was vacuous at first, and the negative control caught it.**
+  It asserted `MALFORMED`, which both the fixed and the broken path reach --
+  removing the BOM handling left all four tests green. What discriminates is
+  whether the JSON parsed at all: `invalid JSON: Unexpected UTF-8 BOM` versus
+  `envelope does not match the LAP envelope shape`. Asserting the reason rather
+  than the verdict is what makes it a test.
+- **The verification itself:** both recovery keys opened, both Ed25519
+  signatures verified against the DIDs the published policy names, and the two
+  are distinct members -- so the 2-of-3 threshold is reachable. Proven, from the
+  signatures, rather than reported.
+- **Migration:** Pre-1.0.
+
 ### Pending decision template
 
 - ID:

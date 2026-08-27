@@ -143,6 +143,21 @@ Two things that cost the drill time:
 - a published bundle is a JSON **array of documents**. Load it with
   `Envelope.from_json` per document, then `EventBundle.from_envelopes`.
 
+### Saving a file on Windows
+
+**Do not redirect with `>` in PowerShell.** It writes UTF-16 with a byte order
+mark, and the file it produces is not readable as JSON. This was found by
+running the check above for real: the signed events came back as UTF-16 and
+nothing would load them.
+
+```powershell
+la sign payload.json --key recovery-1.json | Set-Content -Encoding utf8 proof.json
+```
+
+`la` now recognises the bytes and says so rather than raising a traceback, but
+the tooling does not silently re-decode the file: accepting bytes the operator
+did not mean to produce is not a kindness on this particular day.
+
 `scripts/recovery_drill.py` is a worked example of all of it.
 
 ---

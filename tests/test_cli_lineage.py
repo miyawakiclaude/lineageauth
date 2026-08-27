@@ -94,3 +94,76 @@ def test_an_ambiguous_bundle_demands_an_explicit_lineage(tmp_path: Path) -> None
     result = runner.invoke(app, ["lineage", "show", path])
 
     assert result.exit_code == 2
+
+
+class TestItReadsWhatTheShellActuallyWrote:
+    """Found during the recovery drill, on the operator's own machine.
+
+    `docs/RECOVERY.md` tells somebody to save a signed event to a file. On
+    Windows the natural way to do that is `la sign ... > proof.json`, and
+    PowerShell writes UTF-16 with a byte order mark. Read as UTF-8 that raised
+    `UnicodeDecodeError` and Typer printed a traceback -- on, of all days, the
+    one where the reader has already lost their root key and is following the
+    runbook line by line.
+
+    The file is not salvageable by guessing at its encoding: re-decoding it
+    silently would mean the tool accepted bytes the operator did not intend to
+    produce. Naming the cause and the fix is the whole remedy.
+    """
+
+    UTF16_LE = bytes([0xFF, 0xFE])
+    UTF16_BE = bytes([0xFE, 0xFF])
+
+    def test_a_powershell_redirect_is_explained_rather_than_traced(self, tmp_path) -> None:
+        target = tmp_path / "redirected.json"
+        target.write_bytes(self.UTF16_LE + '{"a": 1}'.encode("utf-16-le"))
+
+        result = runner.invoke(app, ["verify", str(target)])
+
+        assert result.exit_code == 2
+        message = (result.stderr or "") + (result.stdout or "")
+        assert "not UTF-8" in message
+        assert "UTF-16" in message
+        assert "Set-Content" in message, "the message must name the fix, not only the fault"
+        assert "Traceback" not in message
+
+    def test_a_big_endian_file_is_named_too(self, tmp_path) -> None:
+        target = tmp_path / "be.json"
+        target.write_bytes(self.UTF16_BE + '{"a": 1}'.encode("utf-16-be"))
+        result = runner.invoke(app, ["verify", str(target)])
+        assert result.exit_code == 2
+        assert "UTF-16" in (result.stderr or "") + (result.stdout or "")
+
+    def test_a_utf8_bom_is_consumed_rather_than_refused(self, tmp_path) -> None:
+        """Several Windows editors add one without saying so.
+
+        A BOM in front of the opening brace is not an encoding this tool cannot
+        read; it is a stray character. Refusing the file for it would strand
+        somebody whose only mistake was using Notepad.
+        """
+        target = tmp_path / "bom.json"
+        target.write_bytes(b"\xef\xbb\xbf" + b'{"protocol": "lineageauth"}')
+
+        result = runner.invoke(app, ["verify", str(target)])
+
+        message = (result.stderr or "") + (result.stdout or "")
+        assert "not UTF-8" not in message, "a UTF-8 BOM must not be reported as a bad encoding"
+        # MALFORMED alone does not discriminate: an unparsed file and a parsed
+        # one that is not an envelope both reach it. What separates them is
+        # whether the JSON was read at all.
+        assert "invalid JSON" not in message, (
+            "the BOM reached the JSON parser, so it was not consumed on read"
+        )
+        assert "envelope does not match" in message, (
+            "it should get as far as judging the shape of a parsed payload"
+        )
+
+    def test_ordinary_utf8_still_reads(self, tmp_path) -> None:
+        """The negative control: the fix must not have broken the normal path."""
+        target = tmp_path / "plain.json"
+        target.write_text('{"protocol": "lineageauth"}', encoding="utf-8")
+        result = runner.invoke(app, ["verify", str(target)])
+        message = (result.stderr or "") + (result.stdout or "")
+        assert "not UTF-8" not in message
+        assert "invalid JSON" not in message
+        assert "envelope does not match" in message
