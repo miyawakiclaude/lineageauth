@@ -264,10 +264,16 @@ depend on the indexer or the Explorer.)*
 - [ ] deployment
 - [ ] optional PostgreSQL scale design (do not provision if paid)
 - [ ] optional object storage design (do not provision if paid)
-- [ ] observability
-- [ ] backup/rebuild drill
-- [ ] dependency audit
-- [ ] fuzz
+- [x] observability — `la doctor`: does the index still agree with the store?
+      Local, offline, non-zero exit, `--json`. No agent and no endpoint (D-070)
+- [x] backup/rebuild drill — `scripts/rebuild_drill.py`; deletes the index
+      for real, rebuilds from the store alone, compares checksums
+- [x] dependency audit — five runtime packages, each with a stated reason a
+      test enforces. What it cannot cover (CVEs, which need a network service)
+      is written down rather than implied
+- [x] fuzz — `tests/test_fuzz.py`: every parser returns or raises a
+      LineageAuthError, and nothing else. An unhandled exception in a verifier
+      is a denial of service on the decision it was about to make
 - [x] conformance package — `conformance/`, generated and deterministic; each
       vector states the rule behind its verdict, and a test proves this
       implementation reaches it (D-069)

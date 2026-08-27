@@ -125,6 +125,53 @@ prints.
 
 PowerShell 5.1 has no `&&`. Run one command per line.
 
+## Health check
+
+```bash
+py -3 -m uv run la doctor ./events --db ./index.sqlite3
+```
+
+Asks the one question that matters for a derived index: does it still agree
+with the store? Exits non-zero if not, so it can gate a scheduled job without
+anything having to parse it. `--json` for machine-readable output.
+
+It reaches no network. That is the whole observability story and it is
+deliberately small — no agent, no endpoint, nothing that could cost anything or
+become a second place events live.
+
+## Restore drill
+
+```bash
+py -3 -m uv run python scripts/rebuild_drill.py ./events --db ./index.sqlite3
+```
+
+A backup you have never restored is a hope. This deletes the index — really
+deletes it, so the drill cannot pass by finding the old file still there —
+rebuilds from the store alone, and compares checksums. The store is never
+written to.
+
+If the checksum changes, the index was holding state that never came from a
+signed event. That is a bug in the index, not a problem with the drill.
+
+## Dependency audit
+
+The runtime set is five packages and every one is accounted for in
+`tests/test_operations.py`, which fails if the list changes without the reasons
+changing with it. Two of them exist specifically so nothing here is hand-rolled:
+`rfc8785` for JCS, `cryptography` for Ed25519.
+
+To see what is outdated:
+
+```bash
+py -3 -m uv pip list --outdated
+```
+
+**What this does not cover:** known vulnerabilities. That needs a
+**vulnerability database**, which is a network service, and there is not one
+wired in here — deliberately, under the zero-cost rule. So the audit that runs
+is the offline one: what is depended on, why, and whether that list is still a
+decision somebody made. Treat CVE checking as a separate step you run yourself.
+
 ## What costs money
 
 Nothing above. The register in

@@ -1055,3 +1055,110 @@ def execute(
     typer.echo("")
     typer.echo(f"  note: {decision.note}")
     raise typer.Exit(code=0 if decision.may_execute else 1)
+
+
+@app.command("doctor")
+def doctor(
+    store_path: Annotated[
+        str, typer.Argument(metavar="STORE", help="Directory holding the event store.")
+    ],
+    db: Annotated[str, typer.Option("--db", help="Path to the SQLite index.")],
+    at: Annotated[str | None, typer.Option("--at", help="Evaluation time (RFC3339 UTC).")] = None,
+    as_json: Annotated[bool, typer.Option("--json", help="Emit machine-readable output.")] = False,
+) -> None:
+    """Report the health of a store and its index, offline.
+
+    This is the whole observability story and it is deliberately small
+    (`docs/25`, `docs/31`): a local command, no agent, no endpoint, no service
+    that could cost anything or become a place where events go.
+
+    The question it answers is the one that actually matters for a derived
+    index: **does the index still agree with the store?** The index is
+    rebuildable by definition, so a disagreement is never a reason to trust the
+    index -- it is a reason to rebuild it and find out what wrote to it.
+
+    A non-zero exit means something disagreed, so this can gate a cron job
+    without anything having to parse it.
+    """
+    from lineageauth.index import EventIndex
+    from lineageauth.lineage import resolve_lineage
+    from lineageauth.store import FileEventStore
+
+    moment = parse_instant(at, field="at") if at else datetime.now(tz=UTC)
+    store = FileEventStore(store_path)
+    problems: list[str] = []
+    report: dict[str, Any] = {
+        "store": store_path,
+        "index": db,
+        "checkedAt": format_instant(moment),
+    }
+
+    with EventIndex(db) as index:
+        store_ids = set(store.event_ids())
+        index_ids = {envelope.event_id for envelope in index.envelopes()}
+
+        report["storeEvents"] = len(store_ids)
+        report["indexEvents"] = len(index_ids)
+        report["checksum"] = index.checksum()
+
+        missing = sorted(store_ids - index_ids)
+        extra = sorted(index_ids - store_ids)
+        report["missingFromIndex"] = missing
+        report["notInStore"] = extra
+
+        if missing:
+            problems.append(
+                f"{len(missing)} event(s) are in the store and not in the index; rebuild it"
+            )
+        if extra:
+            # The dangerous direction. The store is authoritative, so an event
+            # the index knows about and the store does not came from somewhere
+            # that is not a signed event file.
+            problems.append(
+                f"{len(extra)} event(s) are in the index and not in the store. The store "
+                "is authoritative, so this is not a stale index -- something wrote to "
+                "the index that did not come from the store"
+            )
+
+        lineages = []
+        for lineage in index.lineages():
+            state = resolve_lineage(index.bundle(lineage=lineage), lineage=lineage, at=moment)
+            lineages.append(
+                {
+                    "lineage": lineage,
+                    "resolved": state.resolved,
+                    "reason": str(state.reason),
+                    "root": state.root,
+                    "epoch": state.epoch,
+                    "warnings": len(state.warnings),
+                }
+            )
+            if not state.resolved:
+                problems.append(f"{lineage} does not resolve: {state.reason}")
+        report["lineages"] = lineages
+
+    report["problems"] = problems
+
+    if as_json:
+        typer.echo(jsonio.dumps(report, indent=2))
+    else:
+        typer.echo(f"  store      {store_path} ({report['storeEvents']} event(s))")
+        typer.echo(f"  index      {db} ({report['indexEvents']} event(s))")
+        typer.echo(f"  checksum   {report['checksum']}")
+        for entry in lineages:
+            mark = "ok " if entry["resolved"] else "!! "
+            typer.echo(f"  {mark}{entry['lineage']}")
+            typer.echo(f"       epoch {entry['epoch']}  {entry['reason']}")
+        if problems:
+            typer.echo("")
+            for problem in problems:
+                typer.secho(f"  !! {problem}", fg=typer.colors.RED)
+        else:
+            typer.secho("\n  the index agrees with the store", fg=typer.colors.GREEN)
+        typer.echo("")
+        typer.echo(
+            "  note: the index is derived and rebuildable. A disagreement is never a "
+            "reason to trust it -- rebuild, and find out what wrote to it."
+        )
+
+    raise typer.Exit(code=1 if problems else 0)

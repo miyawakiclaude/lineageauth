@@ -1240,6 +1240,42 @@ Git/GitHub writes require confirmation of active account + repository owner + re
   relies on it.
 - **Migration:** Pre-1.0.
 
+## D-070: operations are questions you can answer offline
+
+- **Date:** 2026-08-27
+- **Problem:** `docs/25` asks for observability, a backup drill and a dependency
+  audit. `docs/31` caps all three at zero yen. That constraint turned out to be
+  the useful one: it rules out the versions of these that are a subscription and
+  leaves the versions that are a question answerable offline.
+- **Observability is `la doctor`,** and it asks one question: *does the index
+  still agree with the store?* Non-zero exit so a scheduled job can gate on it,
+  `--json` for machines, no agent, no endpoint, nothing that could cost money or
+  become a second place events live. The asymmetry is the interesting part --
+  an event in the store and not the index is a stale index, while an event in
+  the **index and not the store** means something wrote to the index that did
+  not come from a signed event, and those get different messages.
+- **The drill deletes the index for real.** A backup nobody has restored is a
+  hope. The failure mode worth catching is an index that only looks
+  reconstructible while the old file is still there, so the file is unlinked
+  and the rebuild reads the store alone. The copy kept for diagnosis is never
+  read back -- that would be the drill grading its own work. A changed checksum
+  means the index was holding state that never came from a signed event, which
+  is a bug in the index rather than a problem with the drill.
+- **The dependency audit is offline, and says what it cannot see.** Five runtime
+  packages, each with a stated reason a test enforces, so a dependency cannot
+  arrive without somebody writing down why. Two of them exist specifically so
+  nothing is hand-rolled: `rfc8785` and `cryptography`. **Known vulnerabilities
+  are out of scope** and the RUNBOOK says so -- that needs a vulnerability
+  database, which is a network service, and calling something an audit while it
+  quietly checks nothing about CVEs is worse than having no audit.
+- **Fuzzing asserts one property:** every parser returns, or raises a
+  `LineageAuthError`. A verifier reads bytes an attacker chose, and a leaked
+  `KeyError` in the safe path is a denial of service on the decision that was
+  about to be made. `RecursionError` on deeply nested JSON is allowed through
+  deliberately: that is the interpreter's stack limit, and catching it would
+  hide the depth limit instead of documenting it.
+- **Migration:** Pre-1.0.
+
 ### Pending decision template
 
 - ID:
