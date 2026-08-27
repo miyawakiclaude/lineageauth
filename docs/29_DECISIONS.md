@@ -1696,6 +1696,40 @@ Git/GitHub writes require confirmation of active account + repository owner + re
   correct.
 - **Migration:** Pre-1.0.
 
+## D-084: the prose has to keep up with the code, and a test says so
+
+- **Date:** 2026-08-27
+- **Problem:** `README.md` called the Explorer a snapshot that "verifies
+  nothing". That was true when written and stopped being true at `D-080`.
+  Fifteen lines below, the same file's checklist said the page verifies the
+  signatures it shows using the second implementation. **A reader meets both
+  claims on one screen and has to guess which one this project believes.** For
+  a project whose entire pitch is "check it yourself in a minute", losing that
+  reader at the contradiction costs more than the feature earned.
+- **The third copy is the one that matters.** The page's own notice block was
+  correct and precise -- demo keys, no live API, verified in your browser, three
+  separate facts. But the offline branch, shown only when no API answers, said
+  the Explorer "does not verify anything itself". Wrong, and hidden: nobody
+  reviewing the page in its normal state ever sees that paragraph.
+- **Second problem, same cause:** the status line read `pre-alpha` and
+  "Phase 1 (lineage) is in progress" directly above a checklist of fifteen
+  shipped layers. Understating is not the safe direction it looks like -- it
+  reads as inattention, and it buries the fact that the remaining work is not
+  code at all.
+- **Decision:** the Explorer is described as *not an authority or a source of
+  truth*, which is the real caveat, **and** as independently verifying in the
+  browser the signatures it displays, which is the real capability. The status
+  says the reference implementation is feature-complete for the pre-1.0 draft
+  and that v1 is deliberately blocked on an outside implementation. The warning
+  that matters -- do not put real authority behind it -- stays in both places.
+- **Tested, and not as a banned phrase.** `TestTheClaimsMatchTheCapability`
+  first asserts the capability from the source (the page imports the second
+  implementation and calls it), and only then requires that no user-facing text
+  deny it. If in-browser verification is ever removed, the honest sentence
+  becomes legal again and it is the capability assertion that fails. A banned
+  word list would have gone on failing for the wrong reason forever.
+- **Migration:** Pre-1.0.
+
 ### Pending decision template
 
 - ID:

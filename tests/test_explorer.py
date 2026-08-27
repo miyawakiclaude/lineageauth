@@ -268,6 +268,81 @@ class TestEveryTextColourIsReadable:
             )
 
 
+class TestTheClaimsMatchTheCapability:
+    """Prose drifted away from the code, in three places at once.
+
+    `README.md` described the Explorer as a snapshot that "verifies nothing",
+    which had been true and stopped being true. Fifteen lines below, the same
+    file's checklist said the page verifies the signatures it shows using the
+    second implementation. A reader deciding whether this project is careful
+    hits both claims in one screen and has to pick one.
+
+    The third was worse because it hides: the offline branch of the page, shown
+    only when no API answers, said the Explorer "does not verify anything
+    itself".
+
+    This does not ban a phrase. It asserts the capability from the source, and
+    only then requires that no user-facing text deny it -- so if in-browser
+    verification is ever removed, the honest sentence becomes legal again and
+    the first assertion here is what fails.
+    """
+
+    # Every file a stranger reads before deciding to look at the code.
+    USER_FACING = ("README.md", "SECURITY.md", "RELEASE.md", "CONTRIBUTING.md")
+
+    DENIALS = (
+        "verifies nothing",
+        "verify nothing",
+        "does not verify anything",
+        "doesn't verify anything",
+        "verifies none of",
+    )
+
+    def test_the_page_really_does_verify_in_the_browser(self) -> None:
+        """The premise. If this fails, the denials below are true again."""
+        source = SCRIPT.read_text(encoding="utf-8")
+        assert 'from "./lineageauth.js"' in source, "the second implementation is not imported"
+        assert "verifyEvent(" in source, "nothing calls the verifier"
+        assert (EXPLORER.parent.parent / "packages" / "js" / "lineageauth.js").is_file()
+
+    def test_no_user_facing_text_denies_it(self) -> None:
+        offenders = []
+        for name in (*self.USER_FACING, "apps/explorer/index.html"):
+            path = REPO / name
+            if not path.is_file():
+                continue
+            text = path.read_text(encoding="utf-8").lower()
+            for phrase in self.DENIALS:
+                if phrase in text:
+                    line = next(i for i, ln in enumerate(text.splitlines(), 1) if phrase in ln)
+                    offenders.append(f"{name}:{line} says {phrase!r}")
+        assert not offenders, (
+            "the page verifies signatures in the browser, and these say otherwise:"
+            + "".join(chr(10) + "  " + o for o in offenders)
+        )
+
+    def test_the_status_line_is_not_less_mature_than_the_tree(self) -> None:
+        """ "pre-alpha" above fifteen shipped layers reads as inattention.
+
+        The warning that matters -- do not put real authority behind this -- is
+        kept; the maturity label that contradicts the checklist is not.
+        """
+        for name in ("README.md", "SECURITY.md"):
+            text = (REPO / name).read_text(encoding="utf-8")
+            assert "pre-alpha" not in text, f"{name} still says pre-alpha"
+            assert "pre-1.0" in text, f"{name} lost its pre-1.0 marker"
+        readme = (REPO / "README.md").read_text(encoding="utf-8")
+        assert "do not put" in readme.lower(), "the actual warning went missing"
+
+    def test_the_readme_says_what_v1_is_blocked_on(self) -> None:
+        """The honest version of the status is also the interesting one."""
+        readme = (REPO / "README.md").read_text(encoding="utf-8")
+        assert "independent implementation" in readme
+        assert "share a misreading" in readme, (
+            "the reason a second implementation by the same author is not enough"
+        )
+
+
 class TestItKeepsNoSecretsAndOpensNothing:
     def test_no_storage_is_touched(self) -> None:
         source = SCRIPT.read_text(encoding="utf-8")

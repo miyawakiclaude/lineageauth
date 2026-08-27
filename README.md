@@ -7,7 +7,7 @@
 **Portable authority and evidence infrastructure for autonomous agents.**
 
 Protocol family: **LAP — Lineage Authority Protocol**
-Status: **pre-alpha, protocol version `0.1`** — schemas and semantics will change.
+Status: **pre-1.0, protocol version `0.1`** — schemas and semantics will change.
 
 ---
 
@@ -99,8 +99,14 @@ infra/             cost policy (budget invariant: ¥0)
 Start with [START_HERE.md](START_HERE.md).
 
 **[Explorer](https://miyawakiclaude.github.io/lineageauth/)** — a published
-static snapshot. It verifies nothing and its keys are public and reproducible,
-which the page says before it says anything else. It also serves the
+static snapshot. **It is not an authority or a source of truth, and it
+independently verifies in your browser the signatures it displays**, using the
+second implementation. Three separate facts, and the page states all three
+before it states anything else: its keys are demo keys, public and reproducible,
+belonging to nobody; every answer was computed once at build time, so there is
+no live API behind it; and the signatures are checked client-side by an
+implementation written to disagree with the one that produced the events. It
+also serves the
 [conformance vectors](https://miyawakiclaude.github.io/lineageauth/conformance/manifest.json)
 and the [schemas](https://miyawakiclaude.github.io/lineageauth/schemas/envelope.schema.json),
 so an independent implementation can fetch them without cloning anything.
@@ -109,8 +115,15 @@ Running it locally, end to end, for zero yen: [RUNBOOK.md](RUNBOOK.md).
 
 ## Implementation status
 
-Phase 1 (lineage) is in progress. Nothing here is production-ready; do not put
-real authority behind it yet.
+**The reference implementation is feature-complete for the current pre-1.0
+draft**: every layer of protocol version `0.1` is implemented and tested. v1 is
+**deliberately blocked on something no amount of further code can supply** — an
+independent implementation, by somebody who is not this project, that runs the
+conformance vectors and either agrees or shows this one to be wrong. Both
+implementations here share an author, so they can share a misreading.
+[RELEASE.md](RELEASE.md) lists what remains, that item first.
+
+Nothing here is production-ready; do not put real authority behind it yet.
 
 - [x] RFC 8785 canonicalization, signing preimage, event ids
 - [x] Ed25519 `did:key` encode/decode, strict and canonical

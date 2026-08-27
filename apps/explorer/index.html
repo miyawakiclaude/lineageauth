@@ -39,8 +39,9 @@
 </aside>
 
 <p id="offline" hidden class="warn">
-  Nothing answered on this origin. The Explorer reads a local API and does not
-  verify anything itself, so it needs one running:
+  Nothing answered on this origin. The Explorer verifies signatures itself, in
+  your browser, but it has no events to verify without a source of data, so it
+  needs one running:
   <code>py -3 -m uv run uvicorn lineageauth.api:create_app --factory --port 8000</code>
   then open <code>http://127.0.0.1:8000/</code>.
 </p>

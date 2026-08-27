@@ -1,6 +1,6 @@
 # Security Policy
 
-## Status: pre-alpha — do not put real authority behind this
+## Status: pre-1.0 — do not put real authority behind this
 
 Protocol version `0.1` is not stable. Event shapes, reason codes, and
 verification semantics may still change without a migration path. Nothing here
