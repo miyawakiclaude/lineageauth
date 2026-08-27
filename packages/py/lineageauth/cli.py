@@ -22,7 +22,7 @@ import typer
 from lineageauth import __version__, catalog, jsonio
 from lineageauth.actions import ActionRequest
 from lineageauth.authority import AuthorityDecision, check_permission
-from lineageauth.builders import build_approval_receipt
+from lineageauth.builders import build_approval_receipt, sign_payload
 from lineageauth.bundle import EventBundle
 from lineageauth.envelope import Envelope
 from lineageauth.errors import LineageAuthError, ReasonCode
@@ -1162,3 +1162,135 @@ def doctor(
         )
 
     raise typer.Exit(code=1 if problems else 0)
+
+
+key_app = typer.Typer(
+    name="key",
+    help="Create and inspect an encrypted signing key. This tool never holds one.",
+    no_args_is_help=True,
+)
+app.add_typer(key_app)
+
+
+def _ask_passphrase(*, confirm: bool) -> str:
+    """Read a passphrase from a prompt, never from an argument.
+
+    A command line is visible in the process table and lands in shell history.
+    Nothing about a passphrase survives being put there.
+    """
+    import getpass
+
+    first = getpass.getpass("passphrase: ")
+    if not confirm:
+        return first
+    second = getpass.getpass("passphrase (again): ")
+    if first != second:
+        typer.secho("  the two passphrases differ", fg=typer.colors.RED, err=True)
+        raise typer.Exit(code=2)
+    return first
+
+
+@key_app.command("create")
+def key_create(
+    path: Annotated[str, typer.Argument(metavar="FILE", help="Where to write the encrypted key.")],
+) -> None:
+    """Generate a signing key and write it encrypted with a passphrase.
+
+    The key is generated here, on this machine, and encrypted before it touches
+    the disk. The seed is never printed, never logged and never returned -- the
+    only thing this command puts on your screen is the DID, which is public by
+    construction.
+
+    Keep the file outside any repository. Losing the passphrase loses the
+    identity: `did:key` has no revocation. Publish a `recovery.policy` while
+    this key still works, so a quorum can move the lineage later.
+    """
+    from lineageauth import keyfile
+
+    target = Path(path)
+    if target.exists():
+        typer.secho(
+            f"  {target} already exists; refusing to overwrite", fg=typer.colors.RED, err=True
+        )
+        raise typer.Exit(code=2)
+
+    passphrase = _ask_passphrase(confirm=True)
+    try:
+        created = keyfile.create(target, passphrase)
+    except LineageAuthError as exc:
+        typer.secho(f"  refused: {exc}", fg=typer.colors.RED, err=True)
+        raise typer.Exit(code=2) from exc
+
+    typer.echo("")
+    typer.secho("  KEY CREATED", bold=True)
+    typer.echo(f"    did      {created.did}")
+    typer.echo(f"    file     {created.path}")
+    typer.echo("")
+    typer.secho(
+        "  The DID above is public: publish it freely. The file is not.",
+        fg=typer.colors.YELLOW,
+    )
+    typer.secho(
+        "  Back up the file and the passphrase separately, and publish a "
+        "recovery.policy\n  before this key matters -- did:key cannot be revoked.",
+        fg=typer.colors.YELLOW,
+    )
+
+
+@key_app.command("show")
+def key_show(
+    path: Annotated[str, typer.Argument(metavar="FILE", help="An encrypted key file.")],
+) -> None:
+    """Print the DID in a key file. Does not decrypt anything."""
+    from lineageauth import keyfile
+
+    try:
+        typer.echo(keyfile.read_did(Path(path)))
+    except LineageAuthError as exc:
+        typer.secho(f"  {exc}", fg=typer.colors.RED, err=True)
+        raise typer.Exit(code=2) from exc
+
+
+@app.command("sign")
+def sign(
+    payload_path: Annotated[
+        str, typer.Argument(metavar="PAYLOAD", help="An unsigned event payload, or '-'.")
+    ],
+    key: Annotated[str, typer.Option("--key", help="Encrypted key file to sign with.")],
+) -> None:
+    """Sign an unsigned payload and print the envelope.
+
+    The passphrase is prompted for. The seed is decrypted, used, and dropped
+    inside one call -- it is never an argument, never printed, and never written
+    anywhere by this command.
+
+    Signing does not make a claim true. It makes it attributable, which is a
+    smaller thing and the only thing a signature ever does.
+    """
+    from lineageauth import keyfile
+
+    try:
+        payload = jsonio.loads(_read_source(payload_path))
+    except LineageAuthError as exc:
+        typer.secho(f"  {exc}", fg=typer.colors.RED, err=True)
+        raise typer.Exit(code=2) from exc
+    if not isinstance(payload, dict):
+        typer.secho("  a payload must be a JSON object", fg=typer.colors.RED, err=True)
+        raise typer.Exit(code=2)
+    if "proofs" in payload:
+        typer.secho(
+            "  that looks like a whole envelope, not a payload. Sign the payload.",
+            fg=typer.colors.RED,
+            err=True,
+        )
+        raise typer.Exit(code=2)
+
+    passphrase = _ask_passphrase(confirm=False)
+    try:
+        signer = keyfile.unlock(Path(key), passphrase)
+        envelope = sign_payload(payload, [signer])
+    except LineageAuthError as exc:
+        typer.secho(f"  refused: {exc}", fg=typer.colors.RED, err=True)
+        raise typer.Exit(code=2) from exc
+
+    typer.echo(envelope.to_json())

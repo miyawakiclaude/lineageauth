@@ -288,6 +288,16 @@ depend on the indexer or the Explorer.)*
 - [x] v1 release checklist — `RELEASE.md`, which says plainly that v1 is not
       close and what would have to become true first
 
+## Identity and outreach
+- [x] `la key create` — Ed25519 generated locally, encrypted at rest with a
+      passphrase that is never an argument; prints only the DID (D-081)
+- [x] `la sign` — decrypts, signs, drops the seed inside one call
+- [x] `la key show` — the DID, without decrypting anything
+- [x] Technocore introduction draft — `docs/INTRODUCTION_DRAFT.md`
+- [ ] a real DID exists and is backed up — the operator's to do, not the tool's
+- [ ] a `recovery.policy` is published for it, before it matters
+- [ ] the introduction is signed and posted — external write, operator only
+
 ## Second implementation
 - [x] `packages/js/` — dependency-free verifier, re-derived from the spec rather
       than ported; JCS, base58btc, multicodec, preimage and event id all written

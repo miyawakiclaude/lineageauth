@@ -1592,6 +1592,43 @@ Git/GitHub writes require confirmation of active account + repository owner + re
   that rather than claiming the line is closed.
 - **Migration:** Pre-1.0.
 
+## D-081: a key the tool creates and never holds
+
+- **Date:** 2026-08-27
+- **Problem:** every DID this project has published so far comes from the public
+  test-key domain string, so none of them belong to anybody. The tool existed;
+  the identity did not.
+- **Decision:** `la key create` generates an Ed25519 key locally and writes it
+  **encrypted at rest** -- scrypt over a passphrase, ChaCha20-Poly1305 over the
+  seed, the DID bound in as associated data. `la sign` decrypts, signs, and
+  drops it inside one call.
+- **The constraints this is shaped by, and each one has a test:**
+  - the seed is never printed, logged, returned or put in an argument
+  - the **passphrase is never an argument either** -- a command line is visible
+    in the process table and lands in shell history, so it comes from a prompt
+  - `LocalSigner` still has no way to hand back a seed. The seed is generated
+    inside `keyfile.create` rather than pulled out of a signer, because adding
+    an accessor for one caller's convenience would put a seed-shaped hole in a
+    class everything else shares
+  - **one error message for a wrong passphrase and a tampered file.** Telling
+    them apart tells an attacker which one they are making progress on
+  - `create` refuses to overwrite: a key file replaceable by a typo will be, and
+    the identity does not come back
+- **scrypt at N=2^17**, deliberately slow. It is the only thing between a stolen
+  file and an identity that cannot be revoked, and a fast KDF there is not a KDF.
+- **`did:key` has no revocation**, so the tooling says so at creation and the key
+  file says so in its own note. The mitigation is a `recovery.policy` published
+  *while the key still works* -- `docs/05` only ever helps somebody who acted in
+  advance.
+- **Not custody.** The spec forbids the core holding keys; this writes a file the
+  operator owns, reads it for one operation, and keeps nothing. The API cannot
+  reach it and the verifier does not want it -- verification is a public-key
+  operation.
+- **`docs/INTRODUCTION_DRAFT.md` is a draft, not an action.** The Technocore
+  adapter has no send path, by design and with a test. Publishing is the
+  operator's decision.
+- **Migration:** Pre-1.0.
+
 ### Pending decision template
 
 - ID:
