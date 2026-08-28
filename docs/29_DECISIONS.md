@@ -100,7 +100,7 @@ Git/GitHub writes require confirmation of active account + repository owner + re
 - **Decision:**
   - `root.create` — `root`, `epoch` (always 0)
   - `recovery.policy` — `epoch`, `policySeq`, `members` (sorted, distinct),
-    `threshold`, `previousPolicy` (required when `policySeq > 1`)
+    `threshold`, `previousPolicy?` (required when `policySeq > 1`)
   - `root.succession` — `fromRoot`, `toRoot`, `fromEpoch`, `toEpoch`, `mode`
     (`normal` | `recovery`), `recoveryPolicyRef` (required in `recovery` mode)
 - **Security impact:** `previousPolicy` and `policySeq` give recovery policies
@@ -381,9 +381,9 @@ Git/GitHub writes require confirmation of active account + repository owner + re
   specified.
 - **Decision:**
   - `delegation.grant` — `issuer`, `subject`, `epoch`, `scopes[]`, `notBefore`,
-    `expiresAt`, `maxDepth`, `approval`, and `parent` (absent on a grant issued
+    `expiresAt`, `maxDepth`, `approval`, and `parent?` (absent on a grant issued
     directly by the root).
-  - `delegation.revoke` — `issuer`, `grant`, optional `reason`.
+  - `delegation.revoke` — `issuer`, `grant`, `reason?`.
 - **Security impact:** `maxDepth` counts *further* delegations, so a leaf grant
   is depth 0 and delegating from a parent of depth N yields at most N-1;
   otherwise depth would be unbounded in practice. A grant must be signed by its
@@ -653,7 +653,7 @@ Git/GitHub writes require confirmation of active account + repository owner + re
 - **Unknown predicates:** accepted and kept displayable, but marked. Refusing to
   let anyone express a new kind of claim would be the wrong failure; letting an
   unrecognised one take effect would be the dangerous one.
-- **Migration:** Pre-1.0.
+- **Migration:** **frozen, 2026-08-28.** The required keys of the evidence family are recorded in `conformance/frozen-shapes.json` and checked by `tests/test_frozen_shapes.py`; they will not be added to, removed or renamed without a new decision entry. Adding an optional key remains compatible and is not constrained.
 
 ## D-052 A cited authority is checked, never taken on trust
 
@@ -697,7 +697,7 @@ Git/GitHub writes require confirmation of active account + repository owner + re
   claimant's own word twice over. Support is reported as the parts -- which
   artifacts, which attesters -- rather than as a verdict, because `docs/10`
   requires ranking inputs to stay explainable.
-- **Migration:** Pre-1.0.
+- **Migration:** **frozen, 2026-08-28.** The required keys of the passport family are recorded in `conformance/frozen-shapes.json` and checked by `tests/test_frozen_shapes.py`; they will not be added to, removed or renamed without a new decision entry. Adding an optional key remains compatible and is not constrained.
 
 ## D-054 Unbuilt sections are named, not left empty
 
@@ -742,7 +742,7 @@ Git/GitHub writes require confirmation of active account + repository owner + re
 - **`rewardReference` is opaque.** The core escrows nothing, pays nothing, and
   validates no token value. Treating a reward reference as a promise would be
   the protocol claiming something it cannot deliver.
-- **Migration:** Pre-1.0.
+- **Migration:** **frozen, 2026-08-28.** The required keys of the work family are recorded in `conformance/frozen-shapes.json` and checked by `tests/test_frozen_shapes.py`; they will not be added to, removed or renamed without a new decision entry. Adding an optional key remains compatible and is not constrained.
 
 ## D-056 A work receipt carries signals, never a score
 
@@ -837,7 +837,7 @@ Git/GitHub writes require confirmation of active account + repository owner + re
 - **Signed by the controller:** the claim is "I operate this", which is the
   controller's to make. A binding anyone could mint would let a stranger tar an
   unrelated agent as part of their group.
-- **Migration:** Pre-1.0.
+- **Migration:** **frozen, 2026-08-28.** The required keys of the fleet family are recorded in `conformance/frozen-shapes.json` and checked by `tests/test_frozen_shapes.py`; they will not be added to, removed or renamed without a new decision entry. Adding an optional key remains compatible and is not constrained.
 
 ## D-060: impact is features, not a score, and independence has three tiers
 
@@ -875,7 +875,7 @@ Git/GitHub writes require confirmation of active account + repository owner + re
   reason and none is proof of wrongdoing -- `only_disclosed_siblings` in
   particular fires on the *honest* operator who disclosed, so it must read as an
   observation and never as an accusation (D-059).
-- **Migration:** Pre-1.0.
+- **Migration:** **frozen, 2026-08-28.** The required keys of the impact family are recorded in `conformance/frozen-shapes.json` and checked by `tests/test_frozen_shapes.py`; they will not be added to, removed or renamed without a new decision entry. Adding an optional key remains compatible and is not constrained.
 
 ## D-061: a jury outcome is a procedure's output, and a split jury is an answer
 
@@ -930,7 +930,7 @@ Git/GitHub writes require confirmation of active account + repository owner + re
   a type nothing gives semantics to is worse than rejecting it: an admitted
   event reads as a counted one. `jury.disclose` was added because `docs/12`
   requires conflict disclosure and `docs/03` never named its event.
-- **Migration:** Pre-1.0.
+- **Migration:** **frozen, 2026-08-28.** The required keys of the jury family are recorded in `conformance/frozen-shapes.json` and checked by `tests/test_frozen_shapes.py`; they will not be added to, removed or renamed without a new decision entry. Adding an optional key remains compatible and is not constrained.
 
 ## D-062: the exchange awards nothing it cannot justify, and hides nothing quietly
 
@@ -977,7 +977,7 @@ Git/GitHub writes require confirmation of active account + repository owner + re
 - **Still not custody.** `rewardReference` remains an opaque string. Nothing
   escrows, distributes, guarantees or values anything, and the note says so on
   every response.
-- **Migration:** Pre-1.0.
+- **Migration:** **frozen, 2026-08-28.** The required keys of the work family are recorded in `conformance/frozen-shapes.json` and checked by `tests/test_frozen_shapes.py`; they will not be added to, removed or renamed without a new decision entry. Adding an optional key remains compatible and is not constrained.
 
 ## D-063: the A2A extension is data-only, and can never be marked required
 
@@ -1064,7 +1064,7 @@ Git/GitHub writes require confirmation of active account + repository owner + re
   without policy or human approval, so no HTTP source ships in the core. A
   `Source` is a two-member protocol; an operator who wants a mirror writes one
   under their own policy, outside this module.
-- **Migration:** Pre-1.0.
+- **Migration:** **frozen, 2026-08-28.** `Resolution` reports `checkedAt`, `sources`, `newestEventSeen`, `conflicts` and `freshness`; those names are the contract now. Adding a field remains compatible.
 
 ## D-065: the zero-cost claim is executed, not asserted
 
@@ -1203,7 +1203,7 @@ Git/GitHub writes require confirmation of active account + repository owner + re
   validator would repeat the mistake JCS is delegated to a library to avoid: a
   checker that disagrees with the specification is worse than none, because it
   looks like one.
-- **Migration:** Pre-1.0.
+- **Migration:** **frozen, 2026-08-28.** The published schemas describe the envelope, and the envelope is the part that cannot move without breaking every event id. `scripts/generate_schemas.py` is deterministic and a diff in `schemas/` is a protocol change.
 
 ## D-069: the conformance package publishes the rules, not just the verdicts
 
@@ -1238,7 +1238,7 @@ Git/GitHub writes require confirmation of active account + repository owner + re
   that it does not promise stability. A migration document describing behaviour
   the code lacks is worse than none: it is read once, by somebody who then
   relies on it.
-- **Migration:** Pre-1.0.
+- **Migration:** **frozen, 2026-08-28.** The manifest's shape -- `name`, `file`, `expect`, `rule`, optional `authority` -- is what an outside implementation reads, and `tests/test_conformance.py` fails if a vector loses its rule.
 
 ## D-070: operations are questions you can answer offline
 
@@ -2101,6 +2101,39 @@ Git/GitHub writes require confirmation of active account + repository owner + re
   wire-format pile because their prose contains the words "field" and "schema".
   Forty-six is a readable number and the classifier was the wrong tool for it.
 - **Migration:** none. This is a decision about the decision log.
+
+## D-101: the wire formats that do not depend on the prior-art answer are frozen
+
+- **Date:** 2026-08-28
+- **Problem:** `RELEASE.md` asked for wire formats "frozen with a stated
+  compatibility promise, and meaning it". Meaning it is the half a document
+  cannot do, and there was nothing that failed when the promise was broken.
+- **Decision:** `conformance/frozen-shapes.json` records the payload keys every
+  event type always carries, generated by `scripts/generate_frozen_shapes.py`.
+  **22 of 28 event types are frozen** -- evidence, work, fleet, impact, jury,
+  passport, plus the resolver output, the published schemas and the conformance
+  manifest. A frozen required key does not move without a decision entry.
+- **The `authority` family is held, not frozen.** Delegation, approval, root
+  succession and recovery policy are the layer `docs/PRIOR_ART.md` finds
+  overlapping UCAN and Biscuit. If the answer to that question is to build on
+  one of them, these shapes change; freezing first would only mean unfreezing
+  later. Held means recorded and watched, not unwatched: the test still fails if
+  they change without the file being regenerated.
+- **Optional keys are deliberately outside the contract.** Adding one is a
+  compatible change, and a promise that forbade compatible changes would be
+  edited out of the way the first time it was inconvenient -- which is worse
+  than not making it.
+- **Three sources were considered and two rejected.** The JSON Schemas describe
+  the envelope only, so they cannot carry per-event names. The decision log does
+  list the fields, and cross-checking it against the builders was worth doing --
+  it found `parent`, `reason` and `previousPolicy` marked required in prose and
+  optional in code, all three now fixed. But a regex over hand-written prose is a
+  parser for a format nobody designed: pushing it from 23 of 24 to 24 of 24 made
+  it read `normal` and `recovery`, the *values* of a `mode` field, as field
+  names. **Freezing is an explicit act, so the contract is an explicit file.**
+- **Checked by breaking it:** renaming `artifactId` to `artifactID` in a builder
+  fails the test with the family, the event and both sides of the difference.
+- **Migration:** none. This records what will not change; nothing changed.
 
 ### Pending decision template
 

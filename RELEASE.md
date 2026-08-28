@@ -79,27 +79,33 @@ that changed on 2026-08-28. **Fourteen remain, and every one defines a payload
 shape, a published schema, or an artifact somebody else's code reads.** Those
 fourteen are not a separate problem from the next section; they are its content.
 
-### Wire formats are frozen with a stated compatibility promise
+### Wire formats are frozen — 22 of 28 event types, 2026-08-28
 
-The fourteen decisions still marked `Migration: Pre-1.0` are exactly this task:
+`conformance/frozen-shapes.json` records the payload keys every event type
+always carries, and `tests/test_frozen_shapes.py` fails when a builder stops
+matching. The promise is that a **frozen** family will not gain, lose or rename
+a required key without a decision entry saying what changed and what a holder of
+older events should do. Adding an *optional* key stays compatible and is not
+constrained -- a contract that forbade compatible changes would be edited out of
+the way the first time it was inconvenient.
 
-`D-026` (common payload fields), `D-039` (delegation), `D-043` (approval
-receipt), `D-051` (evidence), `D-053` (passport), `D-055` (task lifecycle),
-`D-059` (fleet), `D-060` (impact), `D-061` (jury), `D-062` (exchange), `D-063`
-(the A2A card extension), `D-064` (resolver output), `D-068` (the published
-schemas), `D-069` (the conformance manifest).
+**Frozen:** evidence, work, fleet, impact, jury, passport — 22 event types,
+covered by `D-051`, `D-053`, `D-055`, `D-059`, `D-060`, `D-061`, `D-062`, plus
+the resolver output (`D-064`), the published schemas (`D-068`) and the
+conformance manifest (`D-069`).
 
-`MIGRATION.md` documents what may change inside a version. v1 additionally
-requires saying what will **not** change across versions, and meaning it. The
-signing preimage is already frozen; these shapes are not.
+**Held, and the last thing on this list that is anyone's to decide:** the
+`authority` family — `D-026`, `D-039`, `D-043`, `D-063`, six event types.
+`docs/PRIOR_ART.md` finds this layer overlaps UCAN and Biscuit substantially. If
+the right answer is to become a profile of one of them, these shapes change, so
+freezing them first would only mean unfreezing them later. They are recorded and
+watched rather than promised.
 
-**Settle the prior-art question first.** `docs/PRIOR_ART.md` finds that the
-delegation layer overlaps UCAN and Biscuit substantially. If the right answer is
-to become a profile of one of them, four of the fourteen change shape, and
-freezing them first would mean unfreezing later. The other ten -- evidence,
-passport, task lifecycle, fleet, impact, jury, exchange, resolver output,
-schemas, conformance -- are outside those standards' scope and can be committed
-whenever somebody is ready to mean it.
+`work.receipt` is derived from other events and has no payload of its own.
+
+Verified by renaming `artifactId` to `artifactID` in a builder and watching the
+test name the family, the event and both sides of the difference. A contract
+nobody has broken on purpose is a contract nobody has checked.
 
 ### The threat model has been reviewed by somebody else
 

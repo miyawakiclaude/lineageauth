@@ -20,6 +20,30 @@ b"lineageauth:event:v1\n" + JCS(payload)
 The `v1` in that string is not the protocol version. It is the *preimage*
 version, and changing it is a new protocol, not a new release of this one.
 
+## What will not change across versions
+
+The signing preimage above is one. The other is the set of payload keys every
+event type always carries, recorded in
+[`conformance/frozen-shapes.json`](conformance/frozen-shapes.json) and checked by
+`tests/test_frozen_shapes.py`.
+
+**Frozen** (22 event types -- evidence, work, fleet, impact, jury, passport): a
+required key will not be added, removed or renamed without a decision entry in
+`docs/29_DECISIONS.md` saying what changed and what a holder of older events
+should do. Adding an *optional* key stays a compatible change and is not
+constrained; a contract that forbade compatible changes would be edited out of
+the way the first time it was inconvenient.
+
+**Held** (6 event types -- the authority family: delegation, approval, root
+succession, recovery policy): no promise yet. `docs/PRIOR_ART.md` finds that this
+layer overlaps UCAN and Biscuit substantially, and if the right answer is to
+become a profile of one of them these shapes change. Freezing them first would
+mean unfreezing them later, so they are recorded and watched rather than
+promised.
+
+`work.receipt` is derived from other events and has no payload of its own, so
+there is nothing there to freeze.
+
 ## What a version bump does and does not permit
 
 `version` on every payload is the **core** version. `catalog.SUPPORTED_VERSIONS`

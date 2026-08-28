@@ -1,0 +1,395 @@
+{
+  "note": "The payload keys every registered event type always carries, captured from the builders by scripts/generate_frozen_shapes.py. A family marked frozen will not gain, lose or rename a required key without a decision entry saying so. A family marked held is waiting on the prior-art question in docs/PRIOR_ART.md: if that layer becomes a profile of an existing standard, its shapes change. Optional keys are not listed -- adding one is a compatible change.",
+  "generated_by": "scripts/generate_frozen_shapes.py",
+  "protocol": "lineageauth",
+  "version": "0.1",
+  "families": {
+    "authority": {
+      "status": "held",
+      "events": {
+        "approval.receipt": {
+          "required": [
+            "action",
+            "agent",
+            "approver",
+            "contentHash",
+            "destination",
+            "expiresAt",
+            "issuedAt",
+            "lineage",
+            "namespace",
+            "nonce",
+            "protocol",
+            "requestHash",
+            "resource",
+            "type",
+            "version"
+          ]
+        },
+        "delegation.grant": {
+          "required": [
+            "approval",
+            "epoch",
+            "expiresAt",
+            "issuedAt",
+            "issuer",
+            "lineage",
+            "maxDepth",
+            "notBefore",
+            "protocol",
+            "scopes",
+            "subject",
+            "type",
+            "version"
+          ]
+        },
+        "delegation.revoke": {
+          "required": [
+            "grant",
+            "issuedAt",
+            "issuer",
+            "lineage",
+            "protocol",
+            "type",
+            "version"
+          ]
+        },
+        "recovery.policy": {
+          "required": [
+            "epoch",
+            "issuedAt",
+            "lineage",
+            "members",
+            "policySeq",
+            "protocol",
+            "threshold",
+            "type",
+            "version"
+          ]
+        },
+        "root.create": {
+          "required": [
+            "epoch",
+            "issuedAt",
+            "lineage",
+            "protocol",
+            "root",
+            "type",
+            "version"
+          ]
+        },
+        "root.succession": {
+          "required": [
+            "fromEpoch",
+            "fromRoot",
+            "issuedAt",
+            "lineage",
+            "mode",
+            "protocol",
+            "toEpoch",
+            "toRoot",
+            "type",
+            "version"
+          ]
+        }
+      }
+    },
+    "impact": {
+      "status": "frozen",
+      "events": {
+        "artifact.improve": {
+          "required": [
+            "artifact",
+            "author",
+            "improves",
+            "issuedAt",
+            "lineage",
+            "protocol",
+            "type",
+            "version"
+          ]
+        },
+        "artifact.reuse": {
+          "required": [
+            "issuedAt",
+            "lineage",
+            "protocol",
+            "reuser",
+            "type",
+            "used",
+            "usedIn",
+            "version"
+          ]
+        },
+        "impact.attest": {
+          "required": [
+            "issuedAt",
+            "issuer",
+            "lineage",
+            "observed",
+            "protocol",
+            "subjectRef",
+            "type",
+            "version"
+          ]
+        }
+      }
+    },
+    "evidence": {
+      "status": "frozen",
+      "events": {
+        "artifact.receipt": {
+          "required": [
+            "artifactId",
+            "issuedAt",
+            "lineage",
+            "protocol",
+            "type",
+            "version",
+            "worker"
+          ]
+        },
+        "artifact.register": {
+          "required": [
+            "artifactId",
+            "issuedAt",
+            "lineage",
+            "protocol",
+            "type",
+            "version"
+          ]
+        },
+        "attestation.issue": {
+          "required": [
+            "issuedAt",
+            "issuer",
+            "lineage",
+            "predicate",
+            "protocol",
+            "subjectRef",
+            "type",
+            "version"
+          ]
+        }
+      }
+    },
+    "passport": {
+      "status": "frozen",
+      "events": {
+        "availability.statement": {
+          "required": [
+            "available",
+            "expiresAt",
+            "issuedAt",
+            "lineage",
+            "protocol",
+            "subject",
+            "type",
+            "version"
+          ]
+        },
+        "profile.statement": {
+          "required": [
+            "description",
+            "issuedAt",
+            "lineage",
+            "nickname",
+            "protocol",
+            "subject",
+            "type",
+            "version"
+          ]
+        },
+        "skill.claim": {
+          "required": [
+            "issuedAt",
+            "lineage",
+            "protocol",
+            "skill",
+            "subject",
+            "type",
+            "version"
+          ]
+        }
+      }
+    },
+    "work": {
+      "status": "frozen",
+      "events": {
+        "claim.coordinate": {
+          "required": [
+            "claim",
+            "coordinator",
+            "issuedAt",
+            "lineage",
+            "protocol",
+            "task",
+            "type",
+            "version"
+          ]
+        },
+        "task.cancel": {
+          "required": [
+            "issuedAt",
+            "lineage",
+            "protocol",
+            "reason",
+            "requester",
+            "task",
+            "type",
+            "version"
+          ]
+        },
+        "task.claim": {
+          "required": [
+            "claimant",
+            "expiresAt",
+            "issuedAt",
+            "lineage",
+            "nonce",
+            "protocol",
+            "task",
+            "type",
+            "version"
+          ]
+        },
+        "task.release": {
+          "required": [
+            "claim",
+            "claimant",
+            "issuedAt",
+            "lineage",
+            "protocol",
+            "type",
+            "version"
+          ]
+        },
+        "task.request": {
+          "required": [
+            "acceptanceCriteria",
+            "allowedClaims",
+            "issuedAt",
+            "lineage",
+            "protocol",
+            "requester",
+            "title",
+            "type",
+            "version"
+          ]
+        },
+        "task.result": {
+          "required": [
+            "artifactRefs",
+            "claim",
+            "issuedAt",
+            "lineage",
+            "protocol",
+            "summary",
+            "task",
+            "type",
+            "version",
+            "worker"
+          ]
+        },
+        "task.verify": {
+          "required": [
+            "issuedAt",
+            "lineage",
+            "protocol",
+            "result",
+            "task",
+            "type",
+            "verdict",
+            "verifier",
+            "version"
+          ]
+        }
+      }
+    },
+    "jury": {
+      "status": "frozen",
+      "events": {
+        "dispute.open": {
+          "required": [
+            "issuedAt",
+            "lineage",
+            "opener",
+            "policy",
+            "protocol",
+            "reasonCode",
+            "result",
+            "selection",
+            "statement",
+            "task",
+            "type",
+            "version"
+          ]
+        },
+        "jury.disclose": {
+          "required": [
+            "case",
+            "conflicts",
+            "issuedAt",
+            "juror",
+            "lineage",
+            "protocol",
+            "type",
+            "version"
+          ]
+        },
+        "jury.vote": {
+          "required": [
+            "case",
+            "finding",
+            "issuedAt",
+            "juror",
+            "lineage",
+            "protocol",
+            "reasonCode",
+            "type",
+            "version"
+          ]
+        }
+      }
+    },
+    "fleet": {
+      "status": "frozen",
+      "events": {
+        "fleet.bind": {
+          "required": [
+            "controller",
+            "fleet",
+            "issuedAt",
+            "lineage",
+            "member",
+            "protocol",
+            "type",
+            "version"
+          ]
+        },
+        "fleet.create": {
+          "required": [
+            "controller",
+            "issuedAt",
+            "lineage",
+            "name",
+            "protocol",
+            "type",
+            "version"
+          ]
+        },
+        "fleet.unbind": {
+          "required": [
+            "bind",
+            "controller",
+            "issuedAt",
+            "lineage",
+            "protocol",
+            "type",
+            "version"
+          ]
+        }
+      }
+    }
+  }
+}
