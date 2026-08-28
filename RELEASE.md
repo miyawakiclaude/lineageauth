@@ -63,25 +63,43 @@ blames the protocol. None of that makes this line true. It removes the
 reasons a stranger would stop before starting, which is the only part of it
 this project can do by itself.
 
-### The pre-1.0 marks are gone from the decision log
+### ~~The pre-1.0 marks are gone from the decision log~~ — resolved into the line below, 2026-08-28
 
-**46 of the 100 entries** in `docs/29_DECISIONS.md` say `Migration: Pre-1.0`;
-seventeen already say `None`. (This section used to say *every* entry did, which
-was true when it was written and had stopped being true — the same drift D-084
-was about.) Reaching v1 means going through those 46 and, for each, either
-committing to the shape or changing it while that is still free. A decision log
-where half the entries say "this may still change" is not a v1 contract.
+This asked for 46 of 100 entries to be gone through. Reading them found that
+**most of those marks were never statements.** `Migration: Pre-1.0` is the
+template's default, and it had been filled in by habit on decisions with nothing
+to migrate: a pre-push hook, a text colour, how CI annotations are rendered, a
+document. A decision about a CSS token has no consumers and no migration path,
+and saying "this may still change" about it told a reader nothing except that
+nobody had looked.
 
-**Do not start this before the prior-art question is settled.** If
-`docs/PRIOR_ART.md` is right that the delegation layer substantially overlaps
-UCAN, the shape worth committing to may not be this one, and freezing first
-would mean unfreezing later.
+32 entries now say what is actually true of them -- `none`, with the reason, for
+the internal ones, and the migration they genuinely impose for the behaviour
+that changed on 2026-08-28. **Fourteen remain, and every one defines a payload
+shape, a published schema, or an artifact somebody else's code reads.** Those
+fourteen are not a separate problem from the next section; they are its content.
 
 ### Wire formats are frozen with a stated compatibility promise
 
+The fourteen decisions still marked `Migration: Pre-1.0` are exactly this task:
+
+`D-026` (common payload fields), `D-039` (delegation), `D-043` (approval
+receipt), `D-051` (evidence), `D-053` (passport), `D-055` (task lifecycle),
+`D-059` (fleet), `D-060` (impact), `D-061` (jury), `D-062` (exchange), `D-063`
+(the A2A card extension), `D-064` (resolver output), `D-068` (the published
+schemas), `D-069` (the conformance manifest).
+
 `MIGRATION.md` documents what may change inside a version. v1 additionally
 requires saying what will **not** change across versions, and meaning it. The
-signing preimage is already frozen; event payload shapes are not.
+signing preimage is already frozen; these shapes are not.
+
+**Settle the prior-art question first.** `docs/PRIOR_ART.md` finds that the
+delegation layer overlaps UCAN and Biscuit substantially. If the right answer is
+to become a profile of one of them, four of the fourteen change shape, and
+freezing them first would mean unfreezing later. The other ten -- evidence,
+passport, task lifecycle, fleet, impact, jury, exchange, resolver output,
+schemas, conformance -- are outside those standards' scope and can be committed
+whenever somebody is ready to mean it.
 
 ### The threat model has been reviewed by somebody else
 

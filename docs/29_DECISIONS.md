@@ -1097,7 +1097,7 @@ Git/GitHub writes require confirmation of active account + repository owner + re
 - **`RUNBOOK.md`** carries the local zero-yen path. Every command in it was run
   before it was written, including the negative controls: the tampered example
   must fail and the revoked delegation must be denied.
-- **Migration:** Pre-1.0.
+- **Migration:** none. This is a test over this repository's own claims.
 
 ## D-066: the Explorer displays and verifies nothing, and says so
 
@@ -1140,7 +1140,7 @@ Git/GitHub writes require confirmation of active account + repository owner + re
   and forced the checklist to be corrected, which is the behaviour D-065 was
   designed for: a list that can only be corrected by hand goes stale, and this
   one fails instead.
-- **Migration:** Pre-1.0.
+- **Migration:** none. The Explorer is an application over the API, not a format.
 
 ## D-067: the release checklist is a test, and three boxes stay unticked
 
@@ -1169,7 +1169,7 @@ Git/GitHub writes require confirmation of active account + repository owner + re
     now a test: a scanner that never fires is indistinguishable from a clean
     repository, and the only way to tell them apart is to feed it something it
     must catch.
-- **Migration:** Pre-1.0.
+- **Migration:** none. The checklist is a test; nothing consumes it.
 
 ## D-068: the schemas describe shape, and say so in their own description
 
@@ -1274,7 +1274,7 @@ Git/GitHub writes require confirmation of active account + repository owner + re
   about to be made. `RecursionError` on deeply nested JSON is allowed through
   deliberately: that is the interpreter's stack limit, and catching it would
   hide the depth limit instead of documenting it.
-- **Migration:** Pre-1.0.
+- **Migration:** none. `la doctor` reports on a local store and has no consumers.
 
 ## D-071: the stop sign goes where being wrong cannot be undone
 
@@ -1311,7 +1311,7 @@ Git/GitHub writes require confirmation of active account + repository owner + re
   inside this repository is first on the list: an independent implementation
   that has actually run the conformance vectors. Until then, "the specification
   is implementable" is an opinion held by whoever wrote both sides.
-- **Migration:** Pre-1.0.
+- **Migration:** none. A pre-push hook runs before this repository's own pushes.
 
 ## D-072: a scan that cannot see a new file has a blind spot where it matters most
 
@@ -1342,7 +1342,7 @@ Git/GitHub writes require confirmation of active account + repository owner + re
   Widening the scan closes that gap for this check specifically; the general
   lesson is that a check reading `git ls-files` is reading a different
   repository before and after `git add`.
-- **Migration:** Pre-1.0.
+- **Migration:** none. The scan reads this working tree.
 
 ## D-073: CI failures must be readable by whoever can fix them
 
@@ -1364,7 +1364,7 @@ Git/GitHub writes require confirmation of active account + repository owner + re
   skipping it once was enough. Running the gate is not optional even for a
   documentation-only change, because "documentation-only" is a judgement about
   a diff and the tests are what check that judgement.
-- **Migration:** Pre-1.0.
+- **Migration:** none. CI annotations are read by people, not by code.
 
 ## D-074: an unparseable workflow looks exactly like a failing test
 
@@ -1389,7 +1389,7 @@ Git/GitHub writes require confirmation of active account + repository owner + re
   with admin rights, a workflow that reports its own breakage as somebody
   else's. None was hard to fix; all three cost time purely because the evidence
   was somewhere nobody was looking.
-- **Migration:** Pre-1.0.
+- **Migration:** none. The workflow files are this repository's own.
 
 ## D-075: measured, and the answer changed -- no verify endpoint on a Worker
 
@@ -1430,7 +1430,7 @@ Git/GitHub writes require confirmation of active account + repository owner + re
   `CONTRIBUTING.md` asks for and what `RELEASE.md` puts first for v1: an
   independent implementation that can disagree with this one. That is a project,
   not a deployment, and conflating the two is how it would get built badly.
-- **Migration:** Pre-1.0.
+- **Migration:** none. A deployment that was decided against has nothing to migrate.
 
 ## D-076: publishing a snapshot, and the bug only a static host can show
 
@@ -1470,7 +1470,7 @@ Git/GitHub writes require confirmation of active account + repository owner + re
 - **Verified by serving it under a prefix and driving every screen** before
   anything was pushed, because that is the only configuration where these
   particular mistakes are visible.
-- **Migration:** Pre-1.0.
+- **Migration:** none. The published site is generated; regenerate it.
 
 ## D-077: a 404 from an endpoint that needs auth is not evidence of absence
 
@@ -1499,7 +1499,7 @@ Git/GitHub writes require confirmation of active account + repository owner + re
   been about *where the evidence is*, not about the code. A scan blind to new
   files, a log needing admin rights, a workflow reporting its own breakage as
   somebody else's, and now a probe that cannot tell the two answers apart.
-- **Migration:** Pre-1.0.
+- **Migration:** none. This records how to read an API response, not a format.
 
 ## D-078: the site went up before its free tier was in the register
 
@@ -1542,7 +1542,7 @@ Git/GitHub writes require confirmation of active account + repository owner + re
   list a person checked.
 - **Also required:** every `uses` is pinned and none follows `@main`. Somebody
   else's default branch is not a version.
-- **Migration:** Pre-1.0.
+- **Migration:** none. A pinned action reference is CI configuration.
 
 ## D-080: a second implementation, written to disagree
 
@@ -1590,7 +1590,7 @@ Git/GitHub writes require confirmation of active account + repository owner + re
   by the same author in the same week, so they can share a misreading of the
   document without either being wrong about the other. `RELEASE.md` now says
   that rather than claiming the line is closed.
-- **Migration:** Pre-1.0.
+- **Migration:** none. A second implementation of an unchanged format.
 
 ## D-081: a key the tool creates and never holds
 
@@ -1627,7 +1627,7 @@ Git/GitHub writes require confirmation of active account + repository owner + re
 - **`docs/INTRODUCTION_DRAFT.md` is a draft, not an action.** The Technocore
   adapter has no send path, by design and with a test. Publishing is the
   operator's decision.
-- **Migration:** Pre-1.0.
+- **Migration:** none for the protocol. The key file format is `lineageauth-keyfile-v1` and is local to an operator; `ALLOWED_KDF` (D-099) is what governs changing it.
 
 ## D-082: a shortcut into the specification, wired to fail when it drifts
 
@@ -1663,7 +1663,7 @@ Git/GitHub writes require confirmation of active account + repository owner + re
 - **This does not make the v1 line true**, and `RELEASE.md` now says which part
   it does address. Removing the reasons a stranger stops before starting is the
   whole of what one project can do about being independently implemented.
-- **Migration:** Pre-1.0.
+- **Migration:** none. A document, tested against the code it summarises.
 
 ## D-083: a text colour is a token, and a token has to be legible
 
@@ -1694,7 +1694,7 @@ Git/GitHub writes require confirmation of active account + repository owner + re
   failures across 278 text elements on all eight screens. Had the first number
   been believed, the fix would have been to change colours that were already
   correct.
-- **Migration:** Pre-1.0.
+- **Migration:** none. Presentation, in one page this project publishes.
 
 ## D-084: the prose has to keep up with the code, and a test says so
 
@@ -1728,7 +1728,7 @@ Git/GitHub writes require confirmation of active account + repository owner + re
   deny it. If in-browser verification is ever removed, the honest sentence
   becomes legal again and it is the capability assertion that fails. A banned
   word list would have gone on failing for the wrong reason forever.
-- **Migration:** Pre-1.0.
+- **Migration:** none. Prose, with a test that keeps it true.
 
 ## D-085: a runbook is a thing somebody has executed
 
@@ -1772,7 +1772,7 @@ Git/GitHub writes require confirmation of active account + repository owner + re
   policy that does not exist -- all refused, and in each case the lineage holds
   at the old root rather than erroring, which is what fail-closed looks like
   from the operator's side.
-- **Migration:** Pre-1.0.
+- **Migration:** none. A drill and a runbook over an unchanged protocol.
 
 ## D-086: the file the operator actually produced
 
@@ -1806,7 +1806,7 @@ Git/GitHub writes require confirmation of active account + repository owner + re
   signatures verified against the DIDs the published policy names, and the two
   are distinct members -- so the 2-of-3 threshold is reachable. Proven, from the
   signatures, rather than reported.
-- **Migration:** Pre-1.0.
+- **Migration:** none for the protocol. A file that used to raise a traceback now reports its encoding; nothing that worked before stops working.
 
 ## D-086b: an agent must not become entitled to approve itself
 
@@ -1828,7 +1828,7 @@ Git/GitHub writes require confirmation of active account + repository owner + re
   using the drafting side.**
 - **Verified end to end**, not just at unit level: the full loop plus a receipt
   signed by the throwaway key now returns `may_execute=False, DENIED`.
-- **Migration:** Pre-1.0.
+- **Migration:** **a delegation chain that revisits a subject is now refused**, and a receipt whose approver is its own agent is refused by the verifier as well as the builder. Any bundle relying on either was relying on a hole.
 
 ## D-087: a proof that does not verify is discarded, not fatal (revises D-027)
 
@@ -1852,7 +1852,7 @@ Git/GitHub writes require confirmation of active account + repository owner + re
   the same thing, and the conformance run still reports 9/9. Fixing one side
   only would have manufactured exactly the disagreement this project asks
   strangers to look for.
-- **Migration:** Pre-1.0.
+- **Migration:** **a consumer that treated `integrity_ok` as "every proof verified" must read `verified_signers` instead.** An envelope carrying one bad proof is now admitted with the bad proof discarded and a warning attached. Quorum counts were already reading `verified_signers` and are unaffected.
 
 ## D-088: a recovery quorum outranks a disagreeing normal succession
 
@@ -1876,7 +1876,7 @@ Git/GitHub writes require confirmation of active account + repository owner + re
   parties agreeing, not a conflict, and both stay in the step's history. The
   first version of this fix dropped the normal one either way and an existing
   test caught it.
-- **Migration:** Pre-1.0.
+- **Migration:** **a lineage that halted as `CONFLICTED` because a normal and a recovery succession disagreed now resolves to the recovery one.** Any stored `CONFLICTED` verdict for that case should be re-derived. Recovery-versus-recovery still halts.
 
 ## D-089: the execution gate has no default that turns the guard off
 
@@ -1894,7 +1894,7 @@ Git/GitHub writes require confirmation of active account + repository owner + re
   optionally and reports `spentStateConsulted: false` with a warning when it has
   none. An empty store answers "nothing is spent", which is a guess; the flag is
   what stops a caller reading it as a fact.
-- **Migration:** Pre-1.0. Callers passing no store must pass one.
+- **Migration:** **`check_execution` requires `store`.** Callers passing nothing must pass a `SpentReceiptStore`; previewing without consuming is `reserve=False`. `LineageAuthTools` takes an optional store and reports `spentStateConsulted`. Callers passing no store must pass one.
 
 ## D-090: one meaning, one encoding, for mcp resources too
 
@@ -1906,7 +1906,7 @@ Git/GitHub writes require confirmation of active account + repository owner + re
   rule every neighbouring check keeps: canonical `did:key`, sorted actions,
   re-encoded base64url.
 - **Decision:** the prefix must be `server:`; anything else is `MalformedEventError`.
-- **Migration:** Pre-1.0.
+- **Migration:** **an `mcp` server/tool resource must begin with `server:`.** A signed grant spelling it otherwise no longer parses; it never named a different resource, so re-issuing under the canonical spelling is the whole of the change.
 
 ## D-091: an unpaired surrogate has no preimage, in either implementation
 
@@ -1924,7 +1924,7 @@ Git/GitHub writes require confirmation of active account + repository owner + re
 - **Disagreeing in the permissive direction is the worse half.** A stricter
   implementation refuses something real and someone notices. A looser one
   admits an event whose id does not describe its content, and nobody does.
-- **Migration:** Pre-1.0.
+- **Migration:** **JavaScript now refuses an unpaired surrogate**, matching Python. Any event that verified there and nowhere else had no UTF-8 encoding and therefore no preimage.
 
 ## D-092: nothing a caller sizes is unbounded
 
@@ -1942,7 +1942,7 @@ Git/GitHub writes require confirmation of active account + repository owner + re
 - **Decision:** `MAX_PROOFS = 16`, `MAX_SKILLS = 32`, `MAX_REQUIREMENTS = 8`.
   Generous for real use -- a recovery quorum is a handful of keys -- and small
   enough that no unauthenticated request buys meaningful CPU.
-- **Migration:** Pre-1.0.
+- **Migration:** **`/v1/verify/event` accepts at most 16 proofs, and `/v1/router/search` at most 32 skills and 8 requirements.** A caller sending more gets a validation error rather than a slow answer.
 
 ## D-093: the policy has to reach the copy strangers load
 
@@ -1962,7 +1962,7 @@ Git/GitHub writes require confirmation of active account + repository owner + re
   in the console, and the page still worked. Checking the file for a string
   would have proved only that a string was in a file -- the failure being fixed
   was precisely a policy that existed without applying.
-- **Migration:** Pre-1.0.
+- **Migration:** none. A meta tag added to a published page.
 
 ## D-094: a claim is a hold, and a hold can lapse
 
@@ -1981,7 +1981,7 @@ Git/GitHub writes require confirmation of active account + repository owner + re
 - **Warnings rather than refusals**, because a late result is a fact about the
   bundle worth reporting, and derived state that silently omits things is harder
   to debug than derived state that says what it dropped.
-- **Migration:** Pre-1.0.
+- **Migration:** **a `task.result` citing a released or expired claim is ignored**, with a warning, and a coordinator may only award among live claims. Derived task state may change for bundles that contained one.
 
 ## D-095: a check that scans nothing must not report "clean"
 
@@ -2000,7 +2000,7 @@ Git/GitHub writes require confirmation of active account + repository owner + re
   is itself a refusal.
 - **Verified by planting a real-shaped token in both a UTF-8 and a UTF-16 file.**
   Before, only the UTF-8 one was caught.
-- **Migration:** Pre-1.0.
+- **Migration:** none. A pre-push check over this working tree.
 
 ## D-096: the module entry point offered a fraction of the CLI
 
@@ -2013,7 +2013,7 @@ Git/GitHub writes require confirmation of active account + repository owner + re
 - **Decision:** the block moves to the end, and a test compares the two entry
   points command for command. 1,228 tests passing did not catch this, because
   every one of them used the installed entry point.
-- **Migration:** Pre-1.0.
+- **Migration:** none. `python -m lineageauth.cli` now offers the commands `la` always did.
 
 ## D-097: a gate that cannot count is a gate that cannot say "clean"
 
@@ -2041,7 +2041,7 @@ Git/GitHub writes require confirmation of active account + repository owner + re
   is worth stating plainly: **a builder is a convenience and a verifier is a
   rule.** An event that only the drafting side rejects is an event an attacker
   drafts by hand.
-- **Migration:** Pre-1.0.
+- **Migration:** **`availability.statement` windows over seven days and juries over 32 seats are now refused on read**, matching what the builders already refused to draft.
 
 ## D-099: three ways a tool destroyed what it was protecting
 
@@ -2068,7 +2068,39 @@ Git/GitHub writes require confirmation of active account + repository owner + re
   fill this repository, because a scanner that cries wolf gets deleted. Names
   like `seed.txt` are refused before the text-suffix filter, which was where
   `.pem` and `.key` had been slipping past.
-- **Migration:** Pre-1.0.
+- **Migration:** none for the protocol. `keyfile.unlock` now reads the file's own KDF block and accepts only `ALLOWED_KDF`; every file this project has written qualifies.
+
+## D-100: most of the pre-1.0 marks were never statements
+
+- **Date:** 2026-08-28
+- **Problem:** `RELEASE.md` listed "the pre-1.0 marks are gone from the decision
+  log" as a v1 blocker covering 46 entries, and treated all 46 as shapes that
+  might still change. Reading them found that **most of those marks meant
+  nothing.** `Migration: Pre-1.0` is the pending-decision template's default, and
+  it had been carried onto decisions with no consumer at all: a pre-push hook, a
+  text colour, how CI renders an annotation, a document tested against the code.
+  A decision about a CSS token has no migration path. Saying "this may still
+  change" about it told a reader only that nobody had looked.
+- **Why that is worse than it sounds.** A blocker list is read to decide what is
+  safe to depend on. Forty-six entries saying "unsettled" when fourteen are
+  unsettled does not fail safe -- it makes the list unreadable, and an unreadable
+  list gets skimmed, and the fourteen that matter get skimmed with it.
+- **Decision:** each of the 46 was read and given the note that is true of it.
+  **Eighteen internal ones** say `none` with the reason. **Fourteen behaviour
+  changes from this day's audit** state the migration they actually impose --
+  `check_execution` requiring a store, `verified_signers` replacing "every proof
+  verified", a `CONFLICTED` verdict that now resolves, results outside a live
+  claim being ignored. **Fourteen remain `Pre-1.0`**, and every one of those
+  defines a payload shape, a published schema, or an artifact somebody else's
+  code reads.
+- **Two blockers turned out to be one.** Those fourteen are not a separate task
+  from "wire formats are frozen"; they are its content, and `RELEASE.md` now
+  lists them by number.
+- **The judgement was made by reading, not by matching.** A first pass classified
+  them with keywords and put the pre-push hook and the text colour in the
+  wire-format pile because their prose contains the words "field" and "schema".
+  Forty-six is a readable number and the classifier was the wrong tool for it.
+- **Migration:** none. This is a decision about the decision log.
 
 ### Pending decision template
 
