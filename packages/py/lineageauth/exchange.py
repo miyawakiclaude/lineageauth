@@ -324,7 +324,12 @@ def build_listing(bundle: EventBundle, *, lineage: str, task_id: str, at: dateti
             bundle,
             lineage=lineage,
             task=task,
-            claim_ids=frozenset(c.event_id for c in state.claims),
+            # Live claims, not every claim ever made. `live` is what the contest
+            # is between, so awarding outside it would hand the task to somebody
+            # whose hold had lapsed or who had already let it go -- and the
+            # coordinator is trusted to settle a contest, not to revive a claim.
+            # (D-094, the same omission as the one in `work.resolve_task`.)
+            claim_ids=frozenset(c.event_id for c in live),
         )
         warnings.extend(award_warnings)
         contest = ClaimContest(

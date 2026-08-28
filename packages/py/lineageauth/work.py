@@ -463,6 +463,7 @@ def resolve_task(bundle: EventBundle, *, lineage: str, task_id: str, at: datetim
 
     claim_ids = {c.event_id for c in claims}
     by_claimant = {c.event_id: c.claimant for c in claims}
+    by_expiry = {c.event_id: c.expires_at for c in claims}
     released: list[str] = []
     for event in bundle.of_type(TASK_RELEASE, lineage=lineage):
         target = event.get("claim")
@@ -502,6 +503,26 @@ def resolve_task(bundle: EventBundle, *, lineage: str, task_id: str, at: datetim
                 f"task.result {parsed_result.event_id} ignored: the claim it cites is "
                 f"held by {by_claimant.get(parsed_result.claim)}, not by "
                 f"{parsed_result.worker}"
+            )
+            continue
+        if parsed_result.claim in set(released):
+            # A release hands the task back. Whoever picks it up afterwards is
+            # the one working on it, and the previous holder must not be able to
+            # deliver against a claim they gave up. (D-094.)
+            warnings.append(
+                f"task.result {parsed_result.event_id} ignored: the claim it cites was "
+                "released, so it was not held when the result was submitted"
+            )
+            continue
+        deadline = by_expiry.get(parsed_result.claim)
+        if deadline is not None and parsed_result.issued_at >= deadline:
+            # A claim is a time-boxed hold. Without this, a claim on a task
+            # allowing one claimant could be abandoned, expire, be picked up by
+            # somebody else -- and the original holder could still deliver a
+            # result days later that counted as legitimate work.
+            warnings.append(
+                f"task.result {parsed_result.event_id} ignored: the claim it cites had "
+                f"expired at {deadline.isoformat()} when the result was issued"
             )
             continue
         results.append(parsed_result)

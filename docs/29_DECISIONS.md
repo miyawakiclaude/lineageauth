@@ -1964,6 +1964,44 @@ Git/GitHub writes require confirmation of active account + repository owner + re
   was precisely a policy that existed without applying.
 - **Migration:** Pre-1.0.
 
+## D-094: a claim is a hold, and a hold can lapse
+
+- **Date:** 2026-08-28 (audit)
+- **Problem:** `resolve_task` accepted a `task.result` if the claim it cited
+  existed and belonged to the worker. It never asked whether the claim was still
+  *held*. So on a task allowing one claimant, somebody could claim it, release
+  it or let it expire, watch a second worker pick it up -- and still submit a
+  result days later that counted as legitimate work. `exchange._awarded_claim`
+  had the same gap from the other end: it was handed every claim ever made, so a
+  coordinator could award one that had already lapsed.
+- **Decision:** a result is ignored, with a warning rather than an error, when
+  the claim it cites was released or had expired at the moment the result was
+  issued. The coordinator may only award among the live claims -- it settles a
+  contest, it does not revive a hold.
+- **Warnings rather than refusals**, because a late result is a fact about the
+  bundle worth reporting, and derived state that silently omits things is harder
+  to debug than derived state that says what it dropped.
+- **Migration:** Pre-1.0.
+
+## D-095: a check that scans nothing must not report "clean"
+
+- **Date:** 2026-08-28 (audit)
+- **Problem:** `scripts/pre_push_check.py` is the last gate before the
+  irreversible step, and it failed open in two ways. `git()` returned `""` for a
+  failed command; `check_remote` read that as a problem, but `tracked_text`
+  split it into an empty list and reported a clean tree. And a file that would
+  not decode as UTF-8 was skipped silently -- which on this machine means the
+  encoding PowerShell writes for `>`, the very thing `cli.py` warns about two
+  files away. **The most likely encoding on the operator's own console was the
+  blind spot in the scanner.**
+- **Decision:** `git()` returns `None` on failure and the caller must decide;
+  files are decoded as UTF-8, then UTF-16 either way, and anything still
+  unreadable is reported as unscanned rather than skipped; scanning zero files
+  is itself a refusal.
+- **Verified by planting a real-shaped token in both a UTF-8 and a UTF-16 file.**
+  Before, only the UTF-8 one was caught.
+- **Migration:** Pre-1.0.
+
 ### Pending decision template
 
 - ID:

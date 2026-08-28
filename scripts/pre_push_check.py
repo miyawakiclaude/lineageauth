@@ -75,37 +75,67 @@ TEXT_SUFFIXES = {
 GIT = shutil.which("git")
 
 
-def git(*args: str) -> str:
+def git(*args: str) -> str | None:
     """Run one read-only git command, with the executable resolved explicitly.
 
     Resolved rather than left to PATH lookup: this runs as a hook, in whatever
     environment the push happened to have, and a check that can be redirected by
     a PATH entry is not much of a check.
+
+    Returns None when the command failed, rather than an empty string. The two
+    are not the same thing and treating them alike was a hole: `check_remote`
+    turned "" into a refusal, but `tracked_text` split it into an empty list and
+    reported a clean tree. A scanner that finds nothing because it looked at
+    nothing must not be able to say "clean".
     """
     if GIT is None:
-        return ""
+        return None
     done = subprocess.run(  # noqa: S603
         [GIT, "-C", str(REPO), *args], capture_output=True, text=True, check=False
     )
-    return done.stdout.strip() if done.returncode == 0 else ""
+    return done.stdout.strip() if done.returncode == 0 else None
 
 
-def tracked_text() -> list[tuple[str, str]]:
+def tracked_text() -> tuple[list[tuple[str, str]], list[str]]:
+    """Every scannable file, and every file that could not be scanned.
+
+    A file this cannot read is not a file without secrets. Two ways that
+    mattered here: `git ls-files` failing produced an empty list that read as a
+    clean tree, and a UTF-16 file -- which is what PowerShell's `>` writes on
+    this machine, as `cli.py` says in as many words -- was skipped silently. The
+    most likely encoding on the operator's own console was a blind spot in the
+    check that guards the irreversible step.
+    """
     files: list[tuple[str, str]] = []
+    unreadable: list[str] = []
+
     # `--others --exclude-standard` so a file that exists and has never been
     # staged is still seen. A push does not send it, but somebody about to push
     # is somebody about to commit, and the cheap moment to catch this is now.
-    for name in git("ls-files", "--cached", "--others", "--exclude-standard").splitlines():
+    listing = git("ls-files", "--cached", "--others", "--exclude-standard")
+    if listing is None:
+        return [], ["git ls-files failed, so no file was scanned at all"]
+
+    for name in listing.splitlines():
         if not name or name in EXEMPT:
             continue
         path = REPO / name
         if path.suffix.lower() not in TEXT_SUFFIXES:
             continue
         try:
-            files.append((name, path.read_text(encoding="utf-8")))
-        except (OSError, UnicodeDecodeError):
+            raw = path.read_bytes()
+        except OSError as exc:
+            unreadable.append(f"{name} could not be read ({exc.__class__.__name__})")
             continue
-    return files
+        for encoding in ("utf-8-sig", "utf-16-le", "utf-16-be"):
+            try:
+                files.append((name, raw.decode(encoding)))
+                break
+            except UnicodeDecodeError:
+                continue
+        else:
+            unreadable.append(f"{name} is not text this check can decode, so it went unscanned")
+    return files, unreadable
 
 
 def check_remote() -> list[str]:
@@ -121,7 +151,8 @@ def check_remote() -> list[str]:
 
 
 def check_identity() -> list[str]:
-    email = git("config", "--get", "user.email").lower()
+    raw = git("config", "--get", "user.email")
+    email = (raw or "").lower()
     if not email:
         # Not a violation. An unset address is not a company address, and git
         # will not let a commit happen without one anyway. Treating "unset" as a
@@ -138,7 +169,11 @@ def check_identity() -> list[str]:
 
 def check_tree() -> list[str]:
     problems: list[str] = []
-    for name, text in tracked_text():
+    scanned, unreadable = tracked_text()
+    problems.extend(unreadable)
+    if not scanned:
+        problems.append("scanned 0 files -- this check did nothing and cannot say 'clean'")
+    for name, text in scanned:
         lowered = text.lower()
         problems.extend(
             f"{name} names the company ({marker})"
