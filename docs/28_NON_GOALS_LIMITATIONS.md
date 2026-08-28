@@ -103,10 +103,16 @@ stopped, and a threshold recovery quorum outranking a single-key succession
 
 ### Pre-1.0
 
-Schemas and semantics will change. The signing preimage is frozen; event payload
-shapes are not. Roughly half the entries in
-[docs/29_DECISIONS.md](29_DECISIONS.md) are still marked `Migration: Pre-1.0`,
-which means exactly what it says.
+Schemas and semantics will change, but less than they did. The signing preimage
+is frozen, and as of 2026-08-28 so are 22 of the 28 event payload shapes —
+recorded in [`conformance/frozen-shapes.json`](../conformance/frozen-shapes.json)
+with a test that fails if one moves.
+
+The 4 entries still marked `Migration: Pre-1.0` in
+[docs/29_DECISIONS.md](29_DECISIONS.md) are the delegation and approval layer,
+held rather than frozen because [PRIOR_ART.md](PRIOR_ART.md) finds that layer
+overlaps UCAN. If the right answer is to build on UCAN rather than beside it,
+those shapes change.
 
 ## If you are deciding right now
 
@@ -116,9 +122,12 @@ reader. Both are listed in [RELEASE.md](../RELEASE.md) as requirements for v1
 that are not met.
 
 If you want an attenuating capability chain today, [UCAN and
-Biscuit](PRIOR_ART.md) are more mature and have been implemented by more people.
-If you want supply-chain provenance, in-toto and DSSE are the established
-answer. This is worth your attention if the specific combination — offline
+Biscuit](PRIOR_ART.md) are more mature and have been implemented by more people,
+and ADTP is a running daemon doing agent-to-agent delegation over UCAN chains
+with a stronger revocation guarantee than this makes. If you want supply-chain
+provenance, in-toto and DSSE are the established answer.
+
+This is worth your attention if the specific combination — offline
 verification, root recovery, and human approval bound to one exact action — is
 what you need, and you can accept that the combination is unproven.
 
