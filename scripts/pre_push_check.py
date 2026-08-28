@@ -48,7 +48,21 @@ SECRETS = (
     re.compile(r"\bgh[pousr]_[A-Za-z0-9]{20,}"),
     re.compile(r"\bsk-[A-Za-z0-9]{20,}"),
     re.compile(r"\bAKIA[0-9A-Z]{16}\b"),
+    # This project's own key material, which the list above did not describe at
+    # all. An Ed25519 seed here is 64 hex characters; none of the patterns above
+    # would see one. The scanner knew every shape except the one it exists to
+    # protect.
+    #
+    # `(?<!sha256:)` because an event id is also 64 hex characters and they are
+    # everywhere in this repository. Matching those would fire on every commit
+    # until somebody deleted the check, which is how a scanner that cries wolf
+    # ends up not existing.
+    re.compile(r"(?<!sha256:)(?<![0-9a-fA-F])[0-9a-f]{64}(?![0-9a-fA-F])"),
+    re.compile(r"\b(?:SIGN_SEED|SEED|seed)\s*[:=]\s*[\"']?[0-9a-fA-F]{64}"),
 )
+
+# Names that are key material whatever happens to be inside them.
+SECRET_NAMES = re.compile(r"(?:^|/)(?:seed\.txt|[^/]*\.pem|[^/]*\.key|\.env)$", re.IGNORECASE)
 
 # The scan names what it looks for, so it necessarily contains those strings.
 EXEMPT = {
@@ -120,6 +134,13 @@ def tracked_text() -> tuple[list[tuple[str, str]], list[str]]:
         if not name or name in EXEMPT:
             continue
         path = REPO / name
+        # Before the suffix filter, not after it. A `.pem` or a `seed.txt` is
+        # key material by its name, and those are exactly the extensions the
+        # text filter was dropping -- so the check that looked for secrets never
+        # saw the files most likely to be one.
+        if SECRET_NAMES.search(name):
+            unreadable.append(f"{name} is named like key material and must not be in the tree")
+            continue
         if path.suffix.lower() not in TEXT_SUFFIXES:
             continue
         try:

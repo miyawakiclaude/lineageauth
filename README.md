@@ -35,6 +35,13 @@ reports a specific reason code such as `VALID_AUTHORITY_CHAIN`, `REVOKED`,
 It also **does not** replace OAuth, API keys, repository permissions, MCP server
 authorization, or A2A server policy. It is additive provenance, never a bypass.
 
+And it **claims no novelty in any single primitive**. The canonicalization, the
+attenuating delegation chain and the evidence layer all have prior art, some of it
+more mature than this — [docs/PRIOR_ART.md](docs/PRIOR_ART.md) names it, row by
+row, including the one paper that addresses the same problem for the same two
+agent protocols. If you are choosing something to depend on today, that page
+says which of them to prefer.
+
 The core holds **no wallet keys, transfers no tokens, escrows nothing**, and
 makes no claim about anyone's eligibility for anything. See
 [docs/28_NON_GOALS_LIMITATIONS.md](docs/28_NON_GOALS_LIMITATIONS.md).

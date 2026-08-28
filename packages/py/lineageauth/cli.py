@@ -438,10 +438,6 @@ def version() -> None:
     typer.echo(f"supported   {', '.join(sorted(catalog.SUPPORTED_VERSIONS))}")
 
 
-if __name__ == "__main__":  # pragma: no cover
-    app()
-
-
 def _decision_as_dict(decision: AuthorityDecision, bundle: EventBundle) -> dict[str, Any]:
     return {
         "allowed": decision.allowed,
@@ -1348,3 +1344,12 @@ def sign(
         raise typer.Exit(code=2) from exc
 
     typer.echo(envelope.to_json())
+
+
+# At the end, and it has to be. Sitting two-fifths of the way down the file, this
+# block ran `app()` before the nine commands defined below it had been
+# registered -- so `python -m lineageauth.cli` quietly offered a fraction of the
+# CLI while `la` offered all of it. Nothing failed; the commands simply were not
+# there. (D-096.)
+if __name__ == "__main__":  # pragma: no cover
+    app()

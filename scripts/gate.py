@@ -27,22 +27,46 @@ CHECKS: tuple[tuple[str, list[str]], ...] = (
     ("lint", ["ruff", "check", "."]),
     ("format", ["ruff", "format", "--check", "."]),
     ("types", ["mypy"]),
-    ("tests", ["pytest", "-q"]),
+    # No -q here. `pyproject.toml` already has -q in addopts, and the two combine
+    # into -qq, which suppresses the "N passed" line entirely. A gate that cannot
+    # say how many tests ran can only report that nothing objected -- and a suite
+    # that collected nothing reports exactly that too. (D-097.)
+    ("tests", ["pytest"]),
 )
 
 
+def _test_tally(output: str) -> str:
+    """The "N passed" line, so the summary says what actually ran."""
+    for line in reversed(output.splitlines()):
+        if " passed" in line or " failed" in line or "no tests ran" in line:
+            return line.strip().strip("=").strip()
+    return "no result line found -- did the suite collect anything?"
+
+
 def main() -> int:
-    results: list[tuple[str, int]] = []
+    results: list[tuple[str, int, str]] = []
     for name, command in CHECKS:
         print(f"\n=== {name}: {' '.join(command)}")
-        done = subprocess.run(command, cwd=str(REPO), check=False)  # noqa: S603
-        results.append((name, done.returncode))
+        if name != "tests":
+            done = subprocess.run(command, cwd=str(REPO), check=False)  # noqa: S603
+            results.append((name, done.returncode, ""))
+            continue
+        # Captured so the count can be read back, then echoed in full so that
+        # capturing it hides nothing from whoever is watching the run.
+        captured = subprocess.run(  # noqa: S603
+            command, cwd=str(REPO), check=False, capture_output=True, text=True
+        )
+        print(captured.stdout, end="")
+        if captured.stderr:
+            print(captured.stderr, end="", file=sys.stderr)
+        results.append((name, captured.returncode, _test_tally(captured.stdout)))
 
     print("\n=== summary")
-    for name, code in results:
-        print(f"  {'PASS' if code == 0 else 'FAIL'}  {name}")
+    for name, code, note in results:
+        detail = f"  -- {note}" if note else ""
+        print(f"  {'PASS' if code == 0 else 'FAIL'}  {name}{detail}")
 
-    failed = [name for name, code in results if code != 0]
+    failed = [name for name, code, _ in results if code != 0]
     if failed:
         print(f"\n{len(failed)} check(s) failed: {', '.join(failed)}")
         return 1

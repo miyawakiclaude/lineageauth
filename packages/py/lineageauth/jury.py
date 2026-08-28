@@ -41,6 +41,7 @@ from datetime import datetime
 from enum import StrEnum
 from typing import Any
 
+from lineageauth.builders import MAX_JURORS
 from lineageauth.bundle import AdmittedEvent, EventBundle
 from lineageauth.canonical import is_event_id
 from lineageauth.didkey import public_key_from_did_key
@@ -270,6 +271,13 @@ def _read_policy(raw: Any, *, selection: Selection) -> Policy | str:
     threshold = _as_positive_int(raw.get("threshold"))
     if seats is None or quorum is None or threshold is None:
         return "policy needs positive integer seats, quorum and threshold"
+    if seats > MAX_JURORS:
+        # Same reasoning as the threshold rule below, which already says it: the
+        # builder refuses to draft this and a hand-written event must not get
+        # further. An unbounded seat count is also work an outsider can ask this
+        # resolver to do, since every seat is drawn and every draw is counted.
+        # (D-098.)
+        return f"policy.seats is {seats}; a jury may seat at most {MAX_JURORS}"
     if seats != selection.seats:
         return "policy.seats disagrees with the selection"
     if threshold <= seats // 2 or threshold > seats:

@@ -2002,6 +2002,74 @@ Git/GitHub writes require confirmation of active account + repository owner + re
   Before, only the UTF-8 one was caught.
 - **Migration:** Pre-1.0.
 
+## D-096: the module entry point offered a fraction of the CLI
+
+- **Date:** 2026-08-28 (audit)
+- **Problem:** `if __name__ == "__main__": app()` sat two-fifths of the way down
+  `cli.py`, so it ran before the commands defined below it were registered.
+  `python -m lineageauth.cli` offered five commands where `la` offered fourteen
+  -- **approval, check, doctor, execute, graph, index, key, passport and sign
+  were simply absent.** Nothing failed. They were not there.
+- **Decision:** the block moves to the end, and a test compares the two entry
+  points command for command. 1,228 tests passing did not catch this, because
+  every one of them used the installed entry point.
+- **Migration:** Pre-1.0.
+
+## D-097: a gate that cannot count is a gate that cannot say "clean"
+
+- **Date:** 2026-08-28 (audit)
+- **Problem:** `scripts/gate.py` ran `pytest -q` while `pyproject.toml` already
+  put `-q` in `addopts`. The two combined into `-qq`, which suppresses the
+  "N passed" line entirely. For a full day of work the gate could only report
+  that nothing objected -- **and a suite that collected zero tests reports
+  exactly the same thing.**
+- **Decision:** the `-q` is gone from the gate, the tests run captured, and the
+  tally is echoed in the summary. It now reads `PASS tests -- 1228 passed`,
+  which is a different claim from `PASS tests`.
+- **Migration:** none; this is tooling.
+
+## D-098: a limit the builder enforces is not a limit
+
+- **Date:** 2026-08-28 (audit)
+- **Problem:** two caps existed only on the drafting side. `MAX_AVAILABILITY_WINDOW`
+  (seven days) and `MAX_JURORS` (32 seats) were refused by their builders and
+  accepted by their readers. A payload written by hand skipped both -- so an
+  agent could declare itself available for a decade, and a case could seat an
+  unbounded jury that this resolver would then draw and count.
+- **Decision:** both are checked where they are read. This is the third instance
+  of one pattern today (`approval.read_receipt` was the first), and the pattern
+  is worth stating plainly: **a builder is a convenience and a verifier is a
+  rule.** An event that only the drafting side rejects is an event an attacker
+  drafts by hand.
+- **Migration:** Pre-1.0.
+
+## D-099: three ways a tool destroyed what it was protecting
+
+- **Date:** 2026-08-28 (audit)
+- **`keyfile.unlock` ignored the file's own KDF block** and derived with today's
+  constants. Raising `SCRYPT_N` in a future version would have made every
+  existing key file report "the passphrase is wrong, or the file has been
+  altered", sending somebody to hunt for a passphrase that was never wrong.
+  It reads the block now, and accepts only `ALLOWED_KDF` -- honouring the file
+  is not trusting it, and an altered file asking for `n=2**30` would otherwise
+  turn unlocking into a memory-exhaustion switch. `restore_key.py` checks
+  against the same set, so the recovery path cannot be stalled either.
+- **`build_site.py` deleted whatever `--out` named.** It now requires the
+  directory to look like a previous build (`.nojekyll` or `data/site.json`)
+  before removing it, and exits saying so otherwise.
+- **`recovery_drill.py` printed "files left for inspection" and then deleted
+  them.** `finally` tested `sys.exc_info()`, which is already clear once the
+  exception is handled, so the one run where somebody needed the evidence was
+  the run that removed it. An explicit flag now, set only on success.
+- **Also:** `pre_push_check.py` did not know what this project's own key
+  material looks like -- an Ed25519 seed is 64 hex characters and no pattern
+  described one, so the scanner knew every shape except the one it exists to
+  protect. Added, with `(?<!sha256:)` so it does not fire on the event ids that
+  fill this repository, because a scanner that cries wolf gets deleted. Names
+  like `seed.txt` are refused before the text-suffix filter, which was where
+  `.pem` and `.key` had been slipping past.
+- **Migration:** Pre-1.0.
+
 ### Pending decision template
 
 - ID:

@@ -39,6 +39,7 @@ from datetime import datetime
 from typing import Any
 
 from lineageauth.authority import check_permission
+from lineageauth.builders import MAX_AVAILABILITY_WINDOW
 from lineageauth.bundle import EventBundle
 from lineageauth.didkey import public_key_from_did_key
 from lineageauth.errors import LineageAuthError, MalformedEventError, ReasonCode
@@ -291,6 +292,13 @@ def _read_availability(
         try:
             expires_at = parse_instant(event.get("expiresAt"), field="expiresAt")
         except MalformedEventError:
+            continue
+        if expires_at - event.issued_at > MAX_AVAILABILITY_WINDOW:
+            # `builders.build_availability_statement` refuses to draft a window
+            # this long, and a builder is a convenience while a verifier is a
+            # rule. Without the check here, anyone drafting the payload by hand
+            # could declare themselves available for a decade and never have to
+            # say so again -- which is the whole point of the cap. (D-098.)
             continue
         key = (event.issued_at, event.event_id, stated, expires_at)
         if latest is None or (key[0], key[1]) > (latest[0], latest[1]):

@@ -320,6 +320,17 @@ def main() -> int:
 
     out = Path(args.out)
     if out.exists():
+        # `--out` is a path from a command line, and this used to delete whatever
+        # was there. A mistyped argument -- or a habit of passing a directory
+        # that also holds something else -- would take the lot. Delete only a
+        # directory that looks like a previous run of this script. (D-099.)
+        made_by_us = (out / ".nojekyll").exists() or (out / "data" / "site.json").exists()
+        if not made_by_us:
+            sys.exit(
+                f"refusing to delete {out}: it exists and does not look like a build "
+                "output from this script (no .nojekyll, no data/site.json). Remove it "
+                "yourself if that is really what you want."
+            )
         shutil.rmtree(out)
     (out / "explorer").mkdir(parents=True)
     (out / "data").mkdir(parents=True)

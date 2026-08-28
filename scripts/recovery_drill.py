@@ -215,14 +215,21 @@ def _only(documents: list[Envelope], event_type: str) -> Envelope:
 def main() -> int:
     workdir = Path(tempfile.mkdtemp(prefix="lineageauth-recovery-drill-"))
     print(f"drill directory: {workdir}\n")
+    # An explicit flag, not `sys.exc_info()`. The failure branch printed "files
+    # left for inspection" and then `finally` deleted them anyway: by that point
+    # the exception had been handled and `exc_info()` was already clear. The one
+    # run where somebody needed those files was the one run that removed them.
+    # (D-099.)
+    succeeded = False
     try:
         passed = run(workdir)
+        succeeded = True
     except DrillFailure as failure:
         print(f"\nDRILL FAILED: {failure}", file=sys.stderr)
         print(f"  files left for inspection: {workdir}", file=sys.stderr)
         return 1
     finally:
-        if not sys.exc_info()[0]:
+        if succeeded:
             shutil.rmtree(workdir, ignore_errors=True)
 
     print(f"\nDRILL PASSED -- {len(passed)} checks")

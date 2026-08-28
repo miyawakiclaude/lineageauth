@@ -58,6 +58,15 @@ SCRYPT_N = 2**17
 SCRYPT_R = 8
 SCRYPT_P = 1
 
+# Every parameter set this build will open a file with. `unlock` reads the block
+# the file records rather than assuming today's constants -- otherwise raising
+# SCRYPT_N in a future version would make every existing key file report "the
+# passphrase is wrong", and somebody would go looking for a passphrase that was
+# never wrong. Honouring the file is not the same as trusting it: an altered
+# file could otherwise demand n=2**30 and turn unlocking into a memory
+# exhaustion switch, so anything not named here is refused rather than tried.
+ALLOWED_KDF = frozenset({("scrypt", SCRYPT_N, SCRYPT_R, SCRYPT_P)})
+
 # The associated data binds the ciphertext to the DID printed beside it, so a
 # file whose public half was swapped fails to decrypt rather than producing a
 # key that signs for a different identity.
@@ -85,13 +94,15 @@ class Keyfile:
         return {"did": self.did, "path": str(self.path)}
 
 
-def _derive(passphrase: str, salt: bytes) -> bytes:
+def _derive(
+    passphrase: str, salt: bytes, *, n: int = SCRYPT_N, r: int = SCRYPT_R, p: int = SCRYPT_P
+) -> bytes:
     if len(passphrase) < MIN_PASSPHRASE:
         raise KeyfileError(
             f"a passphrase of at least {MIN_PASSPHRASE} characters is required; this file "
             "is the only thing protecting an identity that cannot be revoked"
         )
-    kdf = Scrypt(salt=salt, length=32, n=SCRYPT_N, r=SCRYPT_R, p=SCRYPT_P)
+    kdf = Scrypt(salt=salt, length=32, n=n, r=r, p=p)
     return kdf.derive(passphrase.encode("utf-8"))
 
 
@@ -186,7 +197,28 @@ def unlock(path: Path, passphrase: str) -> LocalSigner:
     except (KeyError, MalformedEventError) as exc:
         raise KeyfileError(f"the key file is malformed: {exc}") from exc
 
-    key = _derive(passphrase, salt)
+    # The file records the parameters it was written with, and this used to
+    # ignore them and use today's constants. Two consequences, both bad. Raise
+    # SCRYPT_N in a future version and every existing key file stops opening --
+    # reported as "the passphrase is wrong, or the file has been altered", which
+    # would send somebody hunting for a passphrase that was never wrong. And a
+    # file could claim parameters this never honoured, so what it says and what
+    # protects it were different things.
+    #
+    # Read them, and accept only a set this implementation vouches for. Trusting
+    # the number outright would let an altered file demand n=2**30 and turn
+    # unlocking into a memory-exhaustion switch. (D-099.)
+    declared = document.get("kdf")
+    if not isinstance(declared, dict):
+        raise KeyfileError("the key file does not record how its key was derived")
+    params = (declared.get("name"), declared.get("n"), declared.get("r"), declared.get("p"))
+    if params not in ALLOWED_KDF:
+        raise KeyfileError(
+            f"unsupported key derivation parameters {params}; this file was written by a "
+            "different version of the format and this build will not guess at them"
+        )
+
+    key = _derive(passphrase, salt, n=declared["n"], r=declared["r"], p=declared["p"])
     try:
         seed = ChaCha20Poly1305(key).decrypt(nonce, ciphertext, AAD_PREFIX + did.encode("ascii"))
     except InvalidTag as exc:
