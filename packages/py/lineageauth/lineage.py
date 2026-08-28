@@ -13,7 +13,11 @@ signature was made, not a validity window; no Phase 1 payload has `notBefore` or
 events, and takes no part in any decision (D-033). Deciding a contested
 succession by time would hand the lineage to whoever signs last, which is
 exactly the attacker holding a stolen key. When two incompatible successions
-leave the same epoch, both are surfaced and the resolver stops (CONFLICTED).
+leave the same epoch, both are surfaced and the resolver stops (CONFLICTED) --
+with one exception, and it is decided by a signed field rather than a clock: a
+threshold recovery quorum outranks a disagreeing single-key normal succession,
+because otherwise the holder of a stolen root key could veto its own
+replacement and freeze the lineage permanently (D-088).
 
 *Fail closed, but only where a stranger cannot reach the switch.* Anyone can
 mint a well-formed, correctly signed event naming someone else's lineage. If
@@ -769,6 +773,41 @@ def _next_step(
 
     if not authorized:
         return None
+
+    # A threshold recovery quorum outranks a single-key normal succession out of
+    # the same epoch (D-088).
+    #
+    # Without this, holding the root key is enough to *block* recovery forever:
+    # sign a normal succession to your own new root, and it collides with the
+    # quorum's recovery succession, and the lineage halts as CONFLICTED. Signing
+    # again with all three members changes nothing, because the thief's event is
+    # already published and anybody can keep a copy in the bundle. Recovery
+    # exists for exactly the case where the root key is the compromised one, and
+    # the compromised key could veto its own replacement.
+    #
+    # This is not a tie-break by timestamp (D-034 stands). `mode` is a field
+    # inside the signed payload, so the preference is fixed by what the issuers
+    # themselves declared, not by when they claim to have declared it.
+    modes_present = {candidate.mode for candidate in authorized}
+    disagree = len({candidate.to_root for candidate in authorized}) > 1
+    if disagree and RECOVERY_SUCCESSION in modes_present and NORMAL_SUCCESSION in modes_present:
+        # Only when they actually disagree. Two successions naming the *same*
+        # next root are not a conflict at all -- they are two parties agreeing,
+        # and both belong in the history for that step.
+        for candidate in authorized:
+            if candidate.mode != NORMAL_SUCCESSION:
+                continue
+            denied.append(
+                DeniedCandidate(
+                    candidate.event_id,
+                    ROOT_SUCCESSION,
+                    ReasonCode.SUPERSEDED,
+                    "a threshold recovery quorum out of this epoch outranks a "
+                    "single-key normal succession; recovery exists for the case where "
+                    "that single key is the compromised one",
+                )
+            )
+        authorized = [c for c in authorized if c.mode == RECOVERY_SUCCESSION]
 
     destinations = sorted({candidate.to_root for candidate in authorized})
     event_ids = tuple(sorted(candidate.event_id for candidate in authorized))

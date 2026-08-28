@@ -48,6 +48,23 @@ The three rules that actually bite:
 Use a library if one exists for your language. The reference implementation
 delegates this to `rfc8785` precisely because it is easy to get subtly wrong.
 
+**If your language distinguishes integers from floats, add one more rule.**
+Because JCS normalises `2.0` to `2`, two documents your language holds as
+different values produce the same bytes, the same signature and the same event
+id. A keyless third party can respell a number in a signed event and change what
+your code reads out of it while every cryptographic check still passes -- turning
+a working `recovery.policy` into one that no longer parses.
+
+The remedy is a round trip: parse your own canonical bytes back, and refuse the
+payload unless the result is the same document **including types**. Python does
+this in `canonical.assert_canonical_payload`.
+
+In JavaScript the hazard does not arise: `JSON.parse` collapses `2.0` to `2`
+before your code ever sees it. That is why no conformance vector demands this --
+a rule you cannot implement without a number-preserving parser is not a rule to
+test a stranger against. It is a hazard to warn them about, and this is the
+warning.
+
 ### 2. Build the signing preimage
 
 ```

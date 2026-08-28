@@ -131,11 +131,16 @@ Worker gets per request on the free plan (checked 2026-08-27):
 
 | operation | cost | of a 10 ms budget |
 |---|---:|---:|
-| verify one event | 0.6 ms | 6% |
-| admit a bundle of 11 events | 5.0 ms | 50% |
-| admit a bundle of 51 events | 25.6 ms | **256%** |
-| admit a bundle of 201 events | 138.6 ms | **1386%** |
-| one request: admit 51 events, then check | 43.7 ms | **437%** |
+| verify one event | 0.4 ms | 4% |
+| admit a bundle of 11 events | 3.3 ms | 33% |
+| admit a bundle of 51 events | 16.0 ms | **160%** |
+| admit a bundle of 201 events | 62.5 ms | **625%** |
+| one request: admit 51 events, then check | 20.3 ms | **203%** |
+
+(Averaged over three consecutive runs on the machine this was re-checked on;
+`scripts/benchmark.py` is not pinned to specific hardware, so the exact numbers
+move with the machine. The verdicts — fits, OVER, OVER, OVER — held on every
+run and are the part that matters.)
 
 **Admission dominates and is linear in events**, because every event in a bundle
 is verified and *the caller chooses how many to send*. An endpoint that admits a

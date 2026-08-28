@@ -398,7 +398,20 @@ def test_competing_successions_are_conflicted() -> None:
     assert state.standing_of(NEXT_ROOT.did) is ReasonCode.CONFLICTED
 
 
-def test_a_normal_and_a_recovery_succession_can_conflict() -> None:
+def test_a_recovery_quorum_outranks_a_disagreeing_normal_succession() -> None:
+    """D-088, replacing the CONFLICTED this used to assert.
+
+    Halting here read as the safe answer and was the opposite. Recovery exists
+    for the case where the root key is the compromised one, so whoever holds
+    that key could publish an ordinary succession, collide with the quorum on
+    purpose, and freeze the lineage for good -- the event is public, anyone can
+    keep a copy in the bundle, and re-signing with every member changes nothing.
+    Refusal was the attack.
+
+    Preferring recovery is decided by `mode`, a field inside the signed payload.
+    That is not a tie-break by `issuedAt` (D-034 stands): a self-asserted
+    timestamp is exactly what the thief would forge.
+    """
     active = policy(threshold=2)
     by_root = succession(to_root=NEXT_ROOT)
     by_quorum = succession(
@@ -410,8 +423,10 @@ def test_a_normal_and_a_recovery_succession_can_conflict() -> None:
 
     state = resolve(genesis(), active, by_root, by_quorum)
 
-    assert state.reason is ReasonCode.CONFLICTED
-    assert state.conflicting_event_ids == tuple(sorted((by_root.event_id, by_quorum.event_id)))
+    assert state.resolved
+    assert state.root == RIVAL_ROOT.did
+    assert state.epoch == 1
+    assert denial_for(state, by_root) is ReasonCode.SUPERSEDED
 
 
 def test_successions_agreeing_on_the_destination_are_not_a_conflict() -> None:
@@ -630,3 +645,123 @@ def test_superseded_roots_never_lists_the_root_currently_held() -> None:
     assert (state.root, state.epoch) == (ROOT.did, 2)
     assert ROOT.did not in state.superseded_roots
     assert state.superseded_roots == (NEXT_ROOT.did,)
+
+
+def _with_appended_garbage(envelope: Envelope) -> Envelope:
+    """A copy carrying one extra proof that no key produced.
+
+    Proofs live outside the payload, so this changes nothing about the event id
+    and needs no private key at all. That is the whole point of the attack.
+    """
+    import json
+
+    document = json.loads(envelope.to_json())
+    document["proofs"].append({"alg": "Ed25519", "signer": STRANGER.did, "sig": "A" * 86})
+    return Envelope.from_json(json.dumps(document))
+
+
+class TestAppendingAProofCannotDeleteAnEvent:
+    """D-087. The union guarantee was being broken at the door.
+
+    Merging copies of one event takes the union of their proofs, because a
+    mirror that could drop a signature could suppress a recovery quorum --
+    omission is the attack. But admission refused any envelope carrying a single
+    bad proof, and proofs do not change the event id, so a keyless third party
+    could append nonsense to a copy and have that copy discarded whole, before
+    merging was ever reached. Adding worked as deleting.
+    """
+
+    def _recovery(self) -> Envelope:
+        return succession(
+            to_root=NEXT_ROOT,
+            mode="recovery",
+            recovery_policy_ref=policy().event_id,
+            signers=MEMBERS[:2],
+        )
+
+    def test_a_recovery_quorum_survives_a_third_appended_proof(self) -> None:
+        spoiled = _with_appended_garbage(self._recovery())
+        state = resolve(genesis(), policy(), spoiled)
+
+        assert state.resolved, "appending a proof deleted the succession"
+        assert state.epoch == 1
+        assert state.root == NEXT_ROOT.did
+
+    def test_the_appended_signer_is_not_credited(self) -> None:
+        """Surviving must not mean counting. This is what replaces the refusal."""
+        spoiled = _with_appended_garbage(self._recovery())
+        bundle = EventBundle.from_envelopes([genesis(), policy(), spoiled])
+        event = next(e for e in bundle.admitted if e.payload["type"] == "root.succession")
+
+        assert not event.signed_by(STRANGER.did)
+        assert event.distinct_signers() == frozenset({MEMBERS[0].did, MEMBERS[1].did})
+
+    def test_an_envelope_whose_proofs_all_fail_is_still_refused(self) -> None:
+        """The floor. Discarding every proof is not admission."""
+        import json
+
+        document = json.loads(self._recovery().to_json())
+        for proof in document["proofs"]:
+            proof["sig"] = "A" * 86
+        bundle = EventBundle.from_envelopes(
+            [genesis(), policy(), Envelope.from_json(json.dumps(document))]
+        )
+        assert len(bundle.rejected) == 1
+
+
+class TestAStolenRootCannotVetoItsOwnReplacement:
+    """D-088. Refusal was the attack, which is a shape this project keeps meeting.
+
+    Recovery exists for the case where the root key is the compromised one. A
+    thief holding that key could sign an ordinary succession to a root of their
+    choosing, collide with the quorum's recovery succession, and halt the
+    lineage as CONFLICTED for good: the event is public, so anyone can keep a
+    copy in the bundle, and re-signing with all three members changes nothing.
+    The single key could veto its own replacement.
+
+    `mode` is a field inside the signed payload, so preferring recovery is a
+    decision the issuers themselves recorded -- not a tie-break by timestamp,
+    which D-034 forbids and which is forbidden for the same reason: `issuedAt`
+    is self-asserted and the thief would simply claim a later one.
+    """
+
+    def _recovery(self) -> Envelope:
+        return succession(
+            to_root=NEXT_ROOT,
+            mode="recovery",
+            recovery_policy_ref=policy().event_id,
+            signers=MEMBERS[:2],
+        )
+
+    def test_recovery_outranks_a_normal_succession_from_the_same_epoch(self) -> None:
+        veto = succession(to_root=RIVAL_ROOT, mode="normal", signers=[ROOT])
+        state = resolve(genesis(), policy(), self._recovery(), veto)
+
+        assert state.resolved, f"the veto still halts recovery: {state.reason}"
+        assert state.root == NEXT_ROOT.did
+        assert state.epoch == 1
+        assert denial_for(state, veto) is ReasonCode.SUPERSEDED
+
+    def test_two_incompatible_recoveries_still_halt(self) -> None:
+        """Preferring recovery over normal must not become "any recovery wins".
+
+        Two recovery quorums disagreeing means threshold-many members are split
+        or colluding, and there is nothing left to prefer with. Fails closed.
+        """
+        rival = succession(
+            to_root=RIVAL_ROOT,
+            mode="recovery",
+            recovery_policy_ref=policy().event_id,
+            signers=[MEMBERS[0], MEMBERS[2]],
+        )
+        state = resolve(genesis(), policy(), self._recovery(), rival)
+
+        assert not state.resolved
+        assert state.reason is ReasonCode.CONFLICTED
+
+    def test_an_ordinary_rotation_on_its_own_still_works(self) -> None:
+        """The negative control. Normal succession is the common case."""
+        state = resolve(genesis(), policy(), succession(to_root=NEXT_ROOT, mode="normal"))
+        assert state.resolved
+        assert state.epoch == 1
+        assert state.root == NEXT_ROOT.did

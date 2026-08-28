@@ -18,7 +18,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 from lineageauth import catalog
-from lineageauth.canonical import compute_event_id
+from lineageauth.canonical import assert_canonical_payload, compute_event_id
 from lineageauth.crypto import verify_by_did
 from lineageauth.didkey import UnsupportedDidMethodError
 from lineageauth.envelope import ALG_ED25519, Envelope, Proof
@@ -112,15 +112,31 @@ def _verify_proof(index: int, proof: Proof, signing_bytes: bytes) -> ProofResult
 def verify_event(envelope: Envelope) -> EventVerification:
     """Verify one signed envelope's structure and every proof it carries.
 
-    Every proof must verify. An unverifiable proof is treated as tampering
-    rather than ignored (decision D-027): quorum layers that need to count
-    *which* signers qualify read the per-proof results directly instead of
-    relying on a lenient top-level pass.
+    **At least one** proof must verify, and only the proofs that do become
+    signers. A proof that does not verify is discarded with a warning rather
+    than condemning the envelope (D-087, revising D-027).
+
+    That revision is not leniency. Proofs sit outside the payload and do not
+    affect the event id, so anybody holding no key can append one to a copy of a
+    signed event. While a single bad proof was fatal, appending was a way of
+    *deleting*: a mirror serving only the spoiled copy made the event disappear,
+    which is the omission attack D-036 exists to prevent, executed at the door
+    before merging was ever reached.
+
+    Nothing is gained by appending. A forged proof names a signer who is absent
+    from `verified_signers`, and `signed_by`, `distinct_signers` and every
+    quorum count read that. The only thing that changes is that the event
+    survives to be merged.
     """
     payload = envelope.payload
 
     try:
         event_id = compute_event_id(payload)
+        # Before anything reads a field out of this payload: the bytes that were
+        # signed must decode back to the document in hand. Otherwise a keyless
+        # third party can respell a number, keep the signature and the id valid,
+        # and change what a reader sees.
+        assert_canonical_payload(payload)
     except MalformedEventError as exc:
         return _fail(ReasonCode.MALFORMED, str(exc))
 
@@ -198,19 +214,39 @@ def verify_event(envelope: Envelope) -> EventVerification:
         for index, proof in enumerate(envelope.proofs)
     )
     failed = [r for r in results if not r.verified]
-    if failed:
+    verified = [r for r in results if r.verified]
+    if not verified:
         first = failed[0]
         return EventVerification(
             integrity_ok=False,
             reason=first.reason,
             detail=f"proof[{first.index}] ({first.signer}): {first.detail}",
             proofs=results,
-            verified_signers=tuple(r.signer for r in results if r.verified),
+            verified_signers=(),
             **common,  # type: ignore[arg-type]
         )
 
     warnings: list[str] = []
-    signers = [r.signer for r in results]
+    if failed:
+        # Refusing the whole envelope for one bad proof turned *adding* into
+        # *deleting*: proofs sit outside the payload and do not touch the event
+        # id, so anybody -- holding no key at all -- could append a nonsense
+        # proof to a copy of a signed event and have that copy thrown away
+        # whole. A mirror serving only that copy makes the event vanish, which
+        # is precisely the omission attack D-036 exists to prevent. The union
+        # guarantee was being broken at the door, before merging was reached.
+        #
+        # So a bad proof is discarded rather than fatal, and only the proofs
+        # that verified become signers. Nothing is gained by appending one: a
+        # forged proof names a signer who does not appear in `verified_signers`,
+        # and `signed_by` and every quorum count read that. What changes is only
+        # that the event survives. (D-087, revising D-027.)
+        warnings.append(
+            f"{len(failed)} proof(s) on this event did not verify and were discarded; "
+            "they confer nothing. Anyone can append a proof without a key, so their "
+            "presence is not evidence about the signers who did verify"
+        )
+    signers = [r.signer for r in verified]
     if len(set(signers)) != len(signers):
         warnings.append(
             "envelope repeats a signer DID across proofs; quorum layers must "
@@ -221,8 +257,8 @@ def verify_event(envelope: Envelope) -> EventVerification:
         integrity_ok=True,
         reason=ReasonCode.SIGNATURE_VERIFIED,
         detail=(
-            f"{len(results)} proof(s) verified over the canonical preimage. "
-            f"{NOT_AUTHORIZATION_NOTE}"
+            f"{len(verified)} of {len(results)} proof(s) verified over the canonical "
+            f"preimage. {NOT_AUTHORIZATION_NOTE}"
         ),
         proofs=results,
         verified_signers=tuple(signers),

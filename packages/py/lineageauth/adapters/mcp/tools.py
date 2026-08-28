@@ -33,7 +33,7 @@ from typing import Any
 
 from lineageauth import __version__, catalog
 from lineageauth.actions import ActionRequest
-from lineageauth.approval import check_execution
+from lineageauth.approval import InMemorySpentStore, SpentReceiptStore, check_execution
 from lineageauth.authority import check_permission, describe_grants
 from lineageauth.builders import build_approval_receipt, build_delegation_grant
 from lineageauth.envelope import Envelope
@@ -131,10 +131,19 @@ class LineageAuthTools:
     cannot add an event, and therefore cannot manufacture authority.
     """
 
-    __slots__ = ("_index",)
+    __slots__ = ("_index", "_store")
 
-    def __init__(self, index: EventIndex) -> None:
+    def __init__(self, index: EventIndex, *, store: SpentReceiptStore | None = None) -> None:
+        """`store` is optional here and required by `check_execution`, deliberately.
+
+        These tools preview; they never consume. But a preview that cannot see
+        which receipts are already spent will call a used receipt spendable, and
+        an integrator with no store configured should be told that rather than
+        shown a confident answer. When it is absent the answer still comes back,
+        with `spentStateConsulted: false` on it.
+        """
         self._index = index
+        self._store = store
 
     # ------------------------------------------------------------- verify
 
@@ -312,7 +321,9 @@ class LineageAuthTools:
             agent=agent,
             request=request,
             at=_moment(at),
-            store=None,
+            # An empty store answers "nothing is spent", which is a guess, not a
+            # fact. The flag below is what stops the caller reading it as one.
+            store=self._store if self._store is not None else InMemorySpentStore(),
             external=external,
             reserve=False,
         )
@@ -324,7 +335,18 @@ class LineageAuthTools:
             "approver": decision.approver,
             "requestHash": request.request_hash,
             "reserved": False,
-            "warnings": list(decision.warnings),
+            "spentStateConsulted": self._store is not None,
+            "warnings": [
+                *decision.warnings,
+                *(
+                    []
+                    if self._store is not None
+                    else [
+                        "no spent-receipt store is configured, so this preview cannot "
+                        "tell an unused receipt from one already consumed"
+                    ]
+                ),
+            ],
             "note": (
                 "A preview. Nothing was reserved, and the answer can change before you "
                 f"act -- re-check at the moment of execution. {decision.note}"

@@ -522,3 +522,91 @@ class TestTimeOfCheckTimeOfUse:
         assert not execute(*events, at=AT + timedelta(hours=1), store=store).may_execute
         # The receipt was never usable at that time, so it must remain unspent.
         assert not store.is_spent(receipt().event_id)
+
+
+class TestAnAgentCannotApproveItselfThroughALoop:
+    """The end-to-end shape of the audit finding, 2026-08-28.
+
+    Every edge attenuates properly, so nothing in the delegation rules objects.
+    What the attacker gains is not authority -- it is *standing*: by routing the
+    chain through a key it also controls, the agent appears among the issuers
+    that `_approvers_entitled` reads, and a receipt it signed itself then counts
+    as somebody else consenting.
+
+    Three separate locks were added, and this test only passes if the whole
+    door holds: the chain refuses a repeated subject, the entitled set discards
+    the requester, and `read_receipt` refuses `approver == agent`.
+    """
+
+    def _loop(self) -> tuple[Envelope, Envelope, Envelope]:
+        """ROOT -> AGENT (depth 2), AGENT -> OPERATOR, OPERATOR -> AGENT."""
+        scopes = [
+            {"namespace": "technocore", "resource": "room:lobby", "actions": ["read", "write"]}
+        ]
+
+        def edge(issuer: LocalSigner, subject: LocalSigner, depth: int, parent: str | None):
+            return sign_payload(
+                build_delegation_grant(
+                    lineage=LINEAGE,
+                    issuer=issuer.did,
+                    subject=subject.did,
+                    epoch=0,
+                    scopes=scopes,
+                    not_before=FROM,
+                    expires_at=UNTIL,
+                    max_depth=depth,
+                    approval="required",
+                    parent=parent,
+                    issued_at=AT,
+                ),
+                [issuer],
+            )
+
+        g1 = edge(ROOT, AGENT, 2, None)
+        g2 = edge(AGENT, OPERATOR, 1, g1.event_id)
+        g3 = edge(OPERATOR, AGENT, 0, g2.event_id)
+        return g1, g2, g3
+
+    def test_a_receipt_from_a_key_the_agent_controls_is_refused(self) -> None:
+        g1, g2, g3 = self._loop()
+        # OPERATOR here stands for a throwaway key the agent generated. Nothing
+        # in the bundle distinguishes it from a real second party -- which is
+        # the point, and why the fix cannot depend on telling them apart.
+        decision = execute(genesis(), g1, g2, g3, receipt(approver=OPERATOR))
+        assert not decision.may_execute
+        assert decision.reason is ReasonCode.DENIED
+
+    def test_the_builder_will_not_even_draft_a_self_receipt(self) -> None:
+        """The blunt version is refused one step earlier, at drafting."""
+        with pytest.raises(MalformedEventError, match="own action"):
+            receipt(approver=AGENT, agent=AGENT)
+
+    def test_the_verifier_refuses_a_self_receipt_the_builder_never_drafts(self) -> None:
+        """`build_approval_receipt` refuses this, so the payload is hand-made.
+
+        A rule only the drafting side enforces is a rule an attacker skips by
+        not using the drafting side.
+        """
+        from lineageauth.approval import read_receipt
+
+        drafted = build_approval_receipt(
+            lineage=LINEAGE,
+            approver=ROOT.did,
+            agent=AGENT.did,
+            request=request(),
+            nonce=NONCE,
+            expires_at=AT + timedelta(minutes=10),
+            issued_at=AT - timedelta(minutes=1),
+        )
+        forged = {**drafted, "approver": AGENT.did}
+        envelope = sign_payload(forged, [AGENT])
+        admitted = EventBundle.from_envelopes([envelope]).admitted[0]
+
+        complaint = read_receipt(admitted)
+        assert isinstance(complaint, str)
+        assert "own action" in complaint
+
+    def test_an_honest_two_party_approval_still_works(self) -> None:
+        """The negative control. All of the above must not cost the feature."""
+        decision = execute(genesis(), grant(), receipt(approver=ROOT))
+        assert decision.may_execute, decision.detail

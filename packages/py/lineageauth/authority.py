@@ -376,12 +376,28 @@ def _walk_to_root(
     path: list[str] = []
     approval = ApprovalMode.NONE
     seen: set[str] = set()
+    # Subjects, not event ids. Refusing a repeated event id stops a grant naming
+    # itself as its own parent and nothing else: an agent holding a throwaway key
+    # can publish A->B and then B->A, attenuating properly at every edge, and so
+    # appear on its own authorizing path as an issuer -- which is exactly the set
+    # `approval._approvers_entitled` reads to decide who may consent (D-042).
+    # A real chain R->A->B->C has distinct subjects; a loop has to repeat one.
+    # Purely a restriction: it can refuse a chain, never widen one.
+    subjects: set[str] = set()
     cursor = leaf
 
     for _ in range(_MAX_CHAIN):
         if cursor.event_id in seen:
             return (ReasonCode.MALFORMED, f"the delegation chain revisits {cursor.event_id}")
         seen.add(cursor.event_id)
+
+        if cursor.subject in subjects:
+            return (
+                ReasonCode.MALFORMED,
+                f"the delegation chain delegates to {cursor.subject} twice; a loop adds no "
+                "authority but launders who appears to have granted it",
+            )
+        subjects.add(cursor.subject)
 
         standing = _grant_standing(cursor, at=at, epoch=epoch, revoked=revoked)
         if standing is not None:

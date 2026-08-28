@@ -46,6 +46,53 @@ def compute_event_id(payload: Any) -> str:
     return "sha256:" + hashlib.sha256(preimage(payload)).hexdigest()
 
 
+def _same_document(left: Any, right: Any) -> bool:
+    """Equal *and* of the same type, all the way down.
+
+    `1 == 1.0` in Python, and that is exactly the equality this must not use.
+    """
+    if type(left) is not type(right):
+        return False
+    if isinstance(left, dict):
+        return left.keys() == right.keys() and all(
+            _same_document(left[key], right[key]) for key in left
+        )
+    if isinstance(left, list):
+        return len(left) == len(right) and all(
+            _same_document(a, b) for a, b in zip(left, right, strict=True)
+        )
+    return bool(left == right)
+
+
+def assert_canonical_payload(payload: Any) -> None:
+    """Refuse a payload that is not already in the form its own bytes decode to.
+
+    RFC 8785 normalises numbers: `2.0` canonicalises to `2`. So two documents
+    that Python holds as different values -- `int` and `float` -- produce the
+    same JCS bytes, the same preimage, the same signature and the same event id.
+    A reader that pulls a field out of the *parsed* document therefore sees a
+    value nobody signed, while every cryptographic check still passes.
+
+    That is not theoretical. A third party holding no key can rewrite one
+    character of a signed `recovery.policy` -- `"threshold":2` to
+    `"threshold":2.0` -- and produce an event whose signature verifies, whose id
+    is unchanged, and whose threshold no longer parses. The policy stops working
+    and nothing reports a fault. Refusal is the attack.
+
+    The round trip catches the whole family at once: `1.0`/`1`, `-0.0`/`0`,
+    `1e2`/`100`. If re-parsing the canonical bytes yields a different document,
+    the payload had a second spelling, and a second spelling of one event id is
+    the bug.
+    """
+    from lineageauth import jsonio
+
+    if not _same_document(payload, jsonio.loads(jcs(payload))):
+        raise MalformedEventError(
+            "payload is not in canonical form: re-parsing its own JCS bytes yields a "
+            "different document, so two spellings would share one event id"
+        )
+
+
 def is_event_id(value: object) -> bool:
     """True if `value` is a syntactically valid event id."""
     return isinstance(value, str) and EVENT_ID_RE.fullmatch(value) is not None

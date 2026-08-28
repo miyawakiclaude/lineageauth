@@ -19,7 +19,7 @@ from typing import Any
 
 import pytest
 
-from lineageauth.authority import AuthorityDecision, check_permission
+from lineageauth.authority import AuthorityDecision, Grant, check_permission, read_grant
 from lineageauth.builders import (
     build_delegation_grant,
     build_delegation_revoke,
@@ -543,3 +543,121 @@ class TestHardening:
         cyclic = sign_payload(payload, [AGENT])
         decision = check(genesis(), placeholder, cyclic, agent=SUB_AGENT)
         assert not decision.allowed
+
+
+def _grants_of(bundle: EventBundle) -> dict[str, Grant]:
+    """The grants map `check_execution` builds, so the tests judge what it judges."""
+    parsed = (read_grant(e) for e in bundle.of_type("delegation.grant", lineage=LINEAGE))
+    return {g.event_id: g for g in parsed if not isinstance(g, str)}
+
+
+class TestADelegationLoopCannotLaunderIdentity:
+    """An agent must not become entitled to approve its own action.
+
+    Found by audit, 2026-08-28. `_approvers_entitled` (D-042) says the parties
+    who may consent are the issuers along the authorizing path, plus the root:
+    whoever delegated the authority is who may consent to its use.
+
+    The chain walk refused a loop by `event_id`, which stops a grant naming
+    itself as its own parent and nothing else. An agent A holding a throwaway
+    key B could publish A->B and then B->A. Attenuation is untouched -- same
+    scopes, approval still required, depth still narrowing -- so every edge
+    check passes, and A now appears on its own authorizing path as an issuer.
+    From there A signs its own approval receipt.
+
+    The invariant that closes it: **no DID is the subject of two grants on one
+    chain.** A real chain R->A->B->C has subjects A, B, C, all distinct.
+    A loop has to repeat one. This is a pure restriction -- it can only ever
+    refuse -- so it cannot become an escalation itself.
+    """
+
+    def _looped_bundle(self) -> tuple[EventBundle, str]:
+        """R -> AGENT, then AGENT -> SUB_AGENT -> AGENT, all attenuating."""
+        g1 = grant(issuer=ROOT, subject=AGENT, max_depth=2, approval="required", parent=None)
+        g2 = grant(
+            issuer=AGENT,
+            subject=SUB_AGENT,
+            max_depth=1,
+            approval="required",
+            parent=g1.event_id,
+            signers=[AGENT],
+        )
+        g3 = grant(
+            issuer=SUB_AGENT,
+            subject=AGENT,
+            max_depth=0,
+            approval="required",
+            parent=g2.event_id,
+            signers=[SUB_AGENT],
+        )
+        return EventBundle.from_envelopes([genesis(), g1, g2, g3]), g3.event_id
+
+    def test_the_loop_is_refused_rather_than_walked(self) -> None:
+        bundle, _ = self._looped_bundle()
+        decision = check_permission(
+            bundle,
+            lineage=LINEAGE,
+            agent=AGENT.did,
+            namespace="technocore",
+            resource="room:lobby",
+            action="write",
+            at=AT,
+        )
+        # The straight grant R -> AGENT still authorizes, so the request is not
+        # denied outright. What must not happen is the looped path being chosen.
+        chosen = set(decision.path)
+        issuers = {g.issuer for eid, g in _grants_of(bundle).items() if eid in chosen}
+        assert AGENT.did not in issuers, (
+            "the agent appears as an issuer on its own authorizing path, which is "
+            "what makes self-approval possible"
+        )
+
+    def test_the_agent_is_never_entitled_to_approve_itself(self) -> None:
+        """Belt and braces: even if a path slipped through, the approver set
+        must exclude the party asking. Two independent checks, because this one
+        is what actually gets read when a receipt is judged."""
+        from lineageauth.approval import _approvers_entitled
+
+        bundle, _ = self._looped_bundle()
+        decision = check_permission(
+            bundle,
+            lineage=LINEAGE,
+            agent=AGENT.did,
+            namespace="technocore",
+            resource="room:lobby",
+            action="write",
+            at=AT,
+        )
+        grants = _grants_of(bundle)
+        assert AGENT.did not in _approvers_entitled(decision, grants)
+
+    def test_a_straight_chain_of_three_still_works(self) -> None:
+        """The negative control. A rule that refuses loops must not refuse
+        ordinary sub-delegation, which is the feature it sits next to."""
+        g1 = grant(issuer=ROOT, subject=AGENT, max_depth=2, parent=None)
+        g2 = grant(
+            issuer=AGENT,
+            subject=SUB_AGENT,
+            max_depth=1,
+            parent=g1.event_id,
+            signers=[AGENT],
+        )
+        g3 = grant(
+            issuer=SUB_AGENT,
+            subject=STRANGER,
+            max_depth=0,
+            parent=g2.event_id,
+            signers=[SUB_AGENT],
+        )
+        bundle = EventBundle.from_envelopes([genesis(), g1, g2, g3])
+        decision = check_permission(
+            bundle,
+            lineage=LINEAGE,
+            agent=STRANGER.did,
+            namespace="technocore",
+            resource="room:lobby",
+            action="write",
+            at=AT,
+        )
+        assert decision.allowed, decision.detail
+        assert len(decision.path) == 3

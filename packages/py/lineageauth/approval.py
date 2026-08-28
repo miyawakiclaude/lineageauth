@@ -81,6 +81,12 @@ def read_receipt(event: AdmittedEvent) -> ApprovalReceipt | str:
         # Otherwise anyone could mint a receipt naming a human as the approver.
         return f"not signed by its declared approver {approver}"
 
+    if approver == agent:
+        # `builders.build_approval_receipt` already refuses to draft this, but a
+        # builder is a convenience and a verifier is a rule. An event that only
+        # the drafting side rejects is an event an attacker simply drafts by hand.
+        return "an agent may not approve its own action"
+
     try:
         request = ActionRequest(
             namespace=str(event.get("namespace")),
@@ -277,6 +283,13 @@ def _approvers_entitled(decision: AuthorityDecision, grants: dict[str, Grant]) -
         grant = grants.get(event_id)
         if grant is not None:
             entitled.add(grant.issuer)
+
+    # The agent asking is never entitled to consent on its own behalf, whatever
+    # the path says. `authority._walk_to_root` refuses the delegation loop that
+    # would put it here, and this is the second lock on the same door: the loop
+    # check protects the path, and this protects the decision read off it. One
+    # of them being wrong should not be enough.
+    entitled.discard(decision.request.agent)
     return entitled
 
 
@@ -287,11 +300,18 @@ def check_execution(
     agent: str,
     request: ActionRequest,
     at: datetime,
-    store: SpentReceiptStore | None = None,
+    store: SpentReceiptStore,
     external: bool = True,
     reserve: bool = True,
 ) -> ExecutionDecision:
     """Decide whether an executor may perform `request` on behalf of `agent`.
+
+    `store` has no default on purpose. It used to default to `None`, which
+    turned replay protection off silently: `may_execute` came back True with
+    `reserved=False` and no warning, so one human approval became an unlimited
+    licence for any caller who did not notice. A gate whose default is "the
+    guard is not on duty" is not a gate. Previewing without consuming is what
+    `reserve=False` is for, so nothing needed the None (D-089).
 
     This is the TOCTOU re-check from `docs/06`, and it is meant to be called
     immediately before the action, not once at the start of a session: authority

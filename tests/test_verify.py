@@ -109,18 +109,44 @@ class TestSignatureFailures:
         assert not result.integrity_ok
         assert result.reason is ReasonCode.INVALID_SIGNATURE
 
-    def test_one_bad_proof_fails_the_whole_envelope(
+    def test_one_bad_proof_is_discarded_and_confers_nothing(
         self, root_create_payload: dict[str, Any], root_a: LocalSigner
     ) -> None:
-        # Decision D-027: an unverifiable proof is treated as tampering rather
-        # than quietly skipped. Quorum counting reads the per-proof results.
+        """D-087, revising D-027.
+
+        A bad proof used to condemn the envelope. That made *appending* a way
+        of *deleting*: proofs live outside the payload and do not change the
+        event id, so anyone with no key could append nonsense to a copy and have
+        that copy discarded whole -- the omission attack D-036 exists to
+        prevent, landed at the door before merging was reached.
+
+        The event now survives, and the security property is carried by
+        `verified_signers` instead: the forged signer is simply not in it.
+        """
         good = sign_payload(root_create_payload, [root_a]).proofs[0]
-        bad = Proof(alg="Ed25519", signer=unsafe_signer(OUTSIDER).did, sig=good.sig)
+        outsider = unsafe_signer(OUTSIDER).did
+        bad = Proof(alg="Ed25519", signer=outsider, sig=good.sig)
+
         result = verify_event(Envelope(payload=root_create_payload, proofs=[good, bad]))
-        assert not result.integrity_ok
-        assert result.reason is ReasonCode.INVALID_SIGNATURE
+
+        assert result.integrity_ok, "appending a proof must not delete the event"
         assert result.proofs[0].verified
         assert not result.proofs[1].verified
+        # The part that matters: nothing was gained by appending.
+        assert result.verified_signers == (root_a.did,)
+        assert outsider not in result.verified_signers
+        assert result.warnings and "discarded" in result.warnings[0]
+
+    def test_an_envelope_whose_every_proof_fails_is_still_refused(
+        self, root_create_payload: dict[str, Any], root_a: LocalSigner
+    ) -> None:
+        """The floor under the revision. Discarding all of them is not admission."""
+        good = sign_payload(root_create_payload, [root_a]).proofs[0]
+        bad = Proof(alg="Ed25519", signer=unsafe_signer(OUTSIDER).did, sig=good.sig)
+        result = verify_event(Envelope(payload=root_create_payload, proofs=[bad]))
+        assert not result.integrity_ok
+        assert result.reason is ReasonCode.INVALID_SIGNATURE
+        assert result.verified_signers == ()
 
 
 class TestMutationInvalidates:
@@ -290,3 +316,89 @@ def test_fixed_test_vector_is_stable(root_create_event: Envelope) -> None:
     assert root_create_event.payload["epoch"] == 0
     assert root_create_event.payload["lineage"].startswith("lineage:la:z6Mk")
     assert datetime.now(UTC) is not None  # sanity: tests never read the clock for logic
+
+
+class TestAPayloadMustBeInTheFormItsOwnBytesDecodeTo:
+    """Found by audit, 2026-08-28. A keyless third party could respell a number.
+
+    RFC 8785 normalises numbers, so `2.0` canonicalises to `2`. The preimage,
+    the signature and the event id are therefore identical for both spellings --
+    but Python holds one as `int` and the other as `float`, and every reader
+    that pulls a field out of the parsed document sees a value nobody signed.
+
+    The concrete case: rewrite one character of a signed `recovery.policy`,
+    `"threshold": 2` to `"threshold": 2.0`, and the signature still verifies
+    while the threshold no longer parses. The recovery policy stops working and
+    nothing reports a fault. **Refusal is the attack**, which is a shape this
+    project keeps having to relearn.
+
+    A useful side effect: only canonical payloads are admitted now, and two
+    canonical documents with one event id are the same document. That makes
+    `bundle._merge_duplicates` taking the first copy safe rather than lucky.
+    """
+
+    @staticmethod
+    def _policy(root: LocalSigner) -> Envelope:
+        from lineageauth.builders import build_recovery_policy
+        from lineageauth.identifiers import derive_lineage_id
+
+        members = [unsafe_signer(k).did for k in (RECOVERY_1, RECOVERY_2, OUTSIDER)]
+        return sign_payload(
+            build_recovery_policy(
+                lineage=derive_lineage_id(root.did),
+                epoch=0,
+                policy_seq=1,
+                members=members,
+                threshold=2,
+                issued_at=datetime(2026, 8, 28, 12, 0, tzinfo=UTC),
+            ),
+            [root],
+        )
+
+    def test_the_honest_policy_verifies(self, root_a: LocalSigner) -> None:
+        assert verify_event(self._policy(root_a)).integrity_ok
+
+    def test_respelling_a_number_is_refused_with_the_signature_untouched(
+        self, root_a: LocalSigner
+    ) -> None:
+        original = self._policy(root_a)
+        text = original.to_json()
+        tampered_text = text.replace('"threshold": 2', '"threshold": 2.0').replace(
+            '"threshold":2', '"threshold":2.0'
+        )
+        assert tampered_text != text, "the fixture no longer contains the field being respelt"
+
+        tampered = Envelope.from_json(tampered_text)
+        result = verify_event(tampered)
+
+        # The whole point: everything cryptographic still agrees.
+        assert tampered.event_id == original.event_id
+        assert result.integrity_ok is False
+        assert result.reason is ReasonCode.MALFORMED
+        assert "canonical form" in result.detail
+
+    def test_every_spelling_of_one_number_is_caught(self, root_a: LocalSigner) -> None:
+        for spelling in ("2.0", "2e0", "2.00"):
+            text = (
+                self._policy(root_a).to_json().replace('"threshold": 2', f'"threshold": {spelling}')
+            )
+            result = verify_event(Envelope.from_json(text))
+            assert result.integrity_ok is False, f"{spelling} slipped through"
+
+    def test_an_ordinary_payload_is_not_disturbed(self) -> None:
+        """The negative control. A rule this broad must cost the honest case nothing."""
+        from lineageauth.canonical import assert_canonical_payload
+
+        assert_canonical_payload(
+            {
+                "protocol": "lineageauth",
+                "version": "0.1",
+                "n": 0,
+                "neg": -17,
+                "big": 2**53 - 1,  # the largest integer JCS admits
+                "s": "unicode and an emoji",
+                "arr": [1, "two", {"three": True}, None],
+                "nested": {"a": {"b": [0, 1]}},
+                "ratio": 0.5,
+            }
+        )

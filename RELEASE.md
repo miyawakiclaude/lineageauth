@@ -111,12 +111,32 @@ five things no test could have:
   afterwards. The runbook lists them, and four of the five are readable out of
   the published bundle -- which is now stated as the artifact to back up.
 
-### Performance is measured rather than assumed
+### ~~Performance is measured rather than assumed~~ — done, 2026-08-27
 
-`infra/scale-design.md` names the bottleneck as verification CPU and says the
-Cloudflare Workers free-tier limit of 10 ms per request has **not been measured
-against** a bundle verification. A v1 should not be guessing about the cost of
-its own core operation.
+`scripts/benchmark.py` measures verification CPU, native CPython, against the
+10 ms per-request budget of the Cloudflare Workers free plan. Verifying one
+event fits comfortably (well under 1 ms). Admitting a caller-supplied bundle
+does not scale the same way: a 51-event bundle already runs over the budget,
+and a 201-event bundle runs several times over it. `infra/scale-design.md`
+carries the measured table and is re-checked whenever the number matters.
+
+This did not resolve a v1 blocker — it confirmed one, and closed the question
+underneath it. The number was never "is admission fast enough"; it was
+"whose bytes get verified, and who decides how many." The caller picks the
+bundle size, so a public endpoint that admits whatever it is handed pays
+whatever the caller asks it to pay — a denial-of-service shape before it is a
+cost problem, and one that does not go away on a paid plan, it just starts
+costing money instead of failing. Underneath that is a second, independent
+blocker: Python Workers run under Pyodide (WebAssembly), and `cryptography` is
+a native package that cannot be imported there, so the verifier does not run
+on Workers at all today regardless of CPU budget.
+
+So this is a **design decision, not a defect**: a public dynamic verify
+endpoint on the free tier is not the shape to build. The ¥0 answer that was
+already the plan — precomputed static files (a passport, an event bundle, both
+static JSON) — has no CPU budget to exceed and no bundle a stranger can inflate,
+and stays the answer. Nothing here blocks v1; it removes a guess `infra/scale-design.md`
+was carrying and confirms the design already pointed the right way.
 
 ### The limitations page is written from the outside
 

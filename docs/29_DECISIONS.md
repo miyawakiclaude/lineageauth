@@ -1808,6 +1808,106 @@ Git/GitHub writes require confirmation of active account + repository owner + re
   signatures, rather than reported.
 - **Migration:** Pre-1.0.
 
+## D-086b: an agent must not become entitled to approve itself
+
+- **Date:** 2026-08-28 (audit)
+- **Problem:** `D-042` says the parties who may consent to an exercise of
+  authority are the issuers along the authorizing path, plus the root -- whoever
+  delegated it is who may approve its use. The chain walk refused loops by
+  **event id**, which stops a grant naming itself as its own parent and nothing
+  more. An agent holding a throwaway key could publish `A->B` and then `B->A`,
+  attenuating correctly at every edge, and thereby appear on its own authorizing
+  path as an issuer. It then signed its own approval receipt.
+- **Decision:** three locks, because one of them being wrong should not be
+  enough. (1) `_walk_to_root` refuses a chain that delegates to the same DID
+  twice -- a real chain `R->A->B->C` has distinct subjects, a loop must repeat
+  one, and the rule can only ever refuse. (2) `_approvers_entitled` discards
+  the requesting agent unconditionally. (3) `read_receipt` refuses
+  `approver == agent`, which `build_approval_receipt` already refused --
+  **a rule only the drafting side enforces is a rule an attacker skips by not
+  using the drafting side.**
+- **Verified end to end**, not just at unit level: the full loop plus a receipt
+  signed by the throwaway key now returns `may_execute=False, DENIED`.
+- **Migration:** Pre-1.0.
+
+## D-087: a proof that does not verify is discarded, not fatal (revises D-027)
+
+- **Date:** 2026-08-28 (audit)
+- **Problem:** `D-027` treated any unverifiable proof as tampering and refused
+  the whole envelope. `D-036` promises that merging copies of one event takes
+  the **union** of their proofs, because a mirror that could drop a signature
+  could suppress a recovery quorum. **The two were incompatible.** Proofs sit
+  outside the payload and do not affect the event id, so anybody holding no key
+  could append a nonsense proof to a copy of a signed event and have that copy
+  discarded whole. A mirror serving only the spoiled copy made the event vanish.
+  Adding worked as deleting, and the union guarantee was broken at the door,
+  before merging was ever reached.
+- **Decision:** at least one proof must verify; the ones that do become the
+  signers; the ones that do not are discarded with a warning. Nothing is gained
+  by appending -- a forged proof names a signer absent from `verified_signers`,
+  and `signed_by`, `distinct_signers` and every quorum count read that list. The
+  only thing that changes is that the event survives to be merged. An envelope
+  where **every** proof fails is still refused.
+- **Both implementations changed together.** `packages/js/lineageauth.js` does
+  the same thing, and the conformance run still reports 9/9. Fixing one side
+  only would have manufactured exactly the disagreement this project asks
+  strangers to look for.
+- **Migration:** Pre-1.0.
+
+## D-088: a recovery quorum outranks a disagreeing normal succession
+
+- **Date:** 2026-08-28 (audit)
+- **Problem:** two authorized successions leaving one epoch for different roots
+  halted the lineage as `CONFLICTED`. That reads as the safe answer and was the
+  opposite. **Recovery exists for the case where the root key is the compromised
+  one**, so the thief holding it could sign an ordinary succession, collide with
+  the quorum on purpose, and freeze the lineage for good: the event is public,
+  anybody can keep a copy in the bundle, and re-signing with every member
+  changes nothing. Refusal was the attack -- the same shape as `D-034`, arrived
+  at from the other direction.
+- **Decision:** when successions out of one epoch **disagree** and both modes are
+  present, the recovery ones win and the normal ones are denied as `SUPERSEDED`.
+  Two recovery quorums disagreeing still halts: that means threshold-many
+  members are split or colluding, and there is nothing left to prefer with.
+- **This is not a timestamp tie-break.** `D-034` stands. `mode` is a field inside
+  the signed payload, so the preference is fixed by what the issuers themselves
+  declared. `issuedAt` is self-asserted and is exactly what a thief would forge.
+- **Only when they disagree.** Successions naming the *same* next root are two
+  parties agreeing, not a conflict, and both stay in the step's history. The
+  first version of this fix dropped the normal one either way and an existing
+  test caught it.
+- **Migration:** Pre-1.0.
+
+## D-089: the execution gate has no default that turns the guard off
+
+- **Date:** 2026-08-28 (audit)
+- **Problem:** `check_execution` took `store: SpentReceiptStore | None = None`,
+  and with `None` it ran neither `is_spent` nor `reserve`. It returned
+  `may_execute=True` with `reserved=False` and **no warning at all**, so one
+  human approval became an unlimited licence for any caller who did not notice
+  the second field. The module's own header calls "never let one receipt be
+  spent twice" one of its two rules; the gate's default disabled it.
+- **Decision:** `store` is required. Previewing without consuming is what
+  `reserve=False` already expressed, so nothing needed the `None`.
+- **The MCP adapter is where the cost lands, and it is paid honestly.**
+  `LineageAuthTools` holds no spent store, so `verify_approval` now takes one
+  optionally and reports `spentStateConsulted: false` with a warning when it has
+  none. An empty store answers "nothing is spent", which is a guess; the flag is
+  what stops a caller reading it as a fact.
+- **Migration:** Pre-1.0. Callers passing no store must pass one.
+
+## D-090: one meaning, one encoding, for mcp resources too
+
+- **Date:** 2026-08-28 (audit)
+- **Problem:** `parse_resource` overwrote the prefix of an `mcp` server/tool
+  resource without checking it, so `server:s/tool:t`, `tool:s/tool:t` and
+  `zzz:s/tool:t` all parsed to one `Resource`. No authority widened -- they name
+  the same thing -- but a signed grant then had several spellings, which is the
+  rule every neighbouring check keeps: canonical `did:key`, sorted actions,
+  re-encoded base64url.
+- **Decision:** the prefix must be `server:`; anything else is `MalformedEventError`.
+- **Migration:** Pre-1.0.
+
 ### Pending decision template
 
 - ID:

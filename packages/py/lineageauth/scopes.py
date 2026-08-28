@@ -189,6 +189,16 @@ def parse_resource(namespace: str, resource: Any) -> Resource:
     # `server:<id>/tool:<tool>` is the one shape whose tail carries its own
     # prefix; normalise it to a two-segment `server/tool` shape.
     if namespace == "mcp" and "/tool:" in remainder:
+        # The prefix has to be checked, not merely replaced. Overwriting it
+        # unconditionally made `server:s/tool:t`, `tool:s/tool:t` and even
+        # `zzz:s/tool:t` parse to one Resource. No authority is widened -- they
+        # name the same thing -- but a signed grant then has several spellings,
+        # and "one meaning, one encoding" is the rule everything else here keeps
+        # (canonical did:key, sorted actions, re-encoded base64url).
+        if prefix != "server":
+            raise MalformedEventError(
+                f"an mcp server/tool resource must begin with 'server:', got {prefix!r}"
+            )
         server, _, tool = remainder.partition("/tool:")
         prefix, segments = "server/tool", [server, tool]
     else:

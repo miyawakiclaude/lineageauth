@@ -307,23 +307,40 @@ export async function verifyEvent(envelope) {
   for (const proof of proofs) {
     results.push({ signer: proof && proof.signer, ...(await verifyProof(payload, proof)) });
   }
+  // At least one proof must verify, and only the ones that do become signers.
+  // A bad proof used to condemn the envelope, which made *appending* a way of
+  // *deleting*: proofs sit outside the payload and do not change the event id,
+  // so anyone holding no key can append nonsense to a copy and have that copy
+  // thrown away whole. A mirror serving only the spoiled copy makes the event
+  // vanish -- the omission attack the union merge exists to prevent, landed at
+  // the door. Nothing is gained by appending: a forged proof names a signer who
+  // is absent from `signers`, and that is the list every quorum count reads.
+  // (D-087, revising D-027. The Python side does the same thing.)
   const failed = results.filter((r) => !r.ok);
-  if (failed.length > 0) {
+  const verified = results.filter((r) => r.ok);
+  if (verified.length === 0) {
     return {
       ok: false,
       reason: "INVALID_SIGNATURE",
       detail: failed.map((r) => `${r.signer}: ${r.reason}`).join("; "),
       proofs: results,
+      signers: [],
       warnings,
     };
+  }
+  if (failed.length > 0) {
+    warnings.push(
+      `${failed.length} proof(s) did not verify and were discarded; they confer ` +
+        "nothing. Anyone can append a proof without a key.",
+    );
   }
 
   return {
     ok: true,
     reason: "SIGNATURE_VERIFIED",
-    detail: `${results.length} proof(s) verified`,
+    detail: `${verified.length} of ${results.length} proof(s) verified`,
     eventId: await eventId(payload),
-    signers: [...new Set(results.map((r) => r.signer))].sort(),
+    signers: [...new Set(verified.map((r) => r.signer))].sort(),
     proofs: results,
     warnings,
   };
