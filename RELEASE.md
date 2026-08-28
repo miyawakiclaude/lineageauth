@@ -65,10 +65,17 @@ this project can do by itself.
 
 ### The pre-1.0 marks are gone from the decision log
 
-Every entry in `docs/29_DECISIONS.md` says `Migration: Pre-1.0`. Reaching v1
-means going through them and, for each, either committing to the shape or
-changing it while that is still free. A decision log where every entry says
-"this may still change" is not a v1 contract.
+**46 of the 100 entries** in `docs/29_DECISIONS.md` say `Migration: Pre-1.0`;
+seventeen already say `None`. (This section used to say *every* entry did, which
+was true when it was written and had stopped being true — the same drift D-084
+was about.) Reaching v1 means going through those 46 and, for each, either
+committing to the shape or changing it while that is still free. A decision log
+where half the entries say "this may still change" is not a v1 contract.
+
+**Do not start this before the prior-art question is settled.** If
+`docs/PRIOR_ART.md` is right that the delegation layer substantially overlaps
+UCAN, the shape worth committing to may not be this one, and freezing first
+would mean unfreezing later.
 
 ### Wire formats are frozen with a stated compatibility promise
 

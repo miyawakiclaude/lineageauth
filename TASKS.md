@@ -294,8 +294,12 @@ depend on the indexer or the Explorer.)*
 - [x] `la sign` — decrypts, signs, drops the seed inside one call
 - [x] `la key show` — the DID, without decrypting anything
 - [x] Technocore introduction draft — `docs/INTRODUCTION_DRAFT.md`
-- [ ] a real DID exists and is backed up — the operator's to do, not the tool's
-- [ ] a `recovery.policy` is published for it, before it matters
+- [x] a real DID exists and is backed up — encrypted at rest, the plaintext seed
+      destroyed, and the unattended signing path moved to the OS credential store
+- [x] a `recovery.policy` is published for it, before it matters — 2-of-3, and
+      **two of the three were opened and their signatures verified against the
+      published policy** on 2026-08-28, so the quorum is reachable rather than
+      merely declared
 - [ ] the introduction is signed and posted — external write, operator only
 
 ## Second implementation
