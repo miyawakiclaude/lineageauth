@@ -1908,6 +1908,62 @@ Git/GitHub writes require confirmation of active account + repository owner + re
 - **Decision:** the prefix must be `server:`; anything else is `MalformedEventError`.
 - **Migration:** Pre-1.0.
 
+## D-091: an unpaired surrogate has no preimage, in either implementation
+
+- **Date:** 2026-08-28 (audit)
+- **Problem:** the two implementations **disagreed**, which is the one outcome
+  this project asks strangers to look for -- found here by an internal review
+  first. A payload containing an unpaired UTF-16 surrogate cannot be encoded as
+  UTF-8, and the preimage is UTF-8 bytes, so there is nothing to sign. Python
+  refused it. JavaScript did not: `TextEncoder` substitutes U+FFFD instead of
+  throwing, so `jcs`, `preimage` and `eventId` all completed and `verifyEvent`
+  returned ok -- **for bytes that were not the document.**
+- **Decision:** `canonicalString` throws on any surrogate that survives
+  `for...of`, which by definition is unpaired since the iterator yields valid
+  pairs as one character. Python was already right; JavaScript now matches.
+- **Disagreeing in the permissive direction is the worse half.** A stricter
+  implementation refuses something real and someone notices. A looser one
+  admits an event whose id does not describe its content, and nobody does.
+- **Migration:** Pre-1.0.
+
+## D-092: nothing a caller sizes is unbounded
+
+- **Date:** 2026-08-28 (audit)
+- **Problem:** `POST /v1/verify/event` accepted any number of proofs and
+  verified every one, and `POST /v1/router/search` accepted any number of
+  `requires`, which multiply against the subject count inside a double loop of
+  `check_permission`. `limit` truncates the *results*, not the work.
+- **Measured, not assumed:** `scripts/benchmark.py` puts admission near 0.5 ms
+  an event, so 51 events already exceed the 10 ms a free Cloudflare Worker gets
+  per request and 201 take fourteen times it. **The caller picks the size**, so
+  an endpoint that admits whatever it is handed pays whatever it is asked to.
+  That is a denial-of-service shape before it is a cost problem, and a paid plan
+  converts it from failing into costing money.
+- **Decision:** `MAX_PROOFS = 16`, `MAX_SKILLS = 32`, `MAX_REQUIREMENTS = 8`.
+  Generous for real use -- a recovery quorum is a handful of keys -- and small
+  enough that no unauthenticated request buys meaningful CPU.
+- **Migration:** Pre-1.0.
+
+## D-093: the policy has to reach the copy strangers load
+
+- **Date:** 2026-08-28 (audit)
+- **Problem:** the Explorer's strict CSP was sent as a header by `api.py`, and
+  tested there. The published Explorer is on GitHub Pages, and **static hosting
+  cannot set headers.** So the protection existed exactly where nobody is
+  attacking, and was absent from the one copy that is reachable from the
+  internet -- while the tests reported it present.
+- **Decision:** the same policy is repeated as a `<meta http-equiv>` in
+  `index.html`, so it travels with the file. `frame-ancestors` and `form-action`
+  are header-only directives and are ignored in a meta tag; they stay in the
+  header, and the test that compares the two knows to skip them rather than
+  demanding a tag do what the specification says it cannot.
+- **Verified in a browser on the built site**, not from the source: an inline
+  script and a script from another origin were both refused, with the violations
+  in the console, and the page still worked. Checking the file for a string
+  would have proved only that a string was in a file -- the failure being fixed
+  was precisely a policy that existed without applying.
+- **Migration:** Pre-1.0.
+
 ### Pending decision template
 
 - ID:

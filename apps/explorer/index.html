@@ -4,6 +4,19 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>LineageAuth Explorer</title>
+<!--
+  The same policy `api.py` sends as a header, repeated here as a meta tag,
+  because the published page is served by GitHub Pages and static hosting
+  cannot set headers. Without this the strict CSP existed only on the local
+  development server -- present exactly where nobody is attacking, absent on
+  the one copy strangers actually load.
+
+  `frame-ancestors` and `form-action` are header-only directives and are
+  ignored in a meta tag; they stay in the header for the live server. What a
+  meta tag does carry is the part that matters here: no inline script, no eval,
+  and nothing loaded from another origin. (D-093.)
+-->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'none'; font-src 'none'; base-uri 'none'">
 <link rel="stylesheet" href="explorer/app.css">
 </head>
 <body>

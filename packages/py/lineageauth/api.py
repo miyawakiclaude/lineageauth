@@ -89,11 +89,26 @@ STANDING_NOTE = (
 )
 
 
+# Caps on anything a caller controls the size of.
+#
+# `scripts/benchmark.py` measured admission at roughly 0.5 ms per event, and the
+# caller chooses how many to send: a 51-event bundle already exceeds the 10 ms a
+# free Cloudflare Worker gets per request, and 201 events takes fourteen times
+# it. That is a denial-of-service shape before it is a cost problem, and it does
+# not go away on a paid plan -- it starts costing money instead of failing.
+#
+# These numbers are generous for real use and small enough that no unauthenticated
+# request can buy meaningful CPU. The read-only API is public by design (D-092).
+MAX_PROOFS = 16  # a recovery quorum is a handful of keys, not hundreds
+MAX_SKILLS = 32
+MAX_REQUIREMENTS = 8  # multiplied by the number of subjects, so it is the sharp one
+
+
 class VerifyRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     payload: dict[str, Any]
-    proofs: list[dict[str, Any]] = Field(default_factory=list)
+    proofs: list[dict[str, Any]] = Field(default_factory=list, max_length=MAX_PROOFS)
 
 
 class PermissionRequest(BaseModel):
@@ -112,8 +127,8 @@ class SearchRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     lineage: str
-    skills: list[str] = Field(default_factory=list)
-    requires: list[dict[str, str]] = Field(default_factory=list)
+    skills: list[str] = Field(default_factory=list, max_length=MAX_SKILLS)
+    requires: list[dict[str, str]] = Field(default_factory=list, max_length=MAX_REQUIREMENTS)
     approval_mode: str | None = None
     require_available: bool = False
     at: str | None = None

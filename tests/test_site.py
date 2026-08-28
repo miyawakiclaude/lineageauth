@@ -268,3 +268,52 @@ class TestTheBuildOutput:
             text = path.read_text(encoding="utf-8", errors="replace")
             for needle in needles:
                 assert needle not in text, f"a private seed reached {path.name}"
+
+
+class TestTheStaticBuildDefendsItself:
+    """A header the published copy never receives is a header that does not exist.
+
+    `api.py` sends a strict CSP, and `tests/test_explorer.py` checks it. But the
+    copy strangers load is on GitHub Pages, and static hosting cannot set
+    headers -- so the policy was present exactly where nobody is attacking and
+    absent on the one copy that is reachable. Found by audit, 2026-08-28.
+    """
+
+    REQUIRED = ("default-src 'none'", "script-src 'self'", "connect-src 'self'")
+
+    def test_the_published_page_carries_the_policy_as_a_meta_tag(self, site: Path) -> None:
+        page = (site / "index.html").read_text(encoding="utf-8")
+        assert 'http-equiv="Content-Security-Policy"' in page, (
+            "the built page has no CSP at all; GitHub Pages cannot supply one"
+        )
+        for directive in self.REQUIRED:
+            assert directive in page, f"the meta policy is missing {directive!r}"
+
+    def test_it_allows_no_inline_or_eval(self, site: Path) -> None:
+        page = (site / "index.html").read_text(encoding="utf-8")
+        policy = re.search(r'http-equiv="Content-Security-Policy"\s+content="([^"]+)"', page)
+        assert policy, "the meta tag is present but its content could not be read"
+        assert "unsafe-inline" not in policy.group(1)
+        assert "unsafe-eval" not in policy.group(1)
+
+    def test_the_meta_policy_matches_the_header_the_api_sends(self, site: Path) -> None:
+        """Two copies of one policy drift. Check the directives that must agree.
+
+        `frame-ancestors` and `form-action` are header-only and ignored in a
+        meta tag, so they are deliberately not required here -- asserting them
+        would make the tag look wrong for doing what the spec says.
+        """
+        from lineageauth.api import EXPLORER_CSP
+
+        page = (site / "index.html").read_text(encoding="utf-8")
+        policy = re.search(r'http-equiv="Content-Security-Policy"\s+content="([^"]+)"', page).group(
+            1
+        )
+        header_only = {"frame-ancestors", "form-action"}
+        for directive in EXPLORER_CSP.split(";"):
+            name = directive.strip().split(" ")[0]
+            if not name or name in header_only:
+                continue
+            assert directive.strip() in policy, (
+                f"the header sends {directive.strip()!r} and the meta tag does not"
+            )

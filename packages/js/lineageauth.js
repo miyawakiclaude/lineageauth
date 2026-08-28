@@ -100,6 +100,23 @@ function canonicalString(value) {
     } else if (ch < " ") {
       out += "\\u" + ch.charCodeAt(0).toString(16).padStart(4, "0");
     } else {
+      // A surrogate that survives `for...of` is unpaired: the iterator yields
+      // valid pairs as one character. It cannot be encoded as UTF-8, and the
+      // preimage is UTF-8 bytes, so this document has no signable form.
+      //
+      // Left alone it did not fail -- it failed *quietly*. `TextEncoder`
+      // substitutes U+FFFD rather than throwing, so an id was produced for
+      // bytes that were not the document, and this implementation returned ok
+      // where the Python one refused. Two implementations disagreeing is the
+      // thing this package exists to make visible; disagreeing in the
+      // permissive direction is the worse half of it. (D-091.)
+      const code = ch.codePointAt(0);
+      if (code >= 0xd800 && code <= 0xdfff) {
+        throw new VerificationError(
+          "a canonical payload cannot contain an unpaired surrogate: it has no " +
+            "UTF-8 encoding, so there is no preimage to sign or verify",
+        );
+      }
       out += ch;
     }
   }
