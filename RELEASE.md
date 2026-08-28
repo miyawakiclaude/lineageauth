@@ -109,10 +109,23 @@ nobody has broken on purpose is a contract nobody has checked.
 
 ### The threat model has been reviewed by somebody else
 
-`docs/22_SECURITY.md` is the working threat model and it has had exactly one
-reader. Several real defects in this repository were found by writing a test
-that disagreed with the code — the class of bug that survives is the one where
-the test and the code share an assumption, and only a second person breaks that.
+**Still open, and it is a person rather than a task.** What changed on
+2026-08-28 is that the document is now worth somebody's hour.
+
+It was 84 lines of threat *names* — "resolver omission", "confused deputy",
+"replay". A reviewer handed a checklist spends their first hour discovering
+things the author already knows, and there is only going to be one reviewer.
+
+It now also records what attacking this code actually found: the four shapes the
+thirty findings fell into, the places where the controls list above is
+misleading (`conflict fail-closed` is a safety property only where a stranger
+cannot reach the switch), and five specific places a second opinion would help —
+two of them marked as never exercised by anyone at all.
+
+The requirement is unchanged: the class of bug that survives self-review is the
+one where the test and the code share an assumption, and only a second person
+breaks that. **This line becomes true when a reviewer says something, not when
+somebody is asked.**
 
 ### ~~Recovery has been rehearsed, not only tested~~ — done, 2026-08-27
 
