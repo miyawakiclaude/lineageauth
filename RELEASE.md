@@ -145,12 +145,25 @@ static JSON) — has no CPU budget to exceed and no bundle a stranger can inflat
 and stays the answer. Nothing here blocks v1; it removes a guess `infra/scale-design.md`
 was carrying and confirms the design already pointed the right way.
 
-### The limitations page is written from the outside
+### ~~The limitations page is written from the outside~~ — done, 2026-08-28
 
-`docs/28_NON_GOALS_LIMITATIONS.md` lists what this deliberately does not do.
-Before v1 it needs rewriting for somebody who has just arrived and is deciding
-whether to depend on it, rather than for somebody who already knows why each
-line is there.
+`docs/28_NON_GOALS_LIMITATIONS.md` was a 28-line list for somebody who already
+knew why each line was there. It now opens with the largest true statement a
+positive result supports -- which is smaller than the word "valid" suggests --
+then what is not proven and why that matters to a decision, then the permanent
+non-goals so a reader can plan around them rather than wait for them, then the
+limits that are real today: a superseded key that keeps signing, omission as the
+standing risk, and pre-1.0 meaning what it says.
+
+It ends by naming what to use instead. A limitations page that cannot point
+elsewhere is a sales page, so it sends a reader who needs an attenuating
+capability chain today to UCAN or Biscuit, and one who needs supply-chain
+provenance to in-toto -- and says that reading it and deciding you do not need
+this is a perfectly good outcome.
+
+`tests/test_limitations.py` asserts every claim the old list made, one by one.
+Rewriting a normative page is the edit where prose improves and a fact quietly
+goes missing, and the missing fact is the one somebody needed.
 
 ## Explicitly not required for v1
 
