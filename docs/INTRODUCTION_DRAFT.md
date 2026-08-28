@@ -10,29 +10,30 @@ This is a draft to review, edit, and then post yourself.
 
 ## Before you post: the identity has to be real
 
-Every DID in the published Explorer today comes from the project's **public test
-keys**. Anybody can reproduce those signatures, so none of them belong to
-anybody. Posting an introduction signed by one would be introducing a key that
-is not yours.
+**Done, 2026-08-27/28.** Kept here because the next person to read this page may
+be starting from nothing.
 
-So, in order:
+The requirement is that the DID be yours. Every DID in the published Explorer
+comes from the project's **public test keys** -- anybody can reproduce those
+signatures, so none of them belong to anybody, and posting an introduction
+signed by one would be introducing a key that is not yours.
 
 ```bash
 py -3 -m uv run la key create ~/.lineageauth/identity.json
 ```
 
 It prompts for a passphrase twice, prints **only the DID**, and writes the
-private key encrypted. Keep the file outside any repository — the `.gitignore`
-already refuses files shaped like it, but the reliable protection is not keeping
-it near a repository in the first place.
+private key encrypted. Keep the file outside any repository.
 
-Two things worth doing in the same sitting, because neither helps later:
+Two things that only help if done in advance, and both are done for this
+identity:
 
 1. **Back up the file and the passphrase separately.** Losing either loses the
-   identity. `did:key` has no revocation.
-2. **Publish a `recovery.policy`** while the key still works, so a quorum can
-   move the lineage to a new root if the key is lost. That is what `docs/05`
-   is for and it only ever helps somebody who did it in advance.
+   identity; `did:key` has no revocation.
+2. **Publish a `recovery.policy`** while the key still works. A 2-of-3 policy is
+   published for this lineage, and on 2026-08-28 two of the three keys were
+   opened and their signatures verified against it -- so the quorum is reachable
+   rather than merely declared. `docs/RECOVERY.md` is the procedure.
 
 ---
 
@@ -66,11 +67,18 @@ audience that will test it.
 > implementation, so you do not have to take the first one's word for anything:
 > https://miyawakiclaude.github.io/lineageauth/
 >
-> It is pre-1.0 and says so. Do not put real authority behind it yet. What would
-> help most is somebody's independent verifier disagreeing with mine — the
-> vectors are published so that costs you nothing to try.
+> It is pre-1.0 and says so. Do not put real authority behind it yet.
 >
-> did: `<your DID here>`
+> It also claims no novelty in any single primitive: the delegation model
+> overlaps UCAN and Biscuit, the evidence layer overlaps in-toto, and there is a
+> 2026 paper (AIP) addressing the same problem for the same two agent protocols.
+> That is written down rather than left for you to find:
+> https://github.com/miyawakiclaude/lineageauth/blob/main/docs/PRIOR_ART.md
+>
+> What would help most is somebody's independent verifier disagreeing with mine
+> — the vectors are published so that costs you nothing to try.
+>
+> did: `did:key:z6MkqhnuW44UYRM7qUwZmPSMU7b21hmKdngXawvLGssRCeu5`
 > code: https://github.com/miyawakiclaude/lineageauth
 
 ---
@@ -100,11 +108,11 @@ something to admire.
 
 ## What to check before posting
 
-- [ ] the DID is yours, from `la key create`, not a test key
-- [ ] the passphrase and the key file are backed up, separately
-- [ ] a `recovery.policy` exists
-- [ ] every link resolves
-- [ ] nothing in the text claims the project is finished
+- [x] the DID is yours, from `la key create`, not a test key
+- [x] the passphrase and the key file are backed up, separately
+- [x] a `recovery.policy` exists, and its quorum has been exercised
+- [x] every link resolves (checked 2026-08-28)
+- [x] nothing in the text claims the project is finished
 - [ ] the room, and the sequence number, are recorded so the evidence trail is
       followable afterwards
 
