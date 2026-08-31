@@ -2228,6 +2228,39 @@ Git/GitHub writes require confirmation of active account + repository owner + re
   "this grant alone is current" would see a narrower answer, and there is no such
   caller in this repository.
 
+## D-104: the exact-action approval claim was narrowed against prior art
+
+- **Date:** 2026-09-01
+- **What happened.** The same #206 comment that prompted `D-103` linked [an
+  SQLite approval-audit
+  schema](https://gist.github.com/renezander030/ad81c7a805a09a844983f881e2c487e5).
+  It was read in full before anything was written about it.
+- **What it says.** Freeze the full payload the human saw rather than a pointer
+  to it, store its hash beside it, record the operator's identity rather than
+  their role, and never `UPDATE` or `DELETE` the row. It is framed against GDPR
+  Article 22 and drawn from a running Go tool,
+  [draftcat](https://github.com/renezander030/draftcat).
+- **Why it matters here.** `PRIOR_ART.md` listed exact-action human approval as
+  one of two residual claims. Those four rules have exact counterparts in this
+  project -- `contentHash`, `requestHash`, the approver's DID, and events that
+  merge by union -- and they predate it. **The binding is not the residual.**
+- **What survives, stated narrowly.** That the record is verifiable by someone
+  who does not trust whoever holds the store, because it is signed rather than
+  append-only by convention; plus a receipt spendable exactly once, and the
+  re-check of authority between decision and execution.
+- **What the schema does that this does not.** Its fourth query asks whether
+  anything executed with no approval at all -- a left join from side effects to
+  approvals. There is no equivalent here, because `authorityRefs` and
+  `approvalRef` on `artifact.receipt` are both optional, so a receipt carrying
+  neither joins to nothing. Recorded in `28_NON_GOALS_LIMITATIONS.md` rather than
+  fixed, because making either field required is a wire change and belongs with
+  the held `authority` family, not beside it.
+- **Why record a retreat at all.** This is the page that exists to stop
+  overclaiming. A claim quietly narrowed is the same failure as a claim never
+  checked, so the citation is pinned in `tests/test_prior_art.py`: dropping the
+  link fails the suite.
+- **Migration:** none. Documentation and a test.
+
 ### Pending decision template
 
 - ID:

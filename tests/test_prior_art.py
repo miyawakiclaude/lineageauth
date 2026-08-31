@@ -87,6 +87,11 @@ class TestTheCitationsAreWellFormed:
             "https://github.com/eclipse-biscuit/biscuit",
             "https://github.com/in-toto/attestation",
             "https://arxiv.org/abs/2603.24775",
+            # The approval-audit schema that narrowed the second residual claim.
+            # Pinned because dropping it would quietly restore an overclaim this
+            # page exists to prevent (D-104).
+            "https://gist.github.com/renezander030/ad81c7a805a09a844983f881e2c487e5",
+            "https://github.com/renezander030/draftcat",
         }
     )
 

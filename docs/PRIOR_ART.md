@@ -71,6 +71,31 @@ is the part we have not found elsewhere: the word "approval" does not occur in
 ADTP's 651-line protocol specification, and UCAN's Receipt is an executor's
 attestation after the fact rather than a human's consent before it.
 
+That residual needs narrowing on the strength of one more piece of prior art.
+**Binding an approval to one exact action is ordinary practice in approval-audit
+logging, and was so before this project.** The pattern — freeze the full payload
+the human saw rather than a pointer to it, store its hash alongside, record the
+operator's identity rather than their role, and never `UPDATE` or `DELETE` the
+row — is set out plainly in [an SQLite approval-audit
+schema](https://gist.github.com/renezander030/ad81c7a805a09a844983f881e2c487e5)
+by renezander030, drawn from
+[draftcat](https://github.com/renezander030/draftcat) and framed against GDPR
+Article 22. Every one of those four rules has a counterpart here: `contentHash`
+and `requestHash`, the approver's DID, and events that merge by union.
+
+So the exact-action binding is not the residual. What is left is narrower: that
+record is verifiable **by someone who does not trust whoever holds the store**,
+because it is signed rather than append-only by convention, and it carries two
+things that schema does not — a receipt spendable exactly once, and a re-check
+of authority in the gap between the decision and the execution.
+
+It is worth saying what that schema does that this does not. Its fourth query
+asks *did anything execute without approval*, a left join from side effects to
+approvals. There is no equivalent here, because the link is optional:
+`artifact.receipt` may carry `authorityRefs` and `approvalRef`, and a receipt
+that carries neither cannot be joined to anything. See
+[28_NON_GOALS_LIMITATIONS.md](28_NON_GOALS_LIMITATIONS.md).
+
 A caveat that applies to both residuals: **not finding something is a statement
 about the search.** Both were checked against documents rather than against the
 code behind them, and neither author has been asked. Until one of them says so,
@@ -98,5 +123,8 @@ Being told this is a reinvention is a better outcome than not being told.
 
 *Every link above was checked to resolve, and the arXiv entry checked to carry
 the title given, on 2026-08-28. The ADTP quotations were read from its README and
-`docs/PROTOCOL.md` on the same day. Assessments of overlap are judgements and may be
-wrong; the citations are facts and should not be.*
+`docs/PROTOCOL.md` on the same day. The approval-audit schema and its four rules
+were read in full from the gist on 2026-09-01, and the description of what it
+does not do — no signatures, no offline verification, no delegation or
+revocation — is from that reading, not from its summary. Assessments of overlap
+are judgements and may be wrong; the citations are facts and should not be.*
