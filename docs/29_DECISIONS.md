@@ -2170,6 +2170,64 @@ Git/GitHub writes require confirmation of active account + repository owner + re
   than not being told.
 - **Migration:** none. This records an exchange, not a change.
 
+## D-103: grant standing walks the chain, because every caller read it as if it did
+
+- **Date:** 2026-09-01
+- **What prompted it.** A third party on
+  [ucan-wg/spec#206](https://github.com/ucan-wg/spec/discussions/206) made a
+  point about revocation that is not about revocation being weak: *"the chain
+  that proves who was allowed cannot tell you what to go undo."* Revoking an
+  ancestor answers the next call and says nothing about the writes that already
+  landed. Checking whether this project actually did better found something
+  worse than the gap being described.
+- **What was wrong.** `describe_grants` judged each grant in isolation -- not
+  revoked, inside its window, right epoch -- and returned
+  `VALID_AUTHORITY_CHAIN` for a grant whose parent had been revoked. Measured on
+  one bundle at one instant: `check_permission` said `REVOKED`, and standing said
+  `usable=True`.
+- **This was documented, and that did not save it.** `GrantStanding` said in
+  its own docstring that `usable` "says nothing about whether the chain above it
+  holds -- ask check_permission", and the success detail repeated it. Four
+  callers read it as a chain answer anyway, because the honest thing each of them
+  needs *is* the chain:
+  - `graph.py` drew a live delegation edge hanging off a revoked one -- in a
+    module whose docstring says a picture that disagrees with the verifier is
+    worse than no picture;
+  - `passport.py` reported the worker as holding live authority, with scopes;
+  - `evidence.py` reported a receipt citing that child as supported by a valid
+    authority chain -- turning the per-grant fact into exactly the retroactive
+    claim #206 says a chain cannot make;
+  - the MCP `list_grants` tool shipped `usable: true` to an agent over the wire.
+- **Decision.** One walk, one answer. `_walk_to_root` takes `request: Request |
+  None`; with `None` it performs the request-independent half, and
+  `describe_grants` calls it instead of judging grants alone. `usable` now means
+  this grant *and every grant above it* are current. It is still not permission:
+  scope coverage remains a question only `check_permission` answers.
+- **Why not fix the four callers instead.** That leaves the trap for the fifth.
+  A per-grant standing has no consumer -- nothing in this repository wants to
+  know that a grant is fine while its parent is dead, except to refuse it.
+- **Security impact.** Strictly a refusal: the walk can deny a chain, never widen
+  one, and the four surfaces now agree with the gate rather than overstating it.
+  The negative controls matter as much -- revoking a child still leaves its
+  parent usable, and an intact chain is unchanged.
+- **Interop impact.** The MCP `list_grants` field `usable` narrows in meaning. No
+  wire format moves: no payload shape, signing preimage or conformance vector is
+  touched, and the JavaScript implementation has no authority layer to follow.
+- **What this does not claim.** It closes a disagreement inside this
+  implementation. It does not answer #206. Enumerating what to undo after a
+  revocation still depends on receipts citing `authorityRefs`, which is an
+  optional field -- work performed without citing its authority remains
+  unattributable to the grant that permitted it. That is a real limit, now
+  written down rather than assumed away.
+- **How it was missed.** The full suite -- 1276 tests -- passed both before and
+  after the change. Nothing covered a two-hop chain with a revoked parent.
+  `tests/test_standing_agrees_with_gate.py` pins the invariant rather than the
+  four symptoms; 7 of its 14 tests fail against the previous code, and the other
+  7 are controls that must pass against both.
+- **Migration:** none for stored events. A caller depending on `usable` meaning
+  "this grant alone is current" would see a narrower answer, and there is no such
+  caller in this repository.
+
 ### Pending decision template
 
 - ID:

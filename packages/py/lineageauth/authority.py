@@ -366,9 +366,18 @@ def _walk_to_root(
     revoked: dict[str, str],
     state: LineageState,
     at: datetime,
-    request: Request,
+    request: Request | None,
 ) -> _Chain | tuple[ReasonCode, str]:
-    """Validate the chain from `leaf` up to the lineage root."""
+    """Validate the chain from `leaf` up to the lineage root.
+
+    `request` is the one request-specific part: with it, every hop must cover the
+    action being asked for. Passing None asks the request-independent half --
+    "does this chain hold at all" -- which is what `describe_grants` needs. The
+    walk is deliberately not duplicated for that caller. An earlier version had
+    `describe_grants` judge each grant on its own, and the two answers drifted:
+    revoking a parent left the child reporting VALID_AUTHORITY_CHAIN while
+    `check_permission` on the same bundle said REVOKED (D-103).
+    """
     root, epoch = state.root, state.epoch
     if root is None or epoch is None:  # pragma: no cover - guarded by the caller
         return (ReasonCode.UNRESOLVED_PARENT, "the lineage has no resolved root")
@@ -407,7 +416,7 @@ def _walk_to_root(
         # ancestor should already cover anything the leaf covers. Checking it
         # here too means a bug in attenuation cannot quietly become an
         # escalation -- it becomes a denial.
-        if not cursor.covers(
+        if request is not None and not cursor.covers(
             namespace=request.namespace, resource=request.resource, action=request.action
         ):
             return (
@@ -619,9 +628,18 @@ class GrantStanding:
     this grant live", which is what an operator looking at a lineage wants and
     what a graph needs in order to draw an edge honestly.
 
-    `usable` means the grant itself is current -- not revoked, inside its window,
-    anchored to the current epoch. It says nothing about whether the chain above
-    it holds, so it is never on its own a reason to permit anything.
+    `usable` means this grant *and every grant above it* on the chain to the root
+    are current -- none revoked, all inside their windows, all anchored to the
+    current epoch. It is still not permission: it says nothing about whether the
+    scopes cover any particular action, so it is never on its own a reason to
+    permit anything.
+
+    It used to mean only that the grant itself was current. That was true, and it
+    was a trap: every caller read it as a statement about the chain, because the
+    honest picture a graph or a passport needs *is* the chain. Revoking a parent
+    left the child drawn as a live edge hanging off a revoked one, and left a
+    receipt citing that child reading as supported by a valid authority chain
+    (D-103).
     """
 
     grant: Grant
@@ -663,16 +681,19 @@ def describe_grants(
                 )
             )
             continue
-        standing = _grant_standing(grant, at=at, epoch=state.epoch, revoked=revoked)
-        if standing is None:
+        outcome = _walk_to_root(
+            grant, grants=grants, revoked=revoked, state=state, at=at, request=None
+        )
+        if isinstance(outcome, _Chain):
             out.append(
                 GrantStanding(
                     grant=grant,
                     usable=True,
                     reason=ReasonCode.VALID_AUTHORITY_CHAIN,
                     detail=(
-                        "the grant itself is current. Whether the chain above it holds is a "
-                        "separate question -- ask check_permission."
+                        f"the grant is current, and so is every one of the {len(outcome.path)} "
+                        "grant(s) on the chain from it to the root. This is not permission for "
+                        "any particular action -- ask check_permission for that."
                     ),
                 )
             )
@@ -681,8 +702,8 @@ def describe_grants(
             GrantStanding(
                 grant=grant,
                 usable=False,
-                reason=standing[0],
-                detail=standing[1],
+                reason=outcome[0],
+                detail=outcome[1],
                 revoked_by=revoked.get(grant.event_id),
             )
         )

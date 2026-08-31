@@ -87,6 +87,22 @@ simply never hands you the revocation.
 but freshness is not completeness, and nothing here can prove you have
 everything.
 
+### Revocation does not tell you what to undo
+
+Revoking a grant denies that grant and everything descending from it, from the
+moment of the revocation onward. It says nothing about the work already done.
+
+Some of that work can be found: an `artifact.receipt` may cite the grants it was
+performed under, and those citations are checked rather than taken on trust. But
+`authorityRefs` is an **optional** field. Work performed without citing its
+authority cannot be traced back to the grant that permitted it, so "revoke and
+enumerate the damage" is not something this layer can promise.
+
+Where a revoked chain *is* cited, the four places that report standing — the
+graph, the passport, the MCP tool, and receipt support — now all follow the chain
+to the root and agree with `check_permission` (D-103). Until 2026-09-01 they did
+not, and a receipt citing the child of a revoked grant read as supported.
+
 ### A jury verdict is not a ruling
 
 Dispute outcomes are what a stated procedure produced from signed votes. They
