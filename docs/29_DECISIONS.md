@@ -2135,6 +2135,41 @@ Git/GitHub writes require confirmation of active account + repository owner + re
   fails the test with the family, the event and both sides of the difference.
 - **Migration:** none. This records what will not change; nothing changed.
 
+## D-102: the loop finding was put to another implementation
+
+- **Date:** 2026-08-31
+- **What happened:** `D-086b` -- an agent laundering its own standing by
+  delegating through a key it also controls, so that it appears as an issuer on
+  its own authorizing chain -- was described to the author of
+  [ADTP](https://github.com/Zahanturel/adtp) on
+  [ucan-wg/spec#206](https://github.com/ucan-wg/spec/discussions/206), a Go
+  implementation of agent delegation over UCAN chains.
+- **Why that project and not another.** ADTP tests RESTRICT against seven named
+  escalation vectors -- scope widening, depth bypass, RESTRICT removal, caveat
+  stripping, cross-org escalation, replay injection, malformed caveats -- and
+  **the loop is in none of them.** Its `§8.6 Self-delegation` refuses `iss ==
+  aud`, which closes the one-hop case; the two-hop A->B->A has `iss != aud` on
+  every edge and the rule does not fire. The parenthetical in that section says
+  "cycle ... hygiene", so cycles are on the author's mind: the gap is between
+  what the section intends and what it says.
+- **What was claimed, and what was not.** The message states plainly that only
+  `docs/PROTOCOL.md` was read and not the Go, so an implementation-level check
+  would make the finding noise. It also says the attack **only pays off where
+  something reads the issuer list as a list of parties** -- and "approval" does
+  not occur in ADTP's specification, so it may be harmless there today and
+  become live the moment such a layer is added.
+- **Nothing was asked for.** No link to this project, no mention of its name.
+  The author had asked whether RESTRICT is worth proposing as a spec extension
+  and that question is answered: the proposable part is not the narrowing, which
+  UCAN already requires, but that it is enforced **at chain validation rather
+  than policy evaluation** -- a claim about where the check lives, which is
+  testable in isolation and cannot be switched off by configuration.
+- **Whatever comes back is worth recording here.** If ADTP already closes this
+  somewhere unread, that is a fact about a second implementation's design and
+  belongs beside `D-086b`. Being told the finding is wrong is a better outcome
+  than not being told.
+- **Migration:** none. This records an exchange, not a change.
+
 ### Pending decision template
 
 - ID:
