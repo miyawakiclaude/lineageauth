@@ -2261,6 +2261,58 @@ Git/GitHub writes require confirmation of active account + repository owner + re
   link fails the suite.
 - **Migration:** none. Documentation and a test.
 
+## D-105: the delegation-loop invariant is withdrawn; approval excludes disclosed siblings
+
+- **Date:** 2026-09-02
+- **Who found it.** Alan Karp, on
+  [ucan-wg/spec#206](https://github.com/ucan-wg/spec/discussions/206), replying to
+  the description of `D-086b` posted there. Both of his points were reproduced
+  against this code before anything was changed.
+- **The rule under review.** `D-086b` made `_walk_to_root` refuse a chain that
+  delegated to the same DID twice, on the grounds that a loop `A->B->A` puts A on
+  its own authorizing path as an issuer, and `_approvers_entitled` (D-042) reads
+  that path to decide who may consent.
+- **It refused something correct.** *"If B asks A to use the resource, then A MUST
+  use B's permission to avoid a confused deputy vulnerability."* A chain in which A
+  exercises authority delegated by B repeats A by construction. Measured: with the
+  rule in place `check_permission` on `R->A->B->A` returned `MALFORMED`.
+- **It did not close the hole.** *"B's delegation back to A can be issued to a
+  different DID that A controls."* Measured: `R->A->B->A'` with `A'` a second key
+  the same operator holds gives `may_execute=True, VALID_AUTHORITY_CHAIN` with A
+  signing the approval for A'. Every subject on that chain is distinct.
+- **Why no shape rule can work.** The suite already said it, in a comment on the
+  test that encoded the old belief: *"Nothing in the bundle distinguishes it from a
+  real second party -- which is the point, and why the fix cannot depend on telling
+  them apart."* A DID costs nothing, and `28_NON_GOALS_LIMITATIONS.md` says counting
+  them counts nothing. A rule about the shape of a chain counts DIDs.
+- **Decision.** The repeated-subject refusal is removed; the repeated-`event_id`
+  check stays, because that is a real cycle. `_approvers_entitled` now also
+  excludes any DID a **disclosure** ties to the agent, via `FleetView.same_fleet` --
+  the rule `jury._detect_conflicts` already applies to a juror who shares a fleet
+  with a party. `check_execution` resolves fleets and passes them in.
+- **What that buys, exactly.** It holds an operator to its own statement and
+  nothing else. Undisclosed collusion stays undetectable, which is now asserted by
+  a test (`test_an_undisclosed_key_the_agent_controls_is_not_detected`) so it cannot
+  quietly stop being true, and stated in `28_NON_GOALS_LIMITATIONS.md`.
+- **Not a penalty for disclosing.** `fleet.py` requires that disclosure never cost
+  the honest operator what silence saves the quiet one. This does not subtract from
+  anybody; it stops a relationship *counting as independent*, which is the safe half
+  of that rule.
+- **Security impact.** Mixed, and worth naming rather than smoothing over. Removing
+  the invariant **widens** what verifies: `R->A->B->A'` was already permitted, but
+  `R->A->B->A` now resolves instead of failing closed. The exclusion **narrows**
+  approval wherever a fleet is disclosed. The net is that a rule which gave a false
+  sense of two-person control is replaced by one that is true but smaller, plus an
+  explicit limitation. Anyone who read the old rule as two-person control was
+  relying on something that never held.
+- **Interop impact.** None. No payload shape, preimage or conformance vector moves.
+  `_approvers_entitled` is private and gains a parameter.
+- **Migration:** none for stored events. Chains previously refused as loops now
+  resolve, so a verifier upgrading may accept a chain it used to reject.
+- **Owed.** Karp also asked what "approve" means here, having found no definition.
+  That is a fair question about this project's vocabulary and is answered in the
+  reply, not in code.
+
 ### Pending decision template
 
 - ID:

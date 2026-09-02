@@ -40,6 +40,7 @@ from lineageauth.bundle import AdmittedEvent, EventBundle
 from lineageauth.canonical import b64u_decode, is_event_id
 from lineageauth.didkey import public_key_from_did_key
 from lineageauth.errors import LineageAuthError, MalformedEventError, ReasonCode
+from lineageauth.fleet import FleetView, resolve_fleets
 from lineageauth.scopes import ApprovalMode
 from lineageauth.timeutil import parse_instant
 
@@ -268,13 +269,33 @@ class ExecutionDecision:
         return self.authority.note
 
 
-def _approvers_entitled(decision: AuthorityDecision, grants: dict[str, Grant]) -> set[str]:
+def _approvers_entitled(
+    decision: AuthorityDecision, grants: dict[str, Grant], fleets: FleetView
+) -> set[str]:
     """Who may approve an exercise of this authority.
 
     The party that delegated authority is the party entitled to consent to its
     use, so the set is the issuers along the path that authorized the action,
     plus the current root (D-042). Anyone else signing a receipt is a stranger
     consenting on someone else's behalf.
+
+    Two exclusions, and it is worth being exact about how much each buys.
+
+    The agent asking is never entitled to consent on its own behalf, whatever the
+    path says. That much is decidable from the bundle: two DIDs are equal or they
+    are not.
+
+    A DID that a disclosure ties to the agent is excluded too (D-105), the same
+    rule `jury._detect_conflicts` applies to a juror who shares a fleet with a
+    party. This one is only as good as the disclosure -- it stops an operator who
+    said so, and says nothing about one who did not. Excluding it is not a
+    penalty for disclosing: it stops the relationship *counting as independent*,
+    which is the rule `fleet.py` states and the only version safe to publish.
+
+    What neither exclusion buys is the claim that a human other than the agent's
+    operator consented. DIDs are free, so an operator holding two keys can put
+    one on the authorizing path and act with the other -- and no rule about the
+    shape of the chain can tell that apart from a real second party (D-105).
     """
     entitled: set[str] = set()
     if decision.root is not None:
@@ -284,13 +305,9 @@ def _approvers_entitled(decision: AuthorityDecision, grants: dict[str, Grant]) -
         if grant is not None:
             entitled.add(grant.issuer)
 
-    # The agent asking is never entitled to consent on its own behalf, whatever
-    # the path says. `authority._walk_to_root` refuses the delegation loop that
-    # would put it here, and this is the second lock on the same door: the loop
-    # check protects the path, and this protects the decision read off it. One
-    # of them being wrong should not be enough.
-    entitled.discard(decision.request.agent)
-    return entitled
+    agent = decision.request.agent
+    entitled.discard(agent)
+    return {did for did in entitled if not fleets.same_fleet(did, agent)}
 
 
 def check_execution(
@@ -386,7 +403,9 @@ def check_execution(
         )
         if not isinstance(parsed, str)
     }
-    entitled = _approvers_entitled(authority, grants)
+    fleets = resolve_fleets(bundle, lineage=lineage, at=at)
+    warnings.extend(fleets.warnings)
+    entitled = _approvers_entitled(authority, grants, fleets)
 
     matching: list[ApprovalReceipt] = []
     for event in bundle.of_type(APPROVAL_RECEIPT, lineage=lineage):

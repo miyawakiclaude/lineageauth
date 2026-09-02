@@ -551,24 +551,29 @@ def _grants_of(bundle: EventBundle) -> dict[str, Grant]:
     return {g.event_id: g for g in parsed if not isinstance(g, str)}
 
 
-class TestADelegationLoopCannotLaunderIdentity:
-    """An agent must not become entitled to approve its own action.
+class TestADelegationLoopIsWalkedNotRefused:
+    """The loop is legitimate, and refusing it never closed what it was for.
 
-    Found by audit, 2026-08-28. `_approvers_entitled` (D-042) says the parties
-    who may consent are the issuers along the authorizing path, plus the root:
-    whoever delegated the authority is who may consent to its use.
+    An audit on 2026-08-28 found that an agent A holding a throwaway key B could
+    publish A->B and B->A, appear on its own authorizing path as an issuer, and
+    so land in `_approvers_entitled` (D-042). The fix was an invariant: no DID is
+    the subject of two grants on one chain.
 
-    The chain walk refused a loop by `event_id`, which stops a grant naming
-    itself as its own parent and nothing else. An agent A holding a throwaway
-    key B could publish A->B and then B->A. Attenuation is untouched -- same
-    scopes, approval still required, depth still narrowing -- so every edge
-    check passes, and A now appears on its own authorizing path as an issuer.
-    From there A signs its own approval receipt.
+    Alan Karp refuted both halves of that on ucan-wg/spec#206, and both refutations
+    were reproduced here before this class was rewritten (D-105).
 
-    The invariant that closes it: **no DID is the subject of two grants on one
-    chain.** A real chain R->A->B->C has subjects A, B, C, all distinct.
-    A loop has to repeat one. This is a pure restriction -- it can only ever
-    refuse -- so it cannot become an escalation itself.
+    It refuses something legitimate. When B asks A to act on a resource, A must
+    exercise B's authority rather than its own or it is a confused deputy -- and
+    that chain repeats A by construction.
+
+    It does not close the hole. The operator issues the last hop to a *second* key
+    it controls: R->A->B->A'. Every subject is distinct, the walk is happy, and A
+    is still an issuer entitled to approve A'. A DID costs nothing, so no rule
+    about the shape of a chain separates a throwaway key from a second party.
+
+    What remains is in `approval._approvers_entitled`: the agent is excluded, and
+    so is any DID a *disclosure* ties to it. That covers operators who said so and
+    nothing else, which is the most an offline verifier can honestly claim.
     """
 
     def _looped_bundle(self) -> tuple[EventBundle, str]:
@@ -592,9 +597,8 @@ class TestADelegationLoopCannotLaunderIdentity:
         )
         return EventBundle.from_envelopes([genesis(), g1, g2, g3]), g3.event_id
 
-    def test_the_loop_is_refused_rather_than_walked(self) -> None:
-        bundle, _ = self._looped_bundle()
-        decision = check_permission(
+    def _decision(self, bundle: EventBundle):
+        return check_permission(
             bundle,
             lineage=LINEAGE,
             agent=AGENT.did,
@@ -603,33 +607,35 @@ class TestADelegationLoopCannotLaunderIdentity:
             action="write",
             at=AT,
         )
-        # The straight grant R -> AGENT still authorizes, so the request is not
-        # denied outright. What must not happen is the looped path being chosen.
-        chosen = set(decision.path)
-        issuers = {g.issuer for eid, g in _grants_of(bundle).items() if eid in chosen}
-        assert AGENT.did not in issuers, (
-            "the agent appears as an issuer on its own authorizing path, which is "
-            "what makes self-approval possible"
-        )
+
+    def test_the_loop_resolves_instead_of_failing(self) -> None:
+        """R->A->B->A is a chain the walk must be able to follow.
+
+        Karp's confused-deputy case needs it: A exercising B's authority is the
+        correct behaviour, not an attack, and it puts A on the chain twice.
+        """
+        bundle, _ = self._looped_bundle()
+        decision = self._decision(bundle)
+        assert decision.reason is not ReasonCode.MALFORMED
+        assert decision.path, "the walk produced no authorizing path at all"
 
     def test_the_agent_is_never_entitled_to_approve_itself(self) -> None:
-        """Belt and braces: even if a path slipped through, the approver set
-        must exclude the party asking. Two independent checks, because this one
-        is what actually gets read when a receipt is judged."""
+        """The exclusion that survived, and the one that actually gets read.
+
+        The agent may sit on its own path as an issuer now. What it must never do
+        is end up in the set of parties entitled to consent on its behalf.
+        """
         from lineageauth.approval import _approvers_entitled
+        from lineageauth.fleet import resolve_fleets
 
         bundle, _ = self._looped_bundle()
-        decision = check_permission(
-            bundle,
-            lineage=LINEAGE,
-            agent=AGENT.did,
-            namespace="technocore",
-            resource="room:lobby",
-            action="write",
-            at=AT,
+        decision = self._decision(bundle)
+        entitled = _approvers_entitled(
+            decision, _grants_of(bundle), resolve_fleets(bundle, lineage=LINEAGE, at=AT)
         )
-        grants = _grants_of(bundle)
-        assert AGENT.did not in _approvers_entitled(decision, grants)
+        assert AGENT.did not in entitled
+        # Not vacuous: somebody is still entitled, or the check proves nothing.
+        assert entitled
 
     def test_a_straight_chain_of_three_still_works(self) -> None:
         """The negative control. A rule that refuses loops must not refuse

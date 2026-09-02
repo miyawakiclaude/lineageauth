@@ -25,6 +25,8 @@ from lineageauth.approval import (
 from lineageauth.builders import (
     build_approval_receipt,
     build_delegation_grant,
+    build_fleet_bind,
+    build_fleet_create,
     build_root_create,
     sign_payload,
 )
@@ -524,18 +526,24 @@ class TestTimeOfCheckTimeOfUse:
         assert not store.is_spent(receipt().event_id)
 
 
-class TestAnAgentCannotApproveItselfThroughALoop:
-    """The end-to-end shape of the audit finding, 2026-08-28.
+class TestStandingThroughAKeyTheAgentAlsoControls:
+    """How much of the 2026-08-28 audit finding is actually closed. Less than was
+    claimed, and this class exists to say exactly how much (D-105).
 
     Every edge attenuates properly, so nothing in the delegation rules objects.
-    What the attacker gains is not authority -- it is *standing*: by routing the
-    chain through a key it also controls, the agent appears among the issuers
-    that `_approvers_entitled` reads, and a receipt it signed itself then counts
-    as somebody else consenting.
+    What the operator gains is not authority -- it is *standing*: by routing the
+    chain through a key it also controls, it appears among the issuers that
+    `_approvers_entitled` reads, and a receipt from that key counts as somebody
+    else consenting.
 
-    Three separate locks were added, and this test only passes if the whole
-    door holds: the chain refuses a repeated subject, the entitled set discards
-    the requester, and `read_receipt` refuses `approver == agent`.
+    Three locks were added. Two hold and one was removed. `read_receipt` refuses
+    `approver == agent`, and the entitled set discards the requester -- both
+    decidable from the bundle. The third refused a chain that repeated a subject,
+    and Alan Karp showed on ucan-wg/spec#206 that it refused a legitimate pattern
+    while the operator simply moved the throwaway key to the other end.
+
+    What replaced it holds an operator to its own disclosure, and nothing more.
+    Both halves are tested below, including the half that still gets through.
     """
 
     def _loop(self) -> tuple[Envelope, Envelope, Envelope]:
@@ -567,12 +575,65 @@ class TestAnAgentCannotApproveItselfThroughALoop:
         g3 = edge(OPERATOR, AGENT, 0, g2.event_id)
         return g1, g2, g3
 
-    def test_a_receipt_from_a_key_the_agent_controls_is_refused(self) -> None:
+    def _disclosure(self, controller: LocalSigner, members: list[LocalSigner]):
+        """The operator states out loud that these DIDs are all its own."""
+        created = sign_payload(
+            build_fleet_create(
+                lineage=LINEAGE, controller=controller.did, name="one operator", issued_at=AT
+            ),
+            [controller],
+        )
+        bound = [
+            sign_payload(
+                build_fleet_bind(
+                    lineage=LINEAGE,
+                    controller=controller.did,
+                    fleet=created.event_id,
+                    member=m.did,
+                    issued_at=AT,
+                ),
+                [controller],
+            )
+            for m in members
+        ]
+        return [created, *bound]
+
+    def test_an_undisclosed_key_the_agent_controls_is_not_detected(self) -> None:
+        """The honest half, and it must be written down rather than assumed away.
+
+        OPERATOR stands for a throwaway key the agent generated. Nothing in the
+        bundle distinguishes it from a real second party. This used to be refused
+        by a rule about the shape of the chain; Karp showed the shape is free to
+        change, so the rule bought nothing and cost a legitimate pattern (D-105).
+
+        A test asserting `may_execute` here looks like the wrong side to be on.
+        It is the point: the limitation is now visible in the suite, so it cannot
+        quietly stop being true.
+        """
         g1, g2, g3 = self._loop()
-        # OPERATOR here stands for a throwaway key the agent generated. Nothing
-        # in the bundle distinguishes it from a real second party -- which is
-        # the point, and why the fix cannot depend on telling them apart.
         decision = execute(genesis(), g1, g2, g3, receipt(approver=OPERATOR))
+        assert decision.may_execute
+        assert decision.reason is ReasonCode.VALID_AUTHORITY_CHAIN
+
+    def test_the_same_key_is_refused_once_the_operator_discloses_it(self) -> None:
+        """What the exclusion does buy: it holds an operator to its own statement."""
+        g1, g2, g3 = self._loop()
+        decision = execute(
+            genesis(),
+            g1,
+            g2,
+            g3,
+            receipt(approver=OPERATOR),
+            *self._disclosure(AGENT, [AGENT, OPERATOR]),
+        )
+        assert not decision.may_execute
+        assert decision.reason is ReasonCode.DENIED
+
+    def test_a_stranger_is_still_refused(self) -> None:
+        """The negative control. Excluding fleet siblings must not be the only
+        thing left standing -- a party off the path was never entitled either."""
+        g1, g2, g3 = self._loop()
+        decision = execute(genesis(), g1, g2, g3, receipt(approver=STRANGER))
         assert not decision.may_execute
         assert decision.reason is ReasonCode.DENIED
 

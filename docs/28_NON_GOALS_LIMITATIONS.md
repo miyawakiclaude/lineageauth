@@ -87,6 +87,34 @@ simply never hands you the revocation.
 but freshness is not completeness, and nothing here can prove you have
 everything.
 
+### An approval does not prove a second person agreed
+
+This is the limit most likely to be read as more than it is, so it is stated
+flatly: **a valid approval receipt proves that a key other than the agent's
+signed consent to one exact action. It does not prove a second person.**
+
+DIDs are free — the table above already says counting them counts nothing — and
+that applies to approval too. One operator holding two keys can put one on the
+authorizing chain and act with the other, and the receipt then verifies exactly
+as a genuine second party's would.
+
+Two exclusions are enforced, and both are narrow. The agent is never entitled to
+consent on its own behalf. Neither is a DID that a **disclosure** ties to the
+agent (D-105), the same rule that disqualifies a juror sharing a fleet with a
+party. The second holds an operator to what it said; it detects nothing about an
+operator that stayed quiet.
+
+An earlier version refused a delegation chain that reached the same DID twice,
+believing that closed it. Alan Karp pointed out on
+[ucan-wg/spec#206](https://github.com/ucan-wg/spec/discussions/206) that the rule
+failed both ways round, and both halves were reproduced here: it refused the
+chain a *correct* deputy needs — when B asks A to act, A must exercise B's
+authority or become a confused deputy — while the operator moved its throwaway
+key to the far end and laundered standing exactly as before. The rule is gone.
+
+If you need two-person control, bind identity outside this layer. Nothing here
+can supply it.
+
 ### Revocation does not tell you what to undo
 
 Revoking a grant denies that grant and everything descending from it, from the

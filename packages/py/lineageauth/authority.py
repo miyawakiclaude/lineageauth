@@ -385,28 +385,27 @@ def _walk_to_root(
     path: list[str] = []
     approval = ApprovalMode.NONE
     seen: set[str] = set()
-    # Subjects, not event ids. Refusing a repeated event id stops a grant naming
-    # itself as its own parent and nothing else: an agent holding a throwaway key
-    # can publish A->B and then B->A, attenuating properly at every edge, and so
-    # appear on its own authorizing path as an issuer -- which is exactly the set
-    # `approval._approvers_entitled` reads to decide who may consent (D-042).
-    # A real chain R->A->B->C has distinct subjects; a loop has to repeat one.
-    # Purely a restriction: it can refuse a chain, never widen one.
-    subjects: set[str] = set()
+    # Event ids, not subjects. A repeated event id is a real cycle -- a grant
+    # naming itself as its own ancestor -- and refusing it terminates the walk.
+    #
+    # This used to refuse a repeated *subject* as well, to stop A->B->A putting A
+    # on its own authorizing path as an issuer (D-086b). Alan Karp pointed out on
+    # ucan-wg/spec#206 that the rule fails in both directions, and both halves
+    # check out (D-105). It refuses a pattern that is not an attack: when B asks A
+    # to act on a resource, A must exercise B's authority rather than its own, or
+    # it is a confused deputy -- and that chain repeats A by construction. And it
+    # does not stop what it was for: the same operator issues the last hop to a
+    # second key it controls, every subject on the chain is then distinct, and the
+    # laundering is unchanged. Since a DID costs nothing, no rule about the shape
+    # of a chain can separate a throwaway key from a second party. The exclusion
+    # that remains is in `approval._approvers_entitled`, and it is honest about
+    # covering only disclosed relationships.
     cursor = leaf
 
     for _ in range(_MAX_CHAIN):
         if cursor.event_id in seen:
             return (ReasonCode.MALFORMED, f"the delegation chain revisits {cursor.event_id}")
         seen.add(cursor.event_id)
-
-        if cursor.subject in subjects:
-            return (
-                ReasonCode.MALFORMED,
-                f"the delegation chain delegates to {cursor.subject} twice; a loop adds no "
-                "authority but launders who appears to have granted it",
-            )
-        subjects.add(cursor.subject)
 
         standing = _grant_standing(cursor, at=at, epoch=epoch, revoked=revoked)
         if standing is not None:
