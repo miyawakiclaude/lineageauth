@@ -74,14 +74,16 @@ docs/29_DECISIONS.md                     D-106
 
 ## Tests added
 
-90 — 80 in `tests/test_tclk.py` (golden vectors; wire format A–C, T; locks;
+93 — 82 in `tests/test_tclk.py` (golden vectors; wire format A–C, T; locks;
 state machine D–H; venue; authority I–P, S; exact-action approval L–M;
 hostile content Q–R; rail boundary; evidence; interop and votes; the synthetic
-fixture), 9 in `tests/test_cli_tclk.py`, 1 in `tests/test_final_gate.py`.
+fixture; the three hardenings matched to upstream PRs #14, #16 and #24),
+10 in `tests/test_cli_tclk.py`, 1 in `tests/test_final_gate.py`. Counted from
+collected node ids (`pytest --collect-only`), not typed.
 
 ## All tests
 
-1382 passed.
+1385 passed.
 
 ## CI
 
