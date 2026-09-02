@@ -2358,7 +2358,9 @@ Git/GitHub writes require confirmation of active account + repository owner + re
   vectors -- the thing this project asks of others in `RELEASE.md`.
 - **Not done, on purpose.** No PTLC adaptor port (unaudited upstream, and this
   signs nothing). No `MemoryRail`/`PaperRail` (a rehearsal of value movement).
-  No Explorer page (core first). No push -- this commit is local.
+  No Explorer page (core first). The adapter commit was made local-only and
+  pushed afterwards at the user's direction, once the integration report had
+  been read.
 - **Migration:** none.
 
 ### Pending decision template

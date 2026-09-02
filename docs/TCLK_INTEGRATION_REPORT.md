@@ -203,5 +203,8 @@ give: a second implementation that disagrees, or does not.
 
 ## STATUS
 
-**PASS** — with §24 (Explorer page) explicitly not built, and the commit left
-local, unpushed, for the user's review.
+**PASS** — with §24 (Explorer page) explicitly not built. The commits were
+made local-only and pushed to the personal repository on 2026-09-02 at the
+user's direction, after this report was reviewed. "External writes: NONE"
+above describes the integration work itself; the push is the one outward act,
+and it was the user's decision.
