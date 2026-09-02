@@ -121,6 +121,19 @@ the network.
   are undocumented publicly; nothing here assumes their shape.
 - tclk/1 is alpha and may change. This port is pinned to commit `81a8346`.
 
+## Explorer screen and API
+
+The Explorer's ninth screen, **Deal (tclk)**, is a read-only inspector: paste
+the frames of one deal, give the instant to judge them at, and optionally name
+the agent that would post the last line. It shows the contract id, protocol
+version, participants, status, deadlines, frame hashes, the authority result
+for the room write, the exact-action approval result as a dry run, and what the
+transcript does and does not establish. It calls three compute-only endpoints
+on the local API — `POST /v1/tclk/inspect`, `/simulate`, `/authorize` — and
+there is no endpoint that posts, locks, claims, refunds, reveals or pays. The
+API has no default clock for a transcript; a caller states one instant or one
+per frame, which is where the reference tool's issue #23 came from.
+
 ## Read-only CLI
 
 ```

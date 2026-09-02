@@ -17,6 +17,7 @@
 13. Fleet
 14. Impact Graph
 15. Protocol Inspector
+16. tclk/1 Deal Inspector — read-only; no wallet, no settlement (`docs/TCLK_INTEGRATION.md`)
 
 ## Approval UX
 

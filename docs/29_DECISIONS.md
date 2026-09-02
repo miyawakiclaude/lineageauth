@@ -2358,9 +2358,11 @@ Git/GitHub writes require confirmation of active account + repository owner + re
   vectors -- the thing this project asks of others in `RELEASE.md`.
 - **Not done, on purpose.** No PTLC adaptor port (unaudited upstream, and this
   signs nothing). No `MemoryRail`/`PaperRail` (a rehearsal of value movement).
-  No Explorer page (core first). The adapter commit was made local-only and
-  pushed afterwards at the user's direction, once the integration report had
-  been read.
+  The Explorer page was deferred to a later commit the same day (a ninth
+  screen over three compute-only endpoints, `POST /v1/tclk/{inspect,simulate,
+  authorize}`; the approval half is a dry run and the API has no default
+  clock). The adapter commit was made local-only and pushed afterwards at the
+  user's direction, once the integration report had been read.
 - **Migration:** none.
 
 ### Pending decision template

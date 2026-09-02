@@ -40,6 +40,7 @@
   <button type="button" data-screen="exchange">Exchange</button>
   <button type="button" data-screen="dispute">Dispute</button>
   <button type="button" data-screen="inspector">Inspector</button>
+  <button type="button" data-screen="tclk">Deal (tclk)</button>
 </nav>
 
 <aside id="snapshot" hidden class="notice">
@@ -157,6 +158,28 @@
     <div id="event-out"></div>
     <h3>Service</h3>
     <div id="meta-out"></div>
+  </section>
+
+  <section id="screen-tclk" class="screen" data-index="09" hidden>
+    <h2>tclk/1 deal inspector</h2>
+    <p class="slug">// read-only. no wallet. no settlement.</p>
+    <p>
+      Paste the frames of one deal, one per line, as they were posted. The local
+      API folds them through the tclk/1 state machine at the instant you give,
+      and, if you name the agent that would post the last line, asks whether the
+      selected lineage entitles it to. Nothing on this screen posts a frame,
+      binds a rail, or moves value.
+    </p>
+    <form id="tclk-form">
+      <label for="tclk-lines">frame lines</label>
+      <textarea id="tclk-lines" rows="6" spellcheck="false" placeholder='tclk1 {"amount":...}'></textarea>
+      <label for="tclk-now">instant (unix ms) to judge every frame at</label>
+      <input id="tclk-now" type="text" inputmode="numeric" spellcheck="false" placeholder="1756700000000">
+      <label for="tclk-agent">agent that would post the last line (optional)</label>
+      <input id="tclk-agent" type="text" spellcheck="false" placeholder="did:key:z6Mk...">
+      <button type="submit">Inspect</button>
+    </form>
+    <div id="tclk-out"></div>
   </section>
 
 </main>

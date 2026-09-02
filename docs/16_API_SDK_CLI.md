@@ -9,6 +9,9 @@ Core:
 - `GET /v1/events/{id}`
 - `GET /v1/lineages/{id}`
 - `GET /v1/dids/{did}`
+- `POST /v1/tclk/inspect` — decode one tclk/1 frame line (read-only)
+- `POST /v1/tclk/simulate` — fold a transcript at stated instants; no default clock
+- `POST /v1/tclk/authorize` — authority for the room write, plus a dry-run approval check; never posts
 
 Drafts:
 - root

@@ -50,6 +50,8 @@ packages/py/lineageauth/adapters/tclk/commitments.py   vote-commitment verificat
 packages/py/lineageauth/adapters/tclk/rail.py          read-only rail Protocol; refusal
 tests/test_tclk.py
 tests/test_cli_tclk.py
+tests/test_api_tclk.py                                 the three compute-only endpoints
+tests/test_explorer_tclk.py                            the ninth Explorer screen
 conformance/tclk/golden-vectors.json                   copied verbatim, commit recorded
 conformance/tclk/synthetic-transcript.json             labelled synthetic
 conformance/tclk/README.md
@@ -66,24 +68,28 @@ docs/TCLK_INTEGRATION_REPORT.md                        this file
 
 ```
 packages/py/lineageauth/cli.py           `la tclk inspect | simulate | authorize | prepare`
+packages/py/lineageauth/api.py           `POST /v1/tclk/{inspect,simulate,authorize}`, compute-only
+apps/explorer/index.html, app.js, app.css   the ninth screen, "Deal (tclk)"
 scripts/pre_push_check.py                path-scoped mask for 0x-hex under conformance/tclk/
 tests/test_final_gate.py                 test that the mask is path- and prefix-scoped
+tests/test_api.py                        the pinned POST-route set gains the three tclk routes
 README.md                                one status line, "independent integration"
+docs/16_API_SDK_CLI.md, docs/17_UI_UX.md   the endpoints and the screen, listed
 docs/29_DECISIONS.md                     D-106
 ```
 
 ## Tests added
 
-93 — 82 in `tests/test_tclk.py` (golden vectors; wire format A–C, T; locks;
+114 — 82 in `tests/test_tclk.py` (golden vectors; wire format A–C, T; locks;
 state machine D–H; venue; authority I–P, S; exact-action approval L–M;
 hostile content Q–R; rail boundary; evidence; interop and votes; the synthetic
 fixture; the three hardenings matched to upstream PRs #14, #16 and #24),
-10 in `tests/test_cli_tclk.py`, 1 in `tests/test_final_gate.py`. Counted from
+10 in `tests/test_cli_tclk.py`, 15 in `tests/test_api_tclk.py`, 6 in `tests/test_explorer_tclk.py`, 1 in `tests/test_final_gate.py`. Counted from
 collected node ids (`pytest --collect-only`), not typed.
 
 ## All tests
 
-1385 passed.
+1406 passed.
 
 ## CI
 
@@ -192,7 +198,9 @@ credits to ADTP and UCAN, which is the reason to decide slowly.
 - A `lock` frame's rail reference is a posted string; nothing here can check it.
 - tclk/1 is alpha. A new optional key on a `tclk1 ` frame would be refused
   until this port is re-pinned — fail-closed, and a maintenance cost.
-- The Explorer page (§24) was not built; core first.
+- The Explorer page (§24) was built after this report was first written, as
+  the ninth screen plus three compute-only API endpoints; see
+  `TCLK_INTEGRATION.md` § Explorer screen and API.
 - Three ports of this spec now exist (TypeScript reference, the reference's
   MCP server, this). Only the four golden vectors are shared ground truth.
 
@@ -205,7 +213,7 @@ give: a second implementation that disagrees, or does not.
 
 ## STATUS
 
-**PASS** — with §24 (Explorer page) explicitly not built. The commits were
+**PASS** — §24 (Explorer page) was added in a later commit the same day. The commits were
 made local-only and pushed to the personal repository on 2026-09-02 at the
 user's direction, after this report was reviewed. "External writes: NONE"
 above describes the integration work itself; the push is the one outward act,

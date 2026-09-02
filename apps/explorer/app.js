@@ -764,6 +764,161 @@ async function showMeta() {
   }
 }
 
+/* -- tclk/1 deal inspector ---------------------------------------------- */
+
+/* Three answers from three read-only endpoints, kept apart on the page the way
+ * the adapter keeps them apart: what the frames establish (simulate), whether
+ * the agent may post one (authorize), and whether a human already consented to
+ * that exact frame (the dry-run approval inside authorize). None of them is
+ * settlement, and the screen says so before it shows anything. */
+
+function toneForDeal(statusText) {
+  if (statusText === "claimed") {
+    return "allow";
+  }
+  return "caution";
+}
+
+document.getElementById("tclk-form").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const where = document.getElementById("tclk-out");
+  const lines = document
+    .getElementById("tclk-lines")
+    .value.split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0);
+  const nowText = document.getElementById("tclk-now").value.trim();
+  const agent = document.getElementById("tclk-agent").value.trim();
+
+  if (lines.length === 0) {
+    problem(where, "Paste at least the offer frame.");
+    return;
+  }
+  if (!/^[0-9]{1,16}$/.test(nowText)) {
+    problem(where, "Give the instant as unix milliseconds. The service has no default clock.");
+    return;
+  }
+
+  try {
+    const folded = await api("/v1/tclk/simulate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ lines: lines, nowMs: Number(nowText) }),
+    });
+    clear(where);
+    where.appendChild(note("Read-only. No wallet. No settlement. " + NO_KEYS_HERE));
+
+    const contract = card("Contract");
+    contract.appendChild(status("status: " + folded.status, toneForDeal(folded.status)));
+    contract.appendChild(
+      pairs([
+        ["contract id", folded.contract],
+        ["protocol", folded.version],
+        ["payer", folded.payer],
+        ["payee", folded.payee],
+        ["amount", folded.amount + " " + folded.asset],
+        ["lock", folded.lock],
+        ["rails offered", (folded.rails || []).join(", ")],
+        ["rail / ref", (folded.rail || "--") + " / " + (folded.railRef || "--")],
+        ["secret revealed", String(folded.secretRevealed)],
+        ["expires (ms)", folded.deadlines.expiresMs],
+        ["claim by (ms)", folded.deadlines.claimByMs],
+        ["refund after (ms)", folded.deadlines.refundAfterMs],
+        ["reads to A2A / ACP as", folded.a2a + " / " + folded.acp],
+      ])
+    );
+    where.appendChild(contract);
+
+    const steps = card("Frames after the offer");
+    if ((folded.steps || []).length === 0) {
+      steps.appendChild(el("p", "Only the offer was given."));
+    }
+    for (const step of folded.steps || []) {
+      steps.appendChild(
+        pairs([
+          [
+            String(step.index) + " " + step.type,
+            (step.ok ? "applied" : "ignored") + (step.reason ? " -- " + step.reason : ""),
+          ],
+        ])
+      );
+    }
+    where.appendChild(steps);
+
+    /* Keys stay short: the definition list gives the key column a fixed width,
+     * and a DID in the key column squeezes the value into one character per
+     * line. So each frame is its own card, and the DID is a value. */
+    const frames = card("Frame hashes");
+    for (const item of folded.evidence.frameArtifacts || []) {
+      const one = card(item.type);
+      one.appendChild(
+        pairs([
+          ["from", item.from],
+          ["artifact id", item.artifactId],
+        ])
+      );
+      frames.appendChild(one);
+    }
+    where.appendChild(frames);
+
+    if (agent) {
+      const authority = card("Authority to post the last line");
+      if (!currentLineage) {
+        authority.appendChild(el("p", "Pick a lineage on the Lineages screen first.", "warn"));
+      } else {
+        const answer = await api("/v1/tclk/authorize", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            lineage: currentLineage,
+            agent: agent,
+            line: lines[lines.length - 1],
+            at: new Date(Number(nowText)).toISOString().replace(/\.\d{3}Z$/, "Z"),
+          }),
+        });
+        authority.appendChild(
+          status(answer.allowed ? "allowed: " + answer.reason : "not allowed: " + answer.reason, answer.allowed ? "allow" : "deny")
+        );
+        authority.appendChild(
+          pairs([
+            ["detail", answer.detail],
+            ["authority asked", answer.required ? answer.required.namespace + ":" + answer.required.resource + " [" + answer.required.action + "]" : "--"],
+            ["not checked here", (answer.unchecked || []).join(", ")],
+            ["content hash", answer.prepared ? answer.prepared.contentHash : "--"],
+            ["request hash", answer.prepared ? answer.prepared.requestHash : "--"],
+          ])
+        );
+        const approval = answer.approval;
+        if (approval && approval.required) {
+          authority.appendChild(el("h3", "exact-action approval (dry run)"));
+          authority.appendChild(
+            status(approval.mayExecute ? "a matching receipt is in the index" : "no usable receipt: " + approval.reason, approval.mayExecute ? "allow" : "caution")
+          );
+          authority.appendChild(
+            pairs([
+              ["detail", approval.detail],
+              ["receipt", approval.receiptId],
+              ["approver", approval.approver],
+            ])
+          );
+        }
+        authority.appendChild(note(answer.note));
+      }
+      where.appendChild(authority);
+    }
+
+    const evidence = card("What this establishes");
+    evidence.appendChild(el("h3", "proves"));
+    evidence.appendChild(listOf(folded.evidence.proves || []));
+    evidence.appendChild(el("h3", "does not prove"));
+    evidence.appendChild(listOf(folded.evidence.doesNotProve || []));
+    evidence.appendChild(note(folded.note));
+    where.appendChild(evidence);
+  } catch (error) {
+    problem(where, error.message);
+  }
+});
+
 /* Mode first: every screen below asks the same `api()` either way, so the one
  * thing that has to happen before anything renders is knowing which it is. */
 void detectMode().then(loadLineages);

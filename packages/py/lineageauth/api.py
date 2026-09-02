@@ -36,6 +36,18 @@ from fastapi.responses import HTMLResponse, PlainTextResponse
 from pydantic import BaseModel, ConfigDict, Field
 
 from lineageauth import __version__, catalog
+from lineageauth.adapters.tclk import (
+    decode_frame,
+    evidence_summary,
+    fold,
+    frame_artifact_id,
+    prepare_frame,
+    room_for_frame,
+    tclk_status_to_a2a,
+    tclk_status_to_acp_phase,
+    verify_tclk_authority,
+)
+from lineageauth.approval import InMemorySpentStore, check_execution
 from lineageauth.authority import check_permission
 from lineageauth.envelope import Envelope
 from lineageauth.errors import LineageAuthError
@@ -133,6 +145,46 @@ class SearchRequest(BaseModel):
     require_available: bool = False
     at: str | None = None
     limit: int = 20
+
+
+# A tclk/1 frame is at most 4096 chars and folds in microseconds; the cost that
+# scales is secp256k1 point validation on `paymentKey`/`statement`, a few
+# milliseconds each. Sixty-four frames is more than any one contract carries.
+MAX_TCLK_LINES = 64
+MAX_TCLK_LINE_CHARS = 4096
+
+
+class TclkInspectRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    line: str = Field(max_length=MAX_TCLK_LINE_CHARS)
+
+
+class TclkSimulateRequest(BaseModel):
+    """A transcript and when to judge it.
+
+    Deterministic answers (module docstring): there is no wall-clock default. The
+    reference MCP tool folds at `Date.now()` when no instant is given, which is
+    how its issue #23 arose; here a caller states one instant for every frame or
+    one per frame, and gets 400 otherwise.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    lines: list[str] = Field(min_length=1, max_length=MAX_TCLK_LINES)
+    nowMs: int | None = None
+    timestamps: list[int] | None = Field(default=None, max_length=MAX_TCLK_LINES)
+
+
+class TclkAuthorizeRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    lineage: str
+    agent: str
+    line: str = Field(max_length=MAX_TCLK_LINE_CHARS)
+    at: str | None = None
+    room: str | None = None
+    external: bool = True
 
 
 def _moment(value: str | None) -> datetime:
@@ -295,6 +347,147 @@ def create_app(index: EventIndex, *, title: str = "LineageAuth") -> FastAPI:
             "warnings": list(decision.warnings),
             "note": decision.note,
         }
+
+    # ---- tclk/1: read, simulate, authorize. Nothing here posts or settles. ----
+
+    @app.post(f"/{API_VERSION}/tclk/inspect")
+    def tclk_inspect(body: TclkInspectRequest) -> dict[str, Any]:
+        """Decode one tclk/1 frame line. Parsed is not applied, and neither is authorized."""
+        try:
+            frame = decode_frame(body.line)
+        except LineageAuthError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+        return {
+            "type": frame.kind,
+            "from": frame.sender,
+            "contract": frame.contract,
+            "room": room_for_frame(frame),
+            "line": frame.line,
+            "artifactId": frame_artifact_id(frame),
+            "fields": frame.as_dict(),
+            "note": (
+                "A frame that parses is a well-formed message. Whether it applies to a "
+                "contract is the simulate answer; whether its sender may post it is the "
+                "authorize answer; whether money moved is a rail's, never this service's."
+            ),
+        }
+
+    @app.post(f"/{API_VERSION}/tclk/simulate")
+    def tclk_simulate(body: TclkSimulateRequest) -> dict[str, Any]:
+        """Fold a transcript into a contract state, locally, at the instants given."""
+        if body.timestamps is None and body.nowMs is None:
+            raise HTTPException(
+                status_code=400, detail="give nowMs (one instant) or timestamps (one per frame)"
+            )
+        instants: int | list[int]
+        if body.timestamps is not None:
+            if len(body.timestamps) != len(body.lines) - 1:
+                raise HTTPException(
+                    status_code=400,
+                    detail="timestamps must carry one instant for every frame after the offer",
+                )
+            instants = list(body.timestamps)
+        else:
+            assert body.nowMs is not None
+            instants = body.nowMs
+        try:
+            frames = [decode_frame(line) for line in body.lines]
+            if frames[0].kind != "offer":
+                raise HTTPException(status_code=400, detail="a transcript starts with an offer")
+            state, steps = fold(frames[0], frames[1:], instants)
+        except LineageAuthError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+        offer = state.offer
+        return {
+            "status": state.status,
+            "terminal": state.terminal,
+            "contract": state.contract,
+            "version": "tclk/1",
+            "payer": state.payer_did,
+            "payee": state.payee_did,
+            "rail": state.rail,
+            "railRef": state.rail_ref,
+            "secretRevealed": state.secret_revealed,
+            "deadlines": {
+                "expiresMs": offer.get("expiresMs"),
+                "claimByMs": offer.get("claimByMs"),
+                "refundAfterMs": offer.get("refundAfterMs"),
+            },
+            "amount": offer.get("amount"),
+            "asset": offer.get("asset"),
+            "rails": list(offer.get("rails") or []),
+            "lock": offer.get("lock"),
+            "a2a": tclk_status_to_a2a(state.status),
+            "acp": tclk_status_to_acp_phase(state.status),
+            "steps": [
+                {"index": i + 1, "type": f.kind, "from": f.sender, "ok": s.ok, "reason": s.reason}
+                for i, (f, s) in enumerate(zip(frames[1:], steps, strict=True))
+            ],
+            "evidence": evidence_summary(state, frames),
+            "note": (
+                "A folded state is what the frames establish under tclk/1 guards at the "
+                "stated instants. It is not settlement, not delivered work, and not "
+                "authority to have posted any of it."
+            ),
+        }
+
+    @app.post(f"/{API_VERSION}/tclk/authorize")
+    def tclk_authorize(body: TclkAuthorizeRequest) -> dict[str, Any]:
+        """May this agent post this frame, per the indexed events? Nothing is posted.
+
+        Two answers in one: the authority chain for the room write, and -- when
+        that chain requires a human -- whether a matching exact-action receipt is
+        already in the index. The second is a dry run: no receipt is consumed.
+        """
+        at = _moment(body.at)
+        bundle = index.bundle(lineage=body.lineage)
+        try:
+            decision = verify_tclk_authority(
+                bundle,
+                lineage=body.lineage,
+                agent=body.agent,
+                frame_line=body.line,
+                at=at,
+                room=body.room,
+                external=body.external,
+            )
+        except LineageAuthError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+        answer = decision.as_dict()
+        answer["evaluatedAt"] = format_instant(at)
+        answer["approval"] = None
+        answer["prepared"] = None
+        if decision.frame is not None:
+            prepared = prepare_frame(decision.frame, room=body.room)
+            answer["prepared"] = {
+                "room": prepared.room,
+                "destination": prepared.destination,
+                "contentHash": prepared.request.content_hash,
+                "requestHash": prepared.request.request_hash,
+            }
+            if decision.approval_required:
+                execution = check_execution(
+                    bundle,
+                    lineage=body.lineage,
+                    agent=body.agent,
+                    request=prepared.request,
+                    at=at,
+                    store=InMemorySpentStore(),
+                    external=body.external,
+                    reserve=False,
+                )
+                answer["approval"] = {
+                    "required": True,
+                    "mayExecute": execution.may_execute,
+                    "reason": str(execution.reason),
+                    "detail": execution.detail,
+                    "receiptId": execution.receipt_id,
+                    "approver": execution.approver,
+                    "dryRun": True,
+                }
+            elif decision.allowed:
+                answer["approval"] = {"required": False, "mayExecute": True, "dryRun": True}
+        return answer
 
     @app.get(f"/{API_VERSION}/events/{{event_id}}")
     def get_event(event_id: str) -> dict[str, Any]:

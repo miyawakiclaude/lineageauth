@@ -114,6 +114,13 @@ class TestServiceShape:
             ("/v1/verify/event", "POST"),
             ("/v1/check-permission", "POST"),
             ("/v1/router/search", "POST"),
+            # tclk/1 (docs/TCLK_INTEGRATION.md): decode a line, fold a transcript,
+            # decide a room write. Each computes and stores nothing; the approval
+            # half of `authorize` is a dry run that consumes no receipt, and no
+            # route posts, locks, claims, refunds, reveals or pays.
+            ("/v1/tclk/inspect", "POST"),
+            ("/v1/tclk/simulate", "POST"),
+            ("/v1/tclk/authorize", "POST"),
         }
 
     def test_verifying_an_event_does_not_index_it(self, client: TestClient) -> None:
