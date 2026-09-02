@@ -39,7 +39,11 @@ _SPLIT_RE = re.compile(r"[:/]")
 
 
 class ApprovalMode(IntEnum):
-    """How much human involvement a scope demands.
+    """How much human involvement a delegation demands.
+
+    It sits on the grant, not on a `Scope` -- `Scope` carries `namespace`,
+    `resource` and `actions` and refuses any other field. Said "scope" here once,
+    and that was enough to describe the data model wrongly in public.
 
     Ordered, because `docs/04` requires monotonicity: a child may strengthen the
     requirement and may never weaken it. `IntEnum` makes `child >= parent` the
