@@ -41,11 +41,15 @@ golden vectors byte for byte.
 from lineageauth.adapters.tclk import verify_tclk_authority
 
 decision = verify_tclk_authority(
-    bundle, lineage=lineage, agent=agent_did, frame_line=line, at=now,
+    bundle,
+    lineage=lineage,
+    agent=agent_did,
+    frame_line=line,
+    at=now,
 )
-decision.allowed      # LineageAuth authority for the room write, and only that
-decision.reason       # a LineageAuth ReasonCode; MALFORMED / UNKNOWN_VERSION if tclk refused first
-decision.unchecked    # ("spend-limit", "rail-allowlist", "counterparty", "frame-type", "settlement")
+decision.allowed  # LineageAuth authority for the room write, and only that
+decision.reason  # a LineageAuth ReasonCode; MALFORMED / UNKNOWN_VERSION if tclk refused first
+decision.unchecked  # ("spend-limit", "rail-allowlist", "counterparty", "frame-type", "settlement")
 ```
 
 Order of checks, which a caller must not reorder:
@@ -64,10 +68,10 @@ An allow says nothing about the five `unchecked` items. See
 ```python
 from lineageauth.adapters.tclk import prepare_frame
 
-prepared = prepare_frame(line, nonce=nonce)      # no signer needed
-prepared.request                                 # the ActionRequest a receipt binds to
-prepared.signing_challenge                       # "<room>|<nonce>|<line>", sign it where your key lives
-prepared.preview()                               # what a human is shown
+prepared = prepare_frame(line, nonce=nonce)  # no signer needed
+prepared.request  # the ActionRequest a receipt binds to
+prepared.signing_challenge  # "<room>|<nonce>|<line>", sign it where your key lives
+prepared.preview()  # what a human is shown
 ```
 
 The bytes hashed are the frame line itself, after Technocore's single-line

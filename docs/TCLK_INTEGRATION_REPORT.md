@@ -88,6 +88,12 @@ fixture), 9 in `tests/test_cli_tclk.py`, 1 in `tests/test_final_gate.py`.
 `scripts/gate.py`: lint PASS, format PASS, types PASS, tests PASS.
 `scripts/pre_push_check.py`: remote, identity and tree clean.
 
+Stated exactly: at the commit that added the adapter, the gate's `format` step
+failed on one thing — a Python code block inside `docs/TCLK_INTEGRATION.md`
+(the gate runs `ruff format --check .`, which formats fenced Python in
+Markdown too). The block was reformatted in the immediately following commit,
+and the four-way PASS above is the result at that commit.
+
 ## Authority mapping
 
 A frame is a Technocore signed-lane message, so posting it is
