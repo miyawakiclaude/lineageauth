@@ -129,6 +129,30 @@ These are referred to but not specified anywhere read:
 6. **Duplicate JSON keys.** The spec does not say; the reference's `JSON.parse`
    silently takes the last. This port refuses them (stricter, documented).
 
+## Open issues and pull requests at the time of reading (2026-09-02, later the same day)
+
+The repository was one day old and already carried 10 open issues and 11 open
+pull requests. Read before anything was written upstream, so as not to file
+what somebody had already filed. What each means for this port:
+
+| upstream | claim | this port |
+|---|---|---|
+| PR #13 | a stdlib Python walkthrough that pins the three golden ids and walks a deal on an in-memory rail | overlaps the "Python reproduces the vectors" claim; this port is a verifier-side integration, not a walkthrough, but agreement on the vectors is an *agreement*, not a first |
+| issue #23, PR #24 | `tclk_apply_transcript` folds every frame at one `nowMs`, so a completed deal replayed after `refundAfterMs` is reported unfinished; #24 adds per-frame `timestamps[]` | the same finding, reached independently by generating a fixture (see `conformance/tclk/README.md`); `fold` takes one instant per frame. One refinement: with the usual `expiresMs < claimByMs < refundAfterMs` ordering the late fold lands on `proposed`, not the `locked` #23 states, because the accept's expiry guard runs first |
+| PR #14 | a negative or non-finite `nowMs` sails past every deadline guard | `apply_frame` refuses a non-integer or negative instant (`_check_instant`) |
+| PR #15 | `verifySecret` with an unknown lock kind falls through to point verification | never open here: an unknown kind verifies nothing |
+| PR #16 | `job` / `presig` are validated by spreading under a synthetic `type`, so a nested `type` key escapes the unknown-key check | never open here: the object's own keys are checked; tested |
+| issue #22, PR #24 | `SCALAR_HEX` admits an odd digit count the hex decoder then throws on | closed here: an odd-length `presig.s` is refused |
+| issue #17, #5 | a `cancel` in `proposed` matches no contract, so one signed cancel ends every pending offer from that sender, and no `receipt` can follow | **mirrored, on purpose** — this is a reader, and disagreeing with the reference about what a transcript did would be worse than sharing its behaviour; recorded in `TCLK_THREAT_MODEL.md` as an upstream-open residual |
+| issue #12 | on a payee-opened offer the acceptor (the payer) mints the secret that only the payee may reveal | mirrored; a spec question this port does not answer |
+| PR #25 | an offline audit of two `/export` files: signature per frame, `from` equality, fold at each record's `ts` | the same shape as `simulate` plus transport verification; here the signature half is the existing `adapters/technocore` reader's job |
+| #2, #3, #6, #9–#11, #19–#21 | example-script robustness, venue room cap, an EVM rail | out of scope for a read-only integration |
+
+Not found in any of the above, and therefore the only candidates for a report
+of this port's own: the absence of an ordering rule for `expiresMs` against
+`claimByMs`/`refundAfterMs` in `SPEC.md` §3.1 and `validateFrame`; the
+unspecified treatment of duplicate JSON keys; and the provenance sentence below.
+
 ## One inconsistency observed in the source
 
 `tests/vectors.test.ts` says its constants "were generated from the reference

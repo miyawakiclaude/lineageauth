@@ -271,6 +271,37 @@ class TestWireFormat:
         with pytest.raises(FrameError, match="missing field on offer: amount"):
             tclk.validate_frame(fields)
 
+    def test_a_type_key_inside_job_is_refused_as_unknown(self) -> None:
+        """The reference validates `job` by spreading it under a synthetic `type`,
+        so a `type` key inside the job object is overwritten before the unknown-key
+        check sees it (its PR #16). This port checks the object's own keys."""
+        fields = {**offer_fields(), "job": {"proto": "a2a", "id": "t", "type": "smuggled"}}
+        with pytest.raises(FrameError, match="unknown field on job: type"):
+            tclk.validate_frame(fields)
+
+    def test_an_odd_length_presig_scalar_is_refused(self) -> None:
+        _, _, state = accepted()
+        assert state.contract is not None
+        good = {"nonce": POINT, "s": "0x" + "ab" * 32}
+        odd = {"nonce": POINT, "s": "0x" + "ab" * 31 + "c"}
+        frame(
+            type="lock",
+            **{"from": PAYER.did},
+            contract=state.contract,
+            rail="x402",
+            ref="r",
+            presig=good,
+        )
+        with pytest.raises(FrameError, match="odd number of hex digits"):
+            frame(
+                type="lock",
+                **{"from": PAYER.did},
+                contract=state.contract,
+                rail="x402",
+                ref="r",
+                presig=odd,
+            )
+
     def test_unknown_frame_type_is_refused(self) -> None:
         with pytest.raises(FrameError, match="unknown frame type"):
             tclk.validate_frame({"type": "swap", "from": PAYER.did})
@@ -454,6 +485,16 @@ class TestStateMachine:
         ).ok
         refunded = apply_frame(locked, refund, REFUND_AFTER)
         assert refunded.ok and refunded.state.status == "refunded"
+
+    def test_a_bad_clock_is_refused_not_compared(self) -> None:
+        """A negative instant satisfies no `now >= deadline` guard, so every deadline
+        would be sailed past. The clock is the caller's, so this raises."""
+        of, ac, _ = accepted()
+        for bad in (-1, True, 1.5, "0", None):
+            with pytest.raises(FrameError, match="non-negative integer"):
+                apply_frame(open_contract(of), ac, bad)  # type: ignore[arg-type]
+        with pytest.raises(FrameError, match="non-negative integer"):
+            fold(of, [ac], [-1])
 
     def test_a_replayed_frame_is_a_rejected_no_op(self) -> None:  # E
         _, ac, state = accepted()

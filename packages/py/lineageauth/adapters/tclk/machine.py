@@ -91,8 +91,21 @@ def _reject(state: ContractState, reason: str) -> StepResult:
     return StepResult(state=state, ok=False, reason=reason)
 
 
+def _check_instant(now_ms: object) -> int:
+    """A caller's clock, not room input: a bad one is a bug and raises.
+
+    A negative or non-integer instant would sail past every deadline guard
+    (`now >= expiresMs` is False for any negative number), so it is refused
+    rather than compared. The reference has the same hole open in PR #14.
+    """
+    if isinstance(now_ms, bool) or not isinstance(now_ms, int) or now_ms < 0:
+        raise FrameError(f"tclk: now_ms must be a non-negative integer, got {now_ms!r}")
+    return now_ms
+
+
 def apply_frame(state: ContractState, frame: Mapping[str, Any] | Frame, now_ms: int) -> StepResult:
     """Apply one frame at wall-clock `now_ms`. Structural validation first, then guards."""
+    now_ms = _check_instant(now_ms)
     try:
         fields = frame.fields if isinstance(frame, Frame) else validate_frame(frame)
     except FrameError as exc:

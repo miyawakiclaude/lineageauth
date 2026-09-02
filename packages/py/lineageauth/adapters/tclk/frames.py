@@ -288,7 +288,12 @@ def validate_frame(value: object) -> dict[str, Any]:
             assert isinstance(presig, Mapping)
             _require_keys(presig, frozenset({"nonce", "s"}), ("nonce", "s"), "presig")
             _require_string(presig.get("nonce"), "presig.nonce", HEX33)
-            _require_string(presig.get("s"), "presig.s", SCALAR_HEX)
+            scalar = _require_string(presig.get("s"), "presig.s", SCALAR_HEX)
+            # Stricter than the reference regex, which admits an odd digit count
+            # that its own hex decoder then throws on (its PR #24 closes the same
+            # gap). Refusing here can only reject a value nothing could decode.
+            if len(scalar) % 2 != 0:
+                _fail("presig.s is malformed: odd number of hex digits")
     elif kind == "reveal":
         _require_string(frame.get("contract"), "contract", HEX32)
         _require_string(frame.get("secret"), "secret", HEX32)

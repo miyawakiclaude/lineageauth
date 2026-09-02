@@ -120,6 +120,14 @@ machine, matching the reference, because it is the rail's to enforce.
 ## Residual risks (stated, not solved)
 
 - Undisclosed collusion between DIDs (T11).
+- **Upstream-open behaviours this port mirrors on purpose.** A `cancel` while
+  `proposed` matches no contract id, so one signed cancel folds every pending
+  offer from that sender to `cancelled`, and no `receipt` can follow (flop-labs/tclk
+  #17, #5). On a payee-opened offer the party that mints the secret is the one
+  that may not reveal it (#12). This port reads transcripts; disagreeing with
+  the reference about what a transcript did would be a worse failure than
+  sharing its behaviour, so both are reproduced and named here until upstream
+  decides.
 - A rail reference in a `lock` frame proves a message was posted, not that a
   lock exists. Nothing here can check it, and `evidence_summary` says so.
 - The spec is alpha; a future `tclk1 ` frame with new optional keys would be
