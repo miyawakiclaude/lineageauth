@@ -188,13 +188,33 @@ def check_identity() -> list[str]:
     ]
 
 
+# tclk/1 ids, statements and hash-shaped fields are `0x` + 64 hex by wire format
+# (flop-labs/tclk SPEC.md 3), so the reference's golden vectors and the synthetic
+# transcript under conformance/tclk/ are made of exactly the string the 64-hex
+# rule exists to catch. Scoped to that directory and to the `0x` spelling only:
+# a bare 64-hex anywhere, or a `0x` one anywhere else, still fires. The one
+# field there that really is a secret -- the reveal's preimage -- is pinned to
+# the documented UNSAFE test constant by tests/test_tclk.py, so this exemption
+# cannot quietly become a place to leave a real one.
+TCLK_FIXTURES = "conformance/tclk/"
+_TCLK_WIRE_HEX = re.compile(r"0x[0-9a-f]{64}(?![0-9a-fA-F])")
+
+
+def scannable_text(name: str, text: str) -> str:
+    """The text the secret patterns run over. Identity except under conformance/tclk/."""
+    if not name.startswith(TCLK_FIXTURES):
+        return text
+    return _TCLK_WIRE_HEX.sub("0x<tclk-wire-hex>", text)
+
+
 def check_tree() -> list[str]:
     problems: list[str] = []
     scanned, unreadable = tracked_text()
     problems.extend(unreadable)
     if not scanned:
         problems.append("scanned 0 files -- this check did nothing and cannot say 'clean'")
-    for name, text in scanned:
+    for name, raw_text in scanned:
+        text = scannable_text(name, raw_text)
         lowered = text.lower()
         problems.extend(
             f"{name} names the company ({marker})"

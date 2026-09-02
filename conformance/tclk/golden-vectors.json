@@ -1,0 +1,60 @@
+{
+  "note": "Golden cross-implementation vectors for the tclk/1 wire format, copied verbatim from the reference repository. They pin the domain-tagged offer id, the contract id that binds the full offer to its acceptance, the canonical ASCII line each encodes to, and one id whose frame carries a non-ASCII field (the id hashes the escaped form). A port that disagrees with any of these is wrong; the vector is never edited to make a test pass.",
+  "source": {
+    "repository": "https://github.com/flop-labs/tclk",
+    "path": "tests/vectors.test.ts",
+    "commit": "81a83464bd909fb5cd80de647da4e42fbae177dd",
+    "tag": "v0.1.0",
+    "retrieved_at": "2026-09-02T10:20:43Z",
+    "tclk_version": "tclk/1",
+    "observed_inconsistency": "The vector file's header says the vectors were 'generated from the reference implementation'; the same repository's AGENTS.md says they were 'produced by an independent implementation'. Recorded as found; not resolved here."
+  },
+  "vectors": {
+    "offer": {
+      "fields": {
+        "type": "offer",
+        "from": "did:key:z6Mkffffffffffffffffffffffffffffffffffffffffffff",
+        "role": "payer",
+        "amount": "1000000",
+        "asset": "FLOP",
+        "lock": "hash",
+        "rails": ["flop-htlc", "x402"],
+        "claimByMs": 1756703600000,
+        "refundAfterMs": 1756707200000,
+        "expiresMs": 1756700600000,
+        "job": {"proto": "a2a", "id": "task-3f", "context": "ctx-1"},
+        "nonce": "9f2c81d04c9e1f7a"
+      },
+      "id": "0xd001fbbf4fa36d9ab8ea88df02a8b3303539e9d59f7ff9d9bfeb679318e9ce75",
+      "line": "tclk1 {\"amount\":\"1000000\",\"asset\":\"FLOP\",\"claimByMs\":1756703600000,\"expiresMs\":1756700600000,\"from\":\"did:key:z6Mkffffffffffffffffffffffffffffffffffffffffffff\",\"id\":\"0xd001fbbf4fa36d9ab8ea88df02a8b3303539e9d59f7ff9d9bfeb679318e9ce75\",\"job\":{\"context\":\"ctx-1\",\"id\":\"task-3f\",\"proto\":\"a2a\"},\"lock\":\"hash\",\"nonce\":\"9f2c81d04c9e1f7a\",\"rails\":[\"flop-htlc\",\"x402\"],\"refundAfterMs\":1756707200000,\"role\":\"payer\",\"type\":\"offer\"}"
+    },
+    "accept": {
+      "core": {
+        "from": "did:key:z6Mkgggggggggggggggggggggggggggggggggggggggggggg",
+        "ref": "0xd001fbbf4fa36d9ab8ea88df02a8b3303539e9d59f7ff9d9bfeb679318e9ce75",
+        "statement": "0xabababababababababababababababababababababababababababababababab",
+        "nonce": "0011223344556677"
+      },
+      "contract": "0x2768bf32b455317879796093ff2e5882371cbec238611ca71f555a7fcbe58e1c",
+      "line": "tclk1 {\"contract\":\"0x2768bf32b455317879796093ff2e5882371cbec238611ca71f555a7fcbe58e1c\",\"from\":\"did:key:z6Mkgggggggggggggggggggggggggggggggggggggggggggg\",\"nonce\":\"0011223344556677\",\"ref\":\"0xd001fbbf4fa36d9ab8ea88df02a8b3303539e9d59f7ff9d9bfeb679318e9ce75\",\"statement\":\"0xabababababababababababababababababababababababababababababababab\",\"type\":\"accept\"}"
+    },
+    "non_ascii_offer": {
+      "fields": {
+        "type": "offer",
+        "from": "did:key:z6Mkffffffffffffffffffffffffffffffffffffffffffff",
+        "role": "payer",
+        "lock": "hash",
+        "amount": "100",
+        "asset": "FLOP",
+        "rails": ["flop-htlc"],
+        "claimByMs": 1756703600000,
+        "refundAfterMs": 1756707200000,
+        "expiresMs": 1756700600000,
+        "job": {"proto": "a2a", "id": "tâche-1"},
+        "nonce": "9f2c81d04c9e1f7a"
+      },
+      "id": "0xfdad69c602bef151596e3e914cc3ca05b1ccd009211b57c4fdbf0ba0e0d4635b",
+      "line_contains": "\\u00e2"
+    }
+  }
+}

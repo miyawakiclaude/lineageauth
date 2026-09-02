@@ -2313,6 +2313,54 @@ Git/GitHub writes require confirmation of active account + repository owner + re
   That is a fair question about this project's vocabulary and is answered in the
   reply, not in code.
 
+## D-106: a read-only tclk/1 adapter, with no change to LAP core
+
+- **Date:** 2026-09-02
+- **What tclk/1 is.** A convention published by FLOP Labs the same day
+  (`flop-labs/tclk`, `v0.1.0`, commit `81a8346`): HTLC/PTLC deal-making
+  between agents as signed single-line frames in a Technocore room, with money
+  on a settlement rail elsewhere. Read from primary sources first; the report
+  is `docs/TCLK_RESEARCH_REPORT.md`, with the unknowns marked.
+- **The binding, stated once.** A tclk frame is a Technocore signed-lane
+  message. Posting one is `technocore` / `room:<room>` / `write`, where the
+  room is the one `SPEC.md` §2 assigns to the frame type. That is an authority
+  LineageAuth already expresses, so **no namespace, action, reason code, event
+  type, payload shape or predicate was added**. Everything the model cannot say
+  -- spend limit, rail allowlist, counterparty, per-frame-type -- is named on
+  every decision as `unchecked` and written up in `docs/TCLK_GAP_ANALYSIS.md`
+  as `SPEC CHANGE REQUIRED`, awaiting a decision rather than taken.
+- **Three modes, no fourth.** Read-only, simulate, prepare. `publish()` raises.
+  The rail type is a `Protocol` with no member that moves value. Nothing mints,
+  stores or echoes a secret; `ContractState` records `secret_revealed: bool`
+  and has no field for the value, which is stricter than the reference library
+  and the same rule as its MCP server.
+- **Conformance.** The reference's golden vectors are copied verbatim into
+  `conformance/tclk/` with commit and retrieval time, and reproduced byte for
+  byte by `json.dumps(sort_keys=True, separators=(",", ":"), ensure_ascii=True)`
+  -- no canonicaliser of this project's own. Synthetic transcripts are labelled
+  synthetic; the reference publishes no byte-exact end-to-end example and says
+  so.
+- **Where this port is stricter than the reference, and why.** Non-canonical
+  lines and duplicate JSON keys are refused (the reference accepts both). Every
+  reference-emitted frame is canonical, so the difference bites only hand-built
+  lines, and fail-closed is the rule on a path that describes money.
+- **Where it deliberately matches the reference against instinct.** The DID is
+  checked for shape and not decoded, because the golden vectors' DIDs are not
+  real keys and parity with the vectors is the point. `claimByMs` is not
+  enforced by the machine, because the reference leaves it to the rail.
+- **Security impact.** Additive and read-only. A valid frame creates no
+  authority; authority never rescues an invalid frame; approval binds the
+  frame's bytes so a changed nonce is a different action; room content is data
+  and the suite refuses the network. The residual is the one `SPEC.md` §8.5 and
+  D-105 both name: two keys may be one operator, and only disclosure catches it.
+- **Interop impact.** None to LAP. To tclk: this is a second implementation of
+  its wire format and state machine, in another language, agreeing on its
+  vectors -- the thing this project asks of others in `RELEASE.md`.
+- **Not done, on purpose.** No PTLC adaptor port (unaudited upstream, and this
+  signs nothing). No `MemoryRail`/`PaperRail` (a rehearsal of value movement).
+  No Explorer page (core first). No push -- this commit is local.
+- **Migration:** none.
+
 ### Pending decision template
 
 - ID:

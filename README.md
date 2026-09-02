@@ -162,6 +162,13 @@ Nothing here is production-ready; do not put real authority behind it yet.
       marked required, and never fetches the resolver it reads
 - [x] Technocore adapter — GET-write classification, single-line sweep,
       dry-run write preparation. It cannot publish.
+- [x] tclk/1 adapter (read-only) — LineageAuth can verify whether an agent
+      has a declared authority chain for a proposed tclk/1 frame before it is
+      posted, fold a transcript into a contract state against the reference's
+      golden vectors, and bind an exact-action approval to the frame's bytes.
+      It cannot post, settle, or hold a payment secret. An independent
+      integration, pinned to `flop-labs/tclk` `81a8346` —
+      [docs/TCLK_INTEGRATION.md](docs/TCLK_INTEGRATION.md)
 - [x] Zero-cost conformance — the "works with no paid service" list is
       executed, and names what is not built rather than passing quietly
 - [x] Explorer — renders every value as text, and verifies the signatures it

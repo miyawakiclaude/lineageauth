@@ -1351,5 +1351,261 @@ def sign(
 # registered -- so `python -m lineageauth.cli` quietly offered a fraction of the
 # CLI while `la` offered all of it. Nothing failed; the commands simply were not
 # there. (D-096.)
+# ---------------------------------------------------------------- tclk/1
+
+
+tclk_app = typer.Typer(
+    name="tclk",
+    help=(
+        "Read, simulate, authorize and prepare tclk/1 deal frames. Read-only: there "
+        "is no send, publish, lock, claim, refund, reveal or pay here."
+    ),
+    no_args_is_help=True,
+)
+app.add_typer(tclk_app)
+
+
+def _read_frame_line(path: str) -> str:
+    """One frame line from a file or stdin. Surrounding whitespace only is trimmed."""
+    text = _read_source(path).strip()
+    if "\n" in text:
+        typer.secho("error: expected exactly one frame line", fg=typer.colors.RED, err=True)
+        raise typer.Exit(code=2)
+    return text
+
+
+def _read_transcript(path: str) -> list[str]:
+    """Frame lines from a JSON array of strings or newline-delimited text."""
+    text = _read_source(path)
+    stripped = text.strip()
+    if stripped.startswith("["):
+        try:
+            loaded = jsonio.loads(stripped)
+        except LineageAuthError as exc:
+            typer.secho(f"error: {exc}", fg=typer.colors.RED, err=True)
+            raise typer.Exit(code=2) from exc
+        if not isinstance(loaded, list) or not all(isinstance(x, str) for x in loaded):
+            typer.secho(
+                "error: a JSON transcript must be an array of strings",
+                fg=typer.colors.RED,
+                err=True,
+            )
+            raise typer.Exit(code=2)
+        return [str(x) for x in loaded]
+    return [line for line in text.splitlines() if line.strip()]
+
+
+@tclk_app.command("inspect")
+def tclk_inspect(
+    frame: Annotated[
+        str, typer.Argument(metavar="FRAME", help="File holding one frame line, or '-'.")
+    ],
+    as_json: Annotated[bool, typer.Option("--json", help="Emit the parsed frame.")] = False,
+) -> None:
+    """Decode one tclk/1 frame line. Parsed is not valid-in-context, and neither is authorized."""
+    from lineageauth.adapters.tclk import FrameError, decode_frame, room_for_frame
+
+    line = _read_frame_line(frame)
+    try:
+        parsed = decode_frame(line)
+    except FrameError as exc:
+        typer.secho(f"  refused: {exc}", fg=typer.colors.RED, err=True)
+        raise typer.Exit(code=1) from exc
+    if as_json:
+        typer.echo(
+            jsonio.dumps(
+                {
+                    "type": parsed.kind,
+                    "from": parsed.sender,
+                    "contract": parsed.contract,
+                    "room": room_for_frame(parsed),
+                    "line": parsed.line,
+                    "fields": parsed.as_dict(),
+                }
+            )
+        )
+        return
+    typer.secho("  tclk/1 frame: PARSED", fg=typer.colors.GREEN, bold=True)
+    typer.echo(f"    type       {parsed.kind}")
+    typer.echo(f"    from       {parsed.sender}")
+    typer.echo(f"    contract   {parsed.contract or '-'}")
+    typer.echo(f"    room       {room_for_frame(parsed)}")
+    typer.echo(f"    canonical  yes ({len(parsed.line)} chars)")
+    typer.echo("  note: parsed is not a valid transition, and not authority to post it")
+
+
+@tclk_app.command("simulate")
+def tclk_simulate(
+    transcript: Annotated[
+        str, typer.Argument(metavar="TRANSCRIPT", help="Frame lines: a JSON array or one per line.")
+    ],
+    now: Annotated[int, typer.Option("--now", help="The instant to evaluate at, unix ms.")],
+    as_json: Annotated[bool, typer.Option("--json", help="Emit the folded state.")] = False,
+) -> None:
+    """Fold a transcript into a contract state locally. Nothing is sent or settled."""
+    from lineageauth.adapters.tclk import (
+        FrameError,
+        decode_frame,
+        evidence_summary,
+        fold,
+        tclk_status_to_a2a,
+        tclk_status_to_acp_phase,
+    )
+
+    lines = _read_transcript(transcript)
+    if not lines:
+        typer.secho("error: the transcript is empty", fg=typer.colors.RED, err=True)
+        raise typer.Exit(code=2)
+    try:
+        first = decode_frame(lines[0])
+        if first.kind != "offer":
+            raise FrameError("tclk: a transcript starts with an offer")
+        rest = [decode_frame(line) for line in lines[1:]]
+    except FrameError as exc:
+        typer.secho(f"  refused: {exc}", fg=typer.colors.RED, err=True)
+        raise typer.Exit(code=1) from exc
+
+    state, steps = fold(first, rest, now)
+    if as_json:
+        typer.echo(
+            jsonio.dumps(
+                {
+                    "status": state.status,
+                    "a2a": tclk_status_to_a2a(state.status),
+                    "acp": tclk_status_to_acp_phase(state.status),
+                    "steps": [
+                        {"index": i + 1, "type": f.kind, "ok": s.ok, "reason": s.reason}
+                        for i, (f, s) in enumerate(zip(rest, steps, strict=True))
+                    ],
+                    "evidence": evidence_summary(state, [first, *rest]),
+                }
+            )
+        )
+        return
+    for index, (f, step) in enumerate(zip(rest, steps, strict=True), start=2):
+        mark = "applied" if step.ok else "ignored"
+        colour = typer.colors.GREEN if step.ok else typer.colors.YELLOW
+        typer.secho(f"  {index:>3}  {f.kind:<8} {mark}  {step.reason or ''}", fg=colour)
+    typer.echo("")
+    typer.secho(f"  status       {state.status}", bold=True)
+    typer.echo(f"  contract     {state.contract or '-'}")
+    typer.echo(f"  payer        {state.payer_did or '-'}")
+    typer.echo(f"  payee        {state.payee_did or '-'}")
+    typer.echo(f"  rail         {state.rail or '-'}  ref {state.rail_ref or '-'}")
+    typer.echo(f"  revealed     {state.secret_revealed}")
+    a2a, acp = tclk_status_to_a2a(state.status), tclk_status_to_acp_phase(state.status)
+    typer.echo(f"  a2a / acp    {a2a} / {acp}")
+    typer.echo(
+        "  note: a folded state proves what the frames say, not that money moved or work was done"
+    )
+
+
+@tclk_app.command("authorize")
+def tclk_authorize(
+    bundle: Annotated[str, typer.Argument(metavar="BUNDLE", help="Bundle of signed events.")],
+    agent: Annotated[str, typer.Option("--agent", help="The DID that would post the frame.")],
+    frame: Annotated[str, typer.Option("--frame", help="File holding one frame line, or '-'.")],
+    lineage: Annotated[
+        str | None, typer.Option("--lineage", help="Which lineage to resolve.")
+    ] = None,
+    at: Annotated[str | None, typer.Option("--at", help="RFC3339 UTC evaluation time.")] = None,
+    room: Annotated[
+        str | None, typer.Option("--room", help="Override the room SPEC 2 derives.")
+    ] = None,
+    as_json: Annotated[bool, typer.Option("--json", help="Emit the decision.")] = False,
+) -> None:
+    """Does this agent hold LineageAuth authority to post this frame? Nothing is posted.
+
+    Exit 0: allowed. Exit 1: not allowed (including approval required). Exit 2: input error.
+    An allow is authority for the room write, not tclk validity, and not settlement.
+    """
+    from lineageauth.adapters.tclk import verify_tclk_authority
+
+    line = _read_frame_line(frame)
+    try:
+        envelopes = _parse_envelopes(_read_source(bundle))
+        moment = parse_instant(at, field="--at") if at is not None else datetime.now(tz=UTC)
+    except LineageAuthError as exc:
+        typer.secho(f"error: {exc}", fg=typer.colors.RED, err=True)
+        raise typer.Exit(code=2) from exc
+    event_bundle = EventBundle.from_envelopes(envelopes)
+    target = lineage
+    if target is None:
+        found = event_bundle.lineages()
+        if len(found) != 1:
+            typer.secho(
+                f"error: the bundle carries {len(found)} lineages; name one with --lineage",
+                fg=typer.colors.RED,
+                err=True,
+            )
+            raise typer.Exit(code=2)
+        target = found[0]
+
+    decision = verify_tclk_authority(
+        event_bundle, lineage=target, agent=agent, frame_line=line, at=moment, room=room
+    )
+    if as_json:
+        typer.echo(jsonio.dumps(decision.as_dict()))
+    else:
+        colour = typer.colors.GREEN if decision.allowed else typer.colors.RED
+        typer.secho(f"  {'ALLOWED' if decision.allowed else 'NOT ALLOWED'}", fg=colour, bold=True)
+        typer.echo(f"    reason      {decision.reason}")
+        typer.echo(f"    detail      {decision.detail}")
+        if decision.required is not None:
+            typer.echo(f"    authority   {decision.required.render()}")
+            typer.echo(
+                f"    frame       {decision.required.frame_type} from {decision.required.sender}"
+            )
+        typer.echo(f"    unchecked   {', '.join(decision.unchecked)}")
+        typer.echo("")
+        typer.echo(f"  note: {decision.note}")
+    raise typer.Exit(code=0 if decision.allowed else 1)
+
+
+@tclk_app.command("prepare")
+def tclk_prepare(
+    frame: Annotated[
+        str, typer.Argument(metavar="FRAME", help="File holding one frame line, or '-'.")
+    ],
+    nonce: Annotated[
+        int | None, typer.Option("--nonce", help="Technocore nonce; adds the signing challenge.")
+    ] = None,
+    room: Annotated[
+        str | None, typer.Option("--room", help="Override the room SPEC 2 derives.")
+    ] = None,
+    as_json: Annotated[bool, typer.Option("--json", help="Emit the prepared action.")] = False,
+) -> None:
+    """The exact bytes, destination and ActionRequest a post would need. Sends nothing.
+
+    No key is read. With --nonce the canonical signing challenge is printed for
+    the DID's holder to sign wherever that key lives.
+    """
+    from lineageauth.adapters.tclk import FrameError, prepare_frame
+
+    line = _read_frame_line(frame)
+    try:
+        prepared = prepare_frame(line, room=room, nonce=nonce)
+    except (FrameError, LineageAuthError) as exc:
+        typer.secho(f"  refused: {exc}", fg=typer.colors.RED, err=True)
+        raise typer.Exit(code=1) from exc
+    if as_json:
+        typer.echo(
+            jsonio.dumps(
+                {
+                    "room": prepared.room,
+                    "destination": prepared.destination,
+                    "line": prepared.frame.line,
+                    "contentHash": prepared.request.content_hash,
+                    "requestHash": prepared.request.request_hash,
+                    "authority": prepared.required.render(),
+                    "signingChallenge": prepared.signing_challenge,
+                    "sent": False,
+                }
+            )
+        )
+        return
+    typer.echo(prepared.preview())
+
+
 if __name__ == "__main__":  # pragma: no cover
     app()

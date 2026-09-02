@@ -479,6 +479,33 @@ class TestThePrePushCheck:
         assert module.COMPANY_PATH.search(r"C:\Users\x\OneDrive\y")
         assert not module.COMPANY_PATH.search("kept outside OneDrive on purpose")
 
+    def test_the_tclk_fixture_exemption_is_path_and_prefix_scoped(self) -> None:
+        """conformance/tclk/ holds `0x` + 64 hex by wire format, so the 64-hex rule is
+        masked there -- and only there, and only for the `0x` spelling. A bare 64-hex
+        in that directory, or a `0x` one anywhere else, must still fire."""
+        import importlib.util
+
+        spec = importlib.util.spec_from_file_location(
+            "pre_push_check", REPO / "scripts" / "pre_push_check.py"
+        )
+        assert spec and spec.loader
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+
+        wire = "0x" + "ab" * 32  # assembled, so this file carries no 64-hex literal
+        bare = "cd" * 32
+        fixture = "conformance/tclk/golden-vectors.json"
+
+        def fires(name: str, text: str) -> bool:
+            scanned = module.scannable_text(name, text)
+            return any(pattern.search(scanned) for pattern in module.SECRETS)
+
+        assert not fires(fixture, f'"id":"{wire}"')
+        assert fires(fixture, f'"x":"{bare}"')
+        assert fires("packages/py/lineageauth/x.py", wire)
+        assert fires("conformance/vectors/x.json", wire)
+        assert module.scannable_text("packages/py/lineageauth/x.py", wire) == wire
+
     def test_it_says_how_to_bypass_it(self) -> None:
         """A check that cannot be bypassed gets deleted the first time it is wrong."""
         assert "--no-verify" in self._script()
