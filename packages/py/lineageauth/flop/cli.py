@@ -64,6 +64,12 @@ inference_app = typer.Typer(
 receipt_app = typer.Typer(
     name="receipt", help="Re-check an execution receipt this tool produced.", no_args_is_help=True
 )
+audit_app = typer.Typer(
+    name="audit",
+    help="Anchor an audit log's chain head as an artifact, and re-check one.",
+    no_args_is_help=True,
+)
+flop_app.add_typer(audit_app)
 flop_app.add_typer(testnet_app)
 flop_app.add_typer(faucet_app)
 flop_app.add_typer(inference_app)
@@ -478,3 +484,76 @@ def receipt_verify(
 
 
 __all__ = ["flop_app"]
+
+
+@audit_app.command("anchor")
+def audit_anchor(
+    log: Annotated[str, typer.Option("--log", help="Path to the JSONL audit log.")],
+    lineage: Annotated[str, typer.Option("--lineage", help="Lineage the artifact belongs to.")],
+    registrant: Annotated[
+        str, typer.Option("--registrant", help="The did:key that will sign the artifact.")
+    ],
+    at: Annotated[str | None, typer.Option("--at", help="Issue time (RFC3339 UTC).")] = None,
+    as_json: Annotated[bool, typer.Option("--json", help="Emit only the payload.")] = False,
+) -> None:
+    """Draft an UNSIGNED artifact.register over the log's current chain head.
+
+    The payload is printed for signing wherever the registrant's key lives; this
+    command holds no key and signs nothing. Once signed and published, the head
+    is pinned: rewriting any anchored line changes it (D-110).
+    """
+    from pathlib import Path
+
+    from lineageauth.flop.testnet.audit import anchor_payload, read_jsonl_lines, verify_chain
+
+    try:
+        lines = read_jsonl_lines(Path(log))
+        ok, detail = verify_chain(lines)
+        if not ok:
+            typer.secho(
+                f"  refused: the log does not chain ({detail})", fg=typer.colors.RED, err=True
+            )
+            raise typer.Exit(code=1)
+        head = lines[-1].hash if lines else ""
+        payload = anchor_payload(
+            head, lineage=lineage, registrant=registrant, issued_at=_moment(at)
+        )
+    except LineageAuthError as exc:
+        typer.secho(f"  refused: {exc}", fg=typer.colors.RED, err=True)
+        raise typer.Exit(code=1) from exc
+    if as_json:
+        typer.echo(json.dumps(payload, ensure_ascii=True, sort_keys=True))
+        return
+    typer.secho("  audit anchor (UNSIGNED)", bold=True)
+    typer.echo(f"    lines      {len(lines)}")
+    typer.echo(f"    head       {head}")
+    typer.echo("    sign this payload with the registrant's key; nothing here signs:")
+    typer.echo(json.dumps(payload, ensure_ascii=True, sort_keys=True, indent=2))
+
+
+@audit_app.command("verify")
+def audit_verify(
+    log: Annotated[str, typer.Option("--log", help="Path to the JSONL audit log.")],
+    anchor: Annotated[
+        str | None,
+        typer.Option("--anchor", help="An anchored chain head (sha256:...) to check against."),
+    ] = None,
+) -> None:
+    """Re-check a log's chain, and whether an anchored head still matches it.
+
+    Exit 0 when the chain adds up (and the anchor, if given, matches a line);
+    exit 1 otherwise. Lines beyond the anchor are reported, not passed.
+    """
+    from pathlib import Path
+
+    from lineageauth.flop.testnet.audit import read_jsonl_lines, verify_anchor, verify_chain
+
+    try:
+        lines = read_jsonl_lines(Path(log))
+    except (LineageAuthError, ValueError, OSError) as exc:
+        typer.secho(f"  refused: {exc}", fg=typer.colors.RED, err=True)
+        raise typer.Exit(code=1) from exc
+    ok, detail = verify_anchor(lines, anchor) if anchor else verify_chain(lines)
+    typer.echo(f"  {'ok' if ok else 'FAILED'}  {detail}")
+    if not ok:
+        raise typer.Exit(code=1)

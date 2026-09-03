@@ -134,12 +134,12 @@ Gate after the QA repair pass, `py -3 -m uv run python scripts/gate.py`:
 PASS  lint     (ruff check .)
 PASS  format   (ruff format --check .)
 PASS  types    (mypy strict)   Success: no issues found in 84 source files
-PASS  tests    1974 passed
+PASS  tests    1983 passed
 all checks passed
 ```
 
-`pytest --collect-only` counting `::` node ids: 1974 in the repository, of
-which the twelve testnet files contribute 234 and the FLOP files together 560
+`pytest --collect-only` counting `::` node ids: 1983 in the repository, of
+which the twelve testnet files contribute 234 and the FLOP files together 569
 (1850 and 233 at stage 2; 1892 and 478 at stage 3). No failures at any stage.
 
 Acceptance A–O of the directive (§25) are 54 tests whose names carry their
@@ -169,11 +169,13 @@ the property rather than an example.
 | `networkWritesPerformed` was a literal zero in three files | `NetworkWriteMeter` counts what the executor reports; a simulation run computes attempts minus the calls the simulation transport received | `TestTheZeroOnTheHeaderIsMeasured` |
 | `walletCustody: false` was a literal beside a signer that knew the answer | `NoSigner.holds_private_keys`, on the `Signer` protocol | same |
 
-Residual risk, recorded rather than fixed: the audit chain carries no key, so
-it detects a removed, reordered or truncated line and not an editor who
-recomputes the hashes after the one they changed. Signing the chain head would
-be a LineageAuth event, which is a protocol-facing change; `audit.py` says so
-in its module docstring and nothing claims tamper detection.
+Residual closed after the review (D-110): the audit chain is unkeyed, so an editor
+with write access could rewrite a line and recompute the hashes after it. Rather
+than sign the head as a new event type, `la flop audit anchor` drafts an existing
+`artifact.register` whose artifact id is the chain head, signed outside the
+process; `verify_anchor` checks a log against it and reports lines beyond the
+anchor as uncovered. What remains is only what was always true: a log with no
+anchor yet is a local record, not evidence (`tests/test_flop_audit_anchor.py`).
 
 Not measured: behaviour against any real response, because none exists; wall
 time of the simulation run; memory.

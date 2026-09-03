@@ -2565,3 +2565,33 @@ Git/GitHub writes require confirmation of active account + repository owner + re
   `docs/FLOP_TESTNET_SECURITY.md`: making it tamper-evident means signing the
   chain head as a LineageAuth event, which is a protocol-facing change and
   belongs in its own decision.
+
+## D-110: the audit chain is anchored in an `artifact.register`, not signed as a new event
+
+- **Date:** 2026-09-03
+- **Problem:** D-109 left one review finding open: the FLOP executor's audit
+  log is a hash chain with no key, so an editor with write access can rewrite
+  a line and recompute every hash after it. The obvious fix, signing the chain
+  head as a LineageAuth event, looked like a protocol change -- a new event
+  type in a held family -- and was deferred for that reason.
+- **Decision:** no new event. The chain head is a `sha256:` over canonical
+  bytes, which is exactly what `artifact.register` binds as an artifact id, so
+  the head is registered as an artifact (`media_type`
+  `application/vnd.lineageauth.flop-audit-head+json`, `created_by` the
+  operator's DID as a claim). `la flop audit anchor` drafts the payload
+  unsigned; the operator signs it wherever their key lives, the same way an
+  approval receipt is drafted. `verify_anchor` requires the chain to add up
+  and the anchored head to be the hash of some line, and reports lines beyond
+  the last anchor as uncovered rather than passing them.
+- **Rejected.** A new `audit.anchor` event type (protocol-facing, and the
+  artifact family already says "these bytes existed and this key vouched for
+  them", which is the whole claim); an HMAC over the chain (a key inside the
+  process, which the no-custody rule forbids); calling the bare chain
+  tamper-evident in the UI (it is not, and the docs say so).
+- **Security impact.** Additive. A log with no anchor is what it was: a local
+  record. A log with an anchor is tamper-evident up to that line, by a
+  verifier that trusts the signature and nothing else in the process. Anchoring
+  is periodic and operator-driven; the gap between anchors is stated, not
+  hidden.
+- **Interop impact.** None. A reader that does not know the media type sees an
+  ordinary artifact registration with an ordinary hash.

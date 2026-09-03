@@ -118,7 +118,7 @@ core's do-not-touch list was modified. `SPEC CHANGE REQUIRED`: none.
 ## Tests added
 
 Measured with `py -3 -m uv run pytest --collect-only`, counting `::` node ids
-(no `-q`), after the QA repair pass: **1974 collected** (1414 at HEAD `a094d72`
+(no `-q`), after the QA repair pass: **1983 collected** (1414 at HEAD `a094d72`
 before the work began; 1892 at the end of stage 3, before the repairs).
 
 | Stage | Files | Tests |
@@ -143,7 +143,7 @@ Gate, last full run (QA repair pass, `py -3 -m uv run python scripts/gate.py`):
 PASS  lint     (ruff check .)
 PASS  format   (ruff format --check .)   247 files already formatted
 PASS  types    (mypy strict)             Success: no issues found in 84 source files
-PASS  tests    1974 passed
+PASS  tests    1983 passed
 all checks passed
 ```
 
@@ -171,11 +171,13 @@ here and one is recorded as a residual risk. Each fix has a regression test in
 | `JsonlAuditLog` read the whole file per append and wrote without a lock | Low | tail-only read under an exclusive lock file; the chain survives concurrent writers |
 | `networkWritesPerformed: 0` and `walletCustody: false` were literals | Low | counted by `NetworkWriteMeter` and read from `NoSigner.holds_private_keys` |
 
-Residual, not fixed: the audit chain is unkeyed, so it is not tamper-evident
-against anyone who can write the file. Making it so means signing the chain
-head as a LineageAuth event, which is a protocol-facing change rather than a
-console one. The module now says this in as many words, and nothing in the UI
-calls it tamper detection.
+Residual closed after the review (D-110): the audit chain is unkeyed, so an editor
+with write access could rewrite a line and recompute the hashes after it. Rather
+than sign the head as a new event type, `la flop audit anchor` drafts an existing
+`artifact.register` whose artifact id is the chain head, signed outside the
+process; `verify_anchor` checks a log against it and reports lines beyond the
+anchor as uncovered. What remains is only what was always true: a log with no
+anchor yet is a local record, not evidence (`tests/test_flop_audit_anchor.py`).
 
 ## UI screens
 

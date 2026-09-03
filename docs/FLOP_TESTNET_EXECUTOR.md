@@ -233,6 +233,14 @@ a line recording `"seed": "[REDACTED]"` still records that a seed was handled
 here, and this tool handles none. Bytes are stored as sha256. `at` is a
 required argument; the log never reads a clock (D-106's "no default clock").
 
+The chain alone is not tamper-evident against an editor with write access. Its
+head is a `sha256:` over canonical bytes, which is the shape `artifact.register`
+already binds, so `anchor_payload` drafts one with the head as the artifact id
+and the operator signs it wherever their key lives (`la flop audit anchor`).
+`verify_anchor` then checks that a log still contains the anchored prefix
+unchanged and says how many lines stand beyond the anchor (D-110). No event
+type, field or rule was added.
+
 ## API and CLI
 
 `GET /v1/flop/testnet/state`, `GET /v1/flop/testnet/receipts/{id}`,

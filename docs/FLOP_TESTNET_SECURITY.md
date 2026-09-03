@@ -130,13 +130,15 @@ Recorded from the stage-2 report so they are not lost:
 Three things this design does not do, written down so that nobody has to
 rediscover them by reading the code.
 
-*The audit chain is not tamper-evident.* `testnet/audit.py` hashes each line
-over the previous line's hash, with no key and no external anchor. That catches
-a removed line, a reordered one and a truncated file. It does not catch an
-editor with write access, who can change a line and recompute every hash after
-it. Nothing in the UI calls it tamper detection. Making it evidence means
-signing the chain head as a LineageAuth event, which is a protocol-facing
-change rather than a console one.
+*The audit chain is tamper-evident only up to its last anchor.* `testnet/audit.py`
+hashes each line over the previous line's hash, with no key. That catches a
+removed line, a reordered one and a truncated file; it does not catch an editor
+with write access, who can change a line and recompute every hash after it.
+D-110 closes that without a protocol change: `la flop audit anchor` drafts an
+`artifact.register` whose artifact id *is* the chain head, to be signed outside
+this process by the operator's key, and `verify_anchor` checks a log against
+it. Lines appended after the last anchor are reported as uncovered, never
+passed. Nothing in the UI calls the bare chain tamper detection.
 
 *A counterparty's account of itself is not verification.* Everything in a
 response — the receipt reference, the result, and `observedSpend`, which is the

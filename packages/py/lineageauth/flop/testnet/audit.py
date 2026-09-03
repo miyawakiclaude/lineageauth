@@ -27,6 +27,7 @@ that a seed was handled here, and this tool handles none.
 from __future__ import annotations
 
 import hashlib
+import json
 import os
 import time
 from collections.abc import Iterator, Mapping, Sequence
@@ -37,6 +38,7 @@ from pathlib import Path
 from typing import Any
 
 from lineageauth import jsonio
+from lineageauth.builders import build_artifact_register
 from lineageauth.canonical import jcs
 from lineageauth.errors import MalformedEventError
 from lineageauth.flop.testnet.client import redact
@@ -296,12 +298,81 @@ def _instant_of(entry: Mapping[str, Any]) -> datetime:
     )
 
 
+# ------------------------------------------------------------------ anchoring
+
+AUDIT_ANCHOR_MEDIA_TYPE = "application/vnd.lineageauth.flop-audit-head+json"
+
+
+def anchor_payload(
+    head: str, *, lineage: str, registrant: str, issued_at: datetime
+) -> dict[str, Any]:
+    """An unsigned `artifact.register` whose artifact id *is* the chain head.
+
+    The chain by itself is not tamper-evident against an editor with write
+    access (see the module docstring). Anchoring fixes that without a protocol
+    change: the head is a `sha256:` over canonical bytes, which is exactly the
+    shape `artifact.register` already binds, so registering it as an artifact
+    -- signed outside this process, by whoever operates the console -- pins
+    every line up to that point. Rewrite any of them and the recomputed head
+    no longer matches the one somebody signed for (D-110).
+
+    What it does not do: anchor lines appended after it. `verify_anchor` says
+    how many lines stand beyond the last anchor, and a second anchor covers
+    them. Nor does it say who wrote the log; `created_by` is the registrant's
+    claim until a receipt backs it, the same as any artifact.
+    """
+    if head == GENESIS_HASH:
+        raise MalformedEventError("an empty log has nothing to anchor")
+    return build_artifact_register(
+        lineage=lineage,
+        artifact_id=head,
+        media_type=AUDIT_ANCHOR_MEDIA_TYPE,
+        created_by=registrant,
+        issued_at=issued_at,
+    )
+
+
+def verify_anchor(lines: Sequence[AuditLine], anchored_head: str) -> tuple[bool, str]:
+    """Whether a log still contains, unchanged, the prefix somebody anchored.
+
+    The chain must add up first; then the anchored head must be the hash of
+    some line. Because every hash covers its predecessor, a match at line k
+    means lines 1..k are the bytes that were anchored, and lines after k are
+    reported as standing beyond the anchor rather than passed silently.
+    """
+    ok, detail = verify_chain(lines)
+    if not ok:
+        return False, detail
+    for line in lines:
+        if line.hash == anchored_head:
+            beyond = len(lines) - line.seq
+            tail = f"; {beyond} line(s) after it are not covered by this anchor" if beyond else ""
+            return True, f"the anchor matches line {line.seq} of {len(lines)}{tail}"
+    return False, (
+        "no line hashes to the anchored head: the anchored prefix was rewritten, "
+        "or this anchor belongs to a different log"
+    )
+
+
+def read_jsonl_lines(path: Path) -> tuple[AuditLine, ...]:
+    """Every line of a JSONL audit file, as recorded. Verifies nothing by itself."""
+    lines: list[AuditLine] = []
+    for raw in path.read_text(encoding="utf-8").splitlines():
+        if raw.strip():
+            lines.append(_line_from(json.loads(raw)))
+    return tuple(lines)
+
+
 __all__ = [
+    "AUDIT_ANCHOR_MEDIA_TYPE",
     "AUDIT_PROFILE",
     "GENESIS_HASH",
     "AuditLine",
     "InMemoryAuditLog",
     "JsonlAuditLog",
+    "anchor_payload",
     "line_hash",
+    "read_jsonl_lines",
+    "verify_anchor",
     "verify_chain",
 ]

@@ -138,6 +138,9 @@ CLI, ASCII output only:
 - `la flop faucet prepare --did …` — unavailable / simulation output only
 - `la flop inference quote | prepare | inspect`
 - `la flop receipt verify`
+- `la flop audit anchor --log … --lineage … --registrant …` — an unsigned
+  `artifact.register` over the log's chain head; `la flop audit verify --log …
+  [--anchor …]` re-checks the chain and the anchor (D-110)
 
 There is no `la flop inference execute`. If one is added after activation it
 must take an approved prepared-action id and nothing else.
