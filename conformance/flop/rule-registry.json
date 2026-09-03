@@ -1,0 +1,307 @@
+{
+  "_meta": {
+    "purpose": "Every FLOP economic rule this tool relies on, with the official text it came from. Nothing here is a business rule the code may assume; the code reads this file.",
+    "generatedAt": "2026-09-03T04:25:46Z",
+    "statusVocabulary": ["official-final", "official-draft", "community", "unknown"],
+    "unknownStatement": "UNKNOWN_FROM_OFFICIAL_SPEC",
+    "note": "A rule whose recorded hash no longer matches the current snapshot of its source is stale. A stale rule is reported as RULE UPDATED and is never silently treated as current.",
+    "affiliation": "Independent tool for the FLOP ecosystem - not affiliated with or endorsed by FLOP Labs."
+  },
+  "rules": [
+    {
+      "id": "flop-testnet-schedule",
+      "statement": "Flop Testnet is planned for Q4 2026 and runs for roughly ninety days, with mainnet to follow in Q1 2027.",
+      "statementIsQuotation": true,
+      "status": "official-draft",
+      "effectiveNetworkPhase": "testnet",
+      "source": {
+        "sourceId": "flop-finance-teaser",
+        "sourceUrl": "https://flop.finance/teaser/",
+        "sourceVersion": "0.1 (draft)",
+        "sourceDate": "2026-08-26",
+        "fetchedAt": "2026-09-03T04:25:46Z",
+        "hash": "sha256:bc9c93a3a420b7a2cd4fb3b3e0e44ab8a025eae088f216a74702c3e778dbe840"
+      }
+    },
+    {
+      "id": "flop-figures-provisional",
+      "statement": "The figures in this document are provisional. Several are still under review against the protocol parameters of record and may change. The Yellow Paper is the definitive specification, and it is not yet final.",
+      "statementIsQuotation": true,
+      "status": "official-draft",
+      "effectiveNetworkPhase": "any",
+      "source": {
+        "sourceId": "flop-finance-teaser",
+        "sourceUrl": "https://flop.finance/teaser/",
+        "sourceVersion": "0.1 (draft)",
+        "sourceDate": "2026-08-26",
+        "fetchedAt": "2026-09-03T04:25:46Z",
+        "hash": "sha256:bc9c93a3a420b7a2cd4fb3b3e0e44ab8a025eae088f216a74702c3e778dbe840"
+      }
+    },
+    {
+      "id": "flop-genesis-airdrop-pool",
+      "statement": "The genesis airdrop of 3,500,000,000 $FLOP - 20.4% of the total network supply at year 10 - is allocated as follows: Miners up to 1,200,000,000 (7.0%); Agents up to 1,200,000,000 (7.0%); Validators 305,505,000 (1.8%); Reserve / incentives 794,495,000 (4.6%).",
+      "statementIsQuotation": true,
+      "status": "official-draft",
+      "effectiveNetworkPhase": "genesis",
+      "source": {
+        "sourceId": "flop-finance-teaser",
+        "sourceUrl": "https://flop.finance/teaser/",
+        "sourceVersion": "0.1 (draft)",
+        "sourceDate": "2026-08-26",
+        "fetchedAt": "2026-09-03T04:25:46Z",
+        "hash": "sha256:bc9c93a3a420b7a2cd4fb3b3e0e44ab8a025eae088f216a74702c3e778dbe840"
+      }
+    },
+    {
+      "id": "flop-agent-airdrop-allocation",
+      "statement": "Agents: up to 1,200,000,000 (7.0%), earned by compute consumed through inference requests.",
+      "statementIsQuotation": true,
+      "status": "official-draft",
+      "effectiveNetworkPhase": "genesis",
+      "source": {
+        "sourceId": "flop-finance-teaser",
+        "sourceUrl": "https://flop.finance/teaser/",
+        "sourceVersion": "0.1 (draft)",
+        "sourceDate": "2026-08-26",
+        "fetchedAt": "2026-09-03T04:25:46Z",
+        "hash": "sha256:bc9c93a3a420b7a2cd4fb3b3e0e44ab8a025eae088f216a74702c3e778dbe840"
+      }
+    },
+    {
+      "id": "flop-agent-airdrop-basis",
+      "statement": "Agents - claim a test-token faucet and spend it on inference. Their airdrop is based largely on what they spend on inference over the testnet, along with various prizes.",
+      "statementIsQuotation": true,
+      "status": "official-draft",
+      "effectiveNetworkPhase": "testnet",
+      "source": {
+        "sourceId": "flop-finance-teaser",
+        "sourceUrl": "https://flop.finance/teaser/",
+        "sourceVersion": "0.1 (draft)",
+        "sourceDate": "2026-08-26",
+        "fetchedAt": "2026-09-03T04:25:46Z",
+        "hash": "sha256:bc9c93a3a420b7a2cd4fb3b3e0e44ab8a025eae088f216a74702c3e778dbe840"
+      }
+    },
+    {
+      "id": "flop-agent-unlock-ratio",
+      "statement": "It arrives locked and spendable only on inference or staking - every 3 $FLOP spent on inference unlocks 1 airdropped $FLOP, so agents must use the network to make it liquid.",
+      "statementIsQuotation": true,
+      "status": "official-draft",
+      "effectiveNetworkPhase": "mainnet",
+      "formula": {
+        "kind": "unlock-ratio",
+        "cohort": "agents",
+        "spentPerUnlocked": 3,
+        "unlockedPerRatio": 1,
+        "unit": "FLOP",
+        "expression": "unlocked = floor(inferenceSpend / spentPerUnlocked) * unlockedPerRatio",
+        "note": "Held as data because it is a provisional figure in a draft. Code reads it from here and never embeds 3."
+      },
+      "source": {
+        "sourceId": "flop-finance-teaser",
+        "sourceUrl": "https://flop.finance/teaser/",
+        "sourceVersion": "0.1 (draft)",
+        "sourceDate": "2026-08-26",
+        "fetchedAt": "2026-09-03T04:25:46Z",
+        "hash": "sha256:bc9c93a3a420b7a2cd4fb3b3e0e44ab8a025eae088f216a74702c3e778dbe840"
+      }
+    },
+    {
+      "id": "flop-testnet-settlement",
+      "statement": "At the end of the testnet, results are settled into the genesis block. The bulk of the pool is expected to be distributed at the token generation event, with any remainder released at a later stage.",
+      "statementIsQuotation": true,
+      "status": "official-draft",
+      "effectiveNetworkPhase": "genesis",
+      "source": {
+        "sourceId": "flop-finance-teaser",
+        "sourceUrl": "https://flop.finance/teaser/",
+        "sourceVersion": "0.1 (draft)",
+        "sourceDate": "2026-08-26",
+        "fetchedAt": "2026-09-03T04:25:46Z",
+        "hash": "sha256:bc9c93a3a420b7a2cd4fb3b3e0e44ab8a025eae088f216a74702c3e778dbe840"
+      }
+    },
+    {
+      "id": "flop-account-features",
+      "statement": "The Flop Network account-based system allows agents to do the following: Token transfers; Multisig; Proxy / authority delegation; Validator staking & authority set; Miner staking; Timelock / vesting; Multi-party pool / collaborative escrow; Declarative spend-condition layer; Have pre-set spend limits.",
+      "statementIsQuotation": true,
+      "status": "official-draft",
+      "effectiveNetworkPhase": "mainnet",
+      "source": {
+        "sourceId": "flop-finance-teaser",
+        "sourceUrl": "https://flop.finance/teaser/",
+        "sourceVersion": "0.1 (draft)",
+        "sourceDate": "2026-08-26",
+        "fetchedAt": "2026-09-03T04:25:46Z",
+        "hash": "sha256:bc9c93a3a420b7a2cd4fb3b3e0e44ab8a025eae088f216a74702c3e778dbe840"
+      }
+    },
+    {
+      "id": "flop-network-parameters",
+      "statement": "Block time: One second on average. Block reward: 96 $FLOP. Block halving: Every 730 days for the first five halvings.",
+      "statementIsQuotation": true,
+      "status": "official-draft",
+      "effectiveNetworkPhase": "mainnet",
+      "source": {
+        "sourceId": "flop-finance-teaser",
+        "sourceUrl": "https://flop.finance/teaser/",
+        "sourceVersion": "0.1 (draft)",
+        "sourceDate": "2026-08-26",
+        "fetchedAt": "2026-09-03T04:25:46Z",
+        "hash": "sha256:bc9c93a3a420b7a2cd4fb3b3e0e44ab8a025eae088f216a74702c3e778dbe840"
+      }
+    },
+    {
+      "id": "flop-inference-fee-split",
+      "statement": "The miner who completes the task successfully earns 85% of the $FLOP inference fee. Validators verify compute and facilitate transactions, earning block rewards and 15% of inference fees.",
+      "statementIsQuotation": true,
+      "status": "official-draft",
+      "effectiveNetworkPhase": "mainnet",
+      "source": {
+        "sourceId": "flop-finance-teaser",
+        "sourceUrl": "https://flop.finance/teaser/",
+        "sourceVersion": "0.1 (draft)",
+        "sourceDate": "2026-08-26",
+        "fetchedAt": "2026-09-03T04:25:46Z",
+        "hash": "sha256:bc9c93a3a420b7a2cd4fb3b3e0e44ab8a025eae088f216a74702c3e778dbe840"
+      }
+    },
+    {
+      "id": "technocore-not-a-settlement-system",
+      "statement": "Technocore is a coordination layer, not a settlement system: parties meet and agree in a room, and value moves on some other rail.",
+      "statementIsQuotation": false,
+      "derivation": "derived",
+      "derivationNote": "This sentence appears nowhere in flop.finance. The nearest official text is the SPEC.md of flop-labs/tclk, whose body was NOT fetched in this snapshot - only the organisation's repository listing was. The statement is therefore a derivation from an official repository, not a quotation, and carries no body hash.",
+      "status": "official-draft",
+      "effectiveNetworkPhase": "any",
+      "source": {
+        "sourceId": "flop-labs-github-org",
+        "sourceUrl": "https://github.com/flop-labs/tclk/blob/v0.1.0/SPEC.md",
+        "sourceVersion": "v0.1.0",
+        "sourceDate": "2026-09-03",
+        "fetchedAt": "2026-09-03T04:25:46Z",
+        "hash": null
+      }
+    },
+    {
+      "id": "flop-testnet-endpoint",
+      "statement": "UNKNOWN_FROM_OFFICIAL_SPEC",
+      "statementIsQuotation": false,
+      "status": "unknown",
+      "effectiveNetworkPhase": "testnet",
+      "absentFrom": ["flop-finance-teaser", "flop-labs-github-org"],
+      "consequence": "No endpoint may be registered as executable.",
+      "source": {
+        "sourceId": "flop-finance-teaser",
+        "sourceUrl": "https://flop.finance/teaser/",
+        "sourceVersion": "0.1 (draft)",
+        "sourceDate": "2026-08-26",
+        "fetchedAt": "2026-09-03T04:25:46Z",
+        "hash": "sha256:bc9c93a3a420b7a2cd4fb3b3e0e44ab8a025eae088f216a74702c3e778dbe840"
+      }
+    },
+    {
+      "id": "flop-faucet-procedure",
+      "statement": "UNKNOWN_FROM_OFFICIAL_SPEC",
+      "statementIsQuotation": false,
+      "status": "unknown",
+      "effectiveNetworkPhase": "testnet",
+      "absentFrom": ["flop-finance-teaser", "flop-labs-github-org"],
+      "consequence": "Faucet claims exist only as simulation.",
+      "source": {
+        "sourceId": "flop-finance-teaser",
+        "sourceUrl": "https://flop.finance/teaser/",
+        "sourceVersion": "0.1 (draft)",
+        "sourceDate": "2026-08-26",
+        "fetchedAt": "2026-09-03T04:25:46Z",
+        "hash": "sha256:bc9c93a3a420b7a2cd4fb3b3e0e44ab8a025eae088f216a74702c3e778dbe840"
+      }
+    },
+    {
+      "id": "flop-inference-api",
+      "statement": "UNKNOWN_FROM_OFFICIAL_SPEC",
+      "statementIsQuotation": false,
+      "status": "unknown",
+      "effectiveNetworkPhase": "testnet",
+      "absentFrom": ["flop-finance-teaser", "flop-labs-github-org"],
+      "consequence": "Inference spend is never estimated; it is observed or absent.",
+      "source": {
+        "sourceId": "flop-finance-teaser",
+        "sourceUrl": "https://flop.finance/teaser/",
+        "sourceVersion": "0.1 (draft)",
+        "sourceDate": "2026-08-26",
+        "fetchedAt": "2026-09-03T04:25:46Z",
+        "hash": "sha256:bc9c93a3a420b7a2cd4fb3b3e0e44ab8a025eae088f216a74702c3e778dbe840"
+      }
+    },
+    {
+      "id": "flop-inference-pricing",
+      "statement": "UNKNOWN_FROM_OFFICIAL_SPEC",
+      "statementIsQuotation": false,
+      "status": "unknown",
+      "effectiveNetworkPhase": "testnet",
+      "absentFrom": ["flop-finance-teaser"],
+      "consequence": "Quotes are simulated and labelled SIMULATION - NO FLOP NETWORK ACTION.",
+      "source": {
+        "sourceId": "flop-finance-teaser",
+        "sourceUrl": "https://flop.finance/teaser/",
+        "sourceVersion": "0.1 (draft)",
+        "sourceDate": "2026-08-26",
+        "fetchedAt": "2026-09-03T04:25:46Z",
+        "hash": "sha256:bc9c93a3a420b7a2cd4fb3b3e0e44ab8a025eae088f216a74702c3e778dbe840"
+      }
+    },
+    {
+      "id": "flop-network-identifier",
+      "statement": "UNKNOWN_FROM_OFFICIAL_SPEC",
+      "statementIsQuotation": false,
+      "status": "unknown",
+      "effectiveNetworkPhase": "testnet",
+      "absentFrom": ["flop-finance-teaser", "flop-labs-github-org"],
+      "consequence": "Simulation uses an RFC 6761 .invalid origin that cannot resolve.",
+      "source": {
+        "sourceId": "flop-finance-teaser",
+        "sourceUrl": "https://flop.finance/teaser/",
+        "sourceVersion": "0.1 (draft)",
+        "sourceDate": "2026-08-26",
+        "fetchedAt": "2026-09-03T04:25:46Z",
+        "hash": "sha256:bc9c93a3a420b7a2cd4fb3b3e0e44ab8a025eae088f216a74702c3e778dbe840"
+      }
+    },
+    {
+      "id": "flop-auth-signing-scheme",
+      "statement": "UNKNOWN_FROM_OFFICIAL_SPEC",
+      "statementIsQuotation": false,
+      "status": "unknown",
+      "effectiveNetworkPhase": "testnet",
+      "absentFrom": ["flop-finance-teaser", "flop-labs-github-org"],
+      "consequence": "No signer is implemented; this tool holds no key and takes no custody.",
+      "source": {
+        "sourceId": "flop-finance-teaser",
+        "sourceUrl": "https://flop.finance/teaser/",
+        "sourceVersion": "0.1 (draft)",
+        "sourceDate": "2026-08-26",
+        "fetchedAt": "2026-09-03T04:25:46Z",
+        "hash": "sha256:bc9c93a3a420b7a2cd4fb3b3e0e44ab8a025eae088f216a74702c3e778dbe840"
+      }
+    },
+    {
+      "id": "flop-yellow-paper",
+      "statement": "UNKNOWN_FROM_OFFICIAL_SPEC",
+      "statementIsQuotation": false,
+      "status": "unknown",
+      "effectiveNetworkPhase": "any",
+      "absentFrom": ["flop-finance-home", "flop-finance-teaser"],
+      "consequence": "The definitive specification is not published, so every rule above stays a draft.",
+      "source": {
+        "sourceId": "flop-finance-teaser",
+        "sourceUrl": "https://flop.finance/teaser/",
+        "sourceVersion": "0.1 (draft)",
+        "sourceDate": "2026-08-26",
+        "fetchedAt": "2026-09-03T04:25:46Z",
+        "hash": "sha256:bc9c93a3a420b7a2cd4fb3b3e0e44ab8a025eae088f216a74702c3e778dbe840"
+      }
+    }
+  ]
+}

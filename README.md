@@ -176,6 +176,12 @@ Nothing here is production-ready; do not put real authority behind it yet.
 - [x] Second implementation — `packages/js/`, dependency-free, re-derived
       from the specification rather than ported, and CI fails if the two
       ever disagree on a canonical byte
+- [x] FLOP Activity Console and testnet executor — an independent tool for
+      the FLOP ecosystem, not affiliated with or endorsed by FLOP Labs. It
+      shows what an agent has done and what has evidence, never a score; in
+      the current `PRE_TESTNET` phase it can reach no network by construction,
+      and only a labelled simulation runs —
+      [docs/FLOP_ACTIVITY_CONSOLE.md](docs/FLOP_ACTIVITY_CONSOLE.md)
 - [ ] Everything after that — see [MASTER_PLAN.md](MASTER_PLAN.md)
 
 ## Contributing

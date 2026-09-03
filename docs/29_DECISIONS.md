@@ -2427,3 +2427,141 @@ Git/GitHub writes require confirmation of active account + repository owner + re
   with `approval: external-only` or `required` and no `approvers` is no longer
   usable and must be reissued naming its approvers. No such grant exists in
   the conformance vectors, the examples, or the Explorer demo.
+
+## D-108: the FLOP layer is an application over LAP, not a change to it
+
+- **Date:** 2026-09-03
+- **Problem:** two directives asked for a FLOP Activity Console and a FLOP
+  testnet executor on top of LineageAuth, against a network that does not
+  exist yet: the teaser (`https://flop.finance/teaser/`, "Version 0.1
+  (draft)", 2026-08-26) schedules a testnet for Q4 2026, and no official source
+  publishes an endpoint, a faucet, an inference schema, a price, a network
+  identifier or a signing scheme (`docs/FLOP_RULE_REGISTRY.md`, the seven
+  `unknown` rules). The questions were which parts of the core the layer may
+  touch, how a testnet inference call is expressed as authority, what must be
+  impossible before an official testnet exists, how synthetic output is kept
+  from being mistaken for real, and what a refusal looks like.
+- **Decision, in five parts.**
+  - **(a) Core unchanged.** No event type, payload shape, namespace, action,
+    reason code, predicate or conformance vector was added or altered. The
+    layer lives in `packages/py/lineageauth/flop/`, `apps/flop/`,
+    `conformance/flop/` and `docs/FLOP_*.md`; the only edits outside them are
+    the router mount, five static routes and a `flop_demo_mode` flag on
+    `create_app` (default off), and `app.add_typer(flop_app)` in the CLI. The
+    same standing as D-106: an adapter that can be removed.
+  - **(b) Authority is expressed in the existing `http` namespace.** A FLOP
+    testnet inference call is `http` / `host:<official endpoint host>` /
+    `post`, and the exact-action approval binds
+    `ActionRequest.over_bytes(destination=<canonical destination>,
+    content=<canonical request bytes>)` through the core's own
+    `check_execution`, with the approver designated on the grant (D-107). The
+    spend ceiling is inside the canonical bytes (`control.maxSpend`), so the
+    receipt approves a ceiling as well as a destination. A `flop` namespace
+    and a typed spend constraint on a scope were considered and are recorded
+    as `SPEC CHANGE REQUIRED` proposals in `docs/FLOP_TESTNET_EXECUTOR.md`,
+    in the same standing as `docs/TCLK_GAP_ANALYSIS.md`: not adopted, not
+    before an official spec says what a FLOP action is.
+  - **(c) In `PRE_TESTNET` a network write is impossible, not forbidden.**
+    Five guards that do not trust one another: the endpoint registry has no
+    executable entry and its constructor refuses one from a non-official
+    origin; the executor's client is a required argument with no default; the
+    phase gate is stage 1 of 9 and refuses `TESTNET_NOT_LIVE` before the
+    transport at stage 9 is consulted; an AST test finds no egress library
+    anywhere in `flop/**`; the transition table has no `PRE_TESTNET ->
+    TESTNET_ENABLED` edge and the kill switch is locked ON below
+    `TESTNET_VERIFIED`. The simulation's origin is
+    `https://testnet.simulation.invalid`, reserved by RFC 6761 so that even a
+    transport with a bug has nowhere to send a packet
+    (`docs/FLOP_TESTNET_SECURITY.md`).
+  - **(d) Synthetic and simulated output is marked where it cannot be
+    dropped.** A mock record carries `synthetic: true` and `to_dict()` adds
+    `SYNTHETIC MOCK DATA`; a simulated receipt and its evidence drafts carry
+    `SIMULATION - NO FLOP NETWORK ACTION`, and the attestation draft carries
+    `reasonCode: SYNTHETIC_SIMULATION_NO_NETWORK_ACTION` so the marker
+    survives into the signed event without injecting a key the core builders
+    do not produce (`conformance/frozen-shapes.json` unchanged). The mock
+    adapter is consulted only when `flop_demo_mode=True`; the flag chooses
+    whether the source is read, never whether its output is labelled. Real
+    public contributions live in a separate file with `synthetic: false` and
+    are capped at `partially-verified`.
+  - **(e) Every refusal is typed.** `TestnetRefusal(failure, detail, stage)`
+    with a `TestnetFailure` member (nineteen), serialised with `executed:
+    false`; the API answers `409` with that object, never a bare boolean or a
+    200 that did nothing. "Refusing is safe" is not accepted as a reason to
+    refuse without a name.
+- **What the layer may not say.** No allocation, no rank, no prediction: the
+  coverage report has `covered`/`total`/`categories` and no aggregate field,
+  a test asserts the absence, and `forbidden_vocabulary_in()` is run over
+  every API response, CLI output, passport and the page source. The one
+  permitted form is the label that disowns it, `Evidence coverage - not an
+  airdrop score`. *Official* is decided by URL origin and by nothing else.
+- **Security impact.** Additive and read-only in the current phase. No key
+  material of any kind enters the layer (`NoSigner` only; an AST test asserts
+  no parameter named like a seed, key, keyfile or passphrase). The residuals
+  are those of D-105 and D-107 -- two keys may be one operator, and a
+  delegator may name the wrong approver -- plus the one this layer adds: every
+  guard was built against a request shape this project designed, and the
+  official shape may differ. Activation (`docs/FLOP_TESTNET_ACTIVATION.md`)
+  re-reads the threat model against it before anything is enabled.
+- **Interop impact.** None to LAP. To FLOP: nothing, because nothing was sent.
+- **Not done, on purpose.** No `la flop inference execute`; no signer that
+  holds a key; no scheduler or retry of a state-mutating action; no web font,
+  no logo, no mascot; no copy of any official document's body into the
+  repository (hashes only).
+- **Migration:** none.
+
+## D-109: provenance and phase are derived, never accepted from a caller
+
+- **Date:** 2026-09-03
+- **Problem:** an adversarial review of the FLOP layer (D-108) found the same
+  mistake in four places, each one small on its own. The safety scanner took
+  its `networkPhase` and `sourceClass` from the request body, and both of them
+  make it quieter — a page could send `networkPhase: TESTNET_ENABLED` and turn
+  "the mainnet is live" from `HIGH_RISK` into `SAFE TO REVIEW`. An activity
+  record file could write `"sourceClass": "official"` about itself and be
+  believed, although `classify_source` exists precisely because official is an
+  origin. `classify_source` itself read a raw URL path, so
+  `github.com/flop-labs/../evil-org/x` was official while a browser would send
+  it somewhere else. And `_require_same_origin` compared `Origin` against an
+  expectation built from the `Host` header, which a DNS-rebinding page sets to
+  whatever it likes.
+- **Decision.** Every one of those inputs is derived where it is used, and the
+  ways of asserting it are removed rather than validated.
+  - The scan body has no `networkPhase` field (422) and refuses
+    `sourceClass: "official"` (400); the page's dropdown lost the option.
+  - `scan_text` still takes both parameters, because the phase genuinely is a
+    parameter — the day a testnet launches, the same text stops being a
+    contradiction. But a softened rule is now reported as its own `CAUTION`
+    finding rather than dropped, so neither parameter can empty a scan.
+  - A record's declared `sourceClass` is a ceiling under its adapter's, and
+    `official` additionally has to survive `classify_source` on the record's
+    own URL.
+  - A path carrying a dot segment or an encoded separator is `SUSPICIOUS`; it
+    is not normalised and re-tested, because a URL that needs tidying before it
+    can be classified was written to be misread.
+  - Every FLOP route checks `Host` against a set fixed when the router is built
+    (loopback by default) and answers 421 otherwise.
+- **Also decided, in the same pass.** `receipt_from_response` can no longer
+  return `VERIFIED`. Every field in a response is the counterparty describing
+  its own behaviour, `observedSpend` included, and this codebase reserves
+  `verified` for a check against somebody other than the party being checked —
+  the rule `PublicEvidenceAdapter` already followed for a URL it did not
+  re-fetch. Acceptance L moved with it, from "only a complete response
+  verifies" to "even a complete response stops at partially-verified"; the
+  directive's requirement is unchanged and the ceiling is lower. The spend
+  ledger is charged `max(approved estimate, reported spend)` for the same
+  reason: an endpoint that reports zero must not be able to keep a daily cap
+  empty forever.
+- **Rejected.** Validating the asserted values instead of removing the fields
+  (an attacker's value passes validation); normalising a dot-segment URL and
+  classifying the result (it answers a question nobody asked — what the URL
+  would mean if it had been written honestly); keeping `VERIFIED` for a
+  complete response and documenting the caveat (a caveat in a doc does not
+  reach the badge on the screen).
+- **Consequence.** A client that used to send `networkPhase` gets a 422 and a
+  client that sent `sourceClass: official` gets a 400; a deployment that serves
+  the console under a name other than loopback must pass `allowed_hosts=`. The
+  unkeyed audit chain stays as it is and is recorded as a residual risk in
+  `docs/FLOP_TESTNET_SECURITY.md`: making it tamper-evident means signing the
+  chain head as a LineageAuth event, which is a protocol-facing change and
+  belongs in its own decision.

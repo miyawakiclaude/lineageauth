@@ -79,7 +79,22 @@ ARTIFACT = sha256_hex(b"the zero-cost artifact")
 
 # The only place a networking import is allowed: the Technocore adapter, which
 # is opt-in, read-only, and refuses redirects (D-047).
-NETWORK_MODULES = ("urllib", "http.client", "socket", "requests", "httpx", "aiohttp")
+#
+# `urllib.request` and `urllib.error` rather than `urllib`: the check is for
+# something that can open a socket, and `urllib.parse` cannot. It is a string
+# parser, and the FLOP source classifier needs one to read a host out of a URL
+# it will never fetch. Widening the ban to the whole package would have pushed
+# that code into hand-rolling URL parsing at a security boundary, which is a
+# worse outcome than the rule was protecting against.
+NETWORK_MODULES = (
+    "urllib.request",
+    "urllib.error",
+    "http.client",
+    "socket",
+    "requests",
+    "httpx",
+    "aiohttp",
+)
 NETWORK_EXEMPT = PACKAGE / "adapters" / "technocore"
 
 # docs/31's paid-service detector. Presence is not automatically wrong -- these
@@ -404,7 +419,13 @@ class TestNoPaidPath:
                 if isinstance(node, ast.Import):
                     names = [alias.name for alias in node.names]
                 elif isinstance(node, ast.ImportFrom) and node.module:
-                    names = [node.module]
+                    # Both the module and every name taken out of it. The ban
+                    # names `urllib.request`, not `urllib`, so that
+                    # `urllib.parse` stays available at the URL-classifying
+                    # boundary -- and checking only `node.module` would have let
+                    # `from urllib import request` through the gap that
+                    # narrowing opened.
+                    names = [node.module] + [f"{node.module}.{alias.name}" for alias in node.names]
                 for name in names:
                     if any(name == m or name.startswith(f"{m}.") for m in NETWORK_MODULES):
                         offenders.append(f"{path.relative_to(REPO)}: {name}")

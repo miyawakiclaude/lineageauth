@@ -1,0 +1,142 @@
+{
+  "_meta": {
+    "purpose": "The design tokens the FLOP Console is built from, each carrying where it came from.",
+    "generatedAt": "2026-09-03T04:25:46Z",
+    "primarySource": "https://flop.finance/design.md",
+    "primarySourceHash": "sha256:476fe27b0cebf5fef03fb880ce50c98d9afce7f558dfa3687c5cec4d37ca6248",
+    "secondarySource": "https://flop.finance/brand/",
+    "secondarySourceHash": "sha256:5211800919428e2a0d367bef628d27ad245c3f4167732fd6bc7c5ac329970436",
+    "baseline": "flop_ui_tokens.json, supplied with the directive. Superseded wherever design.md differs; every difference is listed in diffFromBaseline.",
+    "provenanceVocabulary": ["design.md", "brand", "app"],
+    "logoAndMascot": "Not reproduced. design.md governs the logo and the Mascot V3.0 artwork and forbids redrawing them; an independent tool draws neither.",
+    "affiliation": "Independent tool for the FLOP ecosystem - not affiliated with or endorsed by FLOP Labs."
+  },
+  "palette": {
+    "base": { "value": "#0A1128", "provenance": "brand" },
+    "grey": { "value": "#5C6670", "provenance": "brand" },
+    "blue": { "value": "#0466C8", "provenance": "brand" },
+    "accent": { "value": "#00B4D8", "provenance": "brand" },
+    "electricGreen": { "value": "#32D74B", "provenance": "brand" },
+    "iceWhite": { "value": "#F5F7FA", "provenance": "brand" },
+    "red": { "value": "#FF453A", "provenance": "design.md" },
+    "white": { "value": "#FFFFFF", "provenance": "design.md" }
+  },
+  "theme": {
+    "dark": {
+      "background": { "value": "#0A1128", "provenance": "design.md", "role": "Base, the deep-navy substrate" },
+      "surface": { "value": "#151D32", "provenance": "design.md", "role": "cards, panels, elevated surfaces" },
+      "surfaceLight": { "value": "#232A3E", "provenance": "design.md", "role": "borders, dividers, hover lift" },
+      "border": { "value": "#232A3E", "provenance": "design.md" },
+      "textPrimary": { "value": "#F5F7FA", "provenance": "design.md", "contrastOnBackground": 17.4 },
+      "textSecondary": { "value": "#A1A7AE", "provenance": "design.md", "contrastOnBackground": 7.7 },
+      "primary": { "value": "#00B4D8", "provenance": "design.md", "contrastOnBackground": 7.6 },
+      "primaryHover": { "value": "#3DC5E0", "provenance": "design.md", "contrastOnBackground": 9.1 },
+      "secondary": { "value": "#0466C8", "provenance": "design.md", "role": "fill only on Base, never body or link text" },
+      "success": { "value": "#32D74B", "provenance": "design.md", "contrastOnBackground": 9.8 },
+      "warningFill": { "value": "#0466C8", "provenance": "design.md", "role": "caution is a FLOP Blue fill with Ice White text; design.md publishes 5.6:1 and recomputation gives 5.2:1, both AA" },
+      "warningText": { "value": "#F5F7FA", "provenance": "design.md" },
+      "error": { "value": "#FF453A", "provenance": "design.md", "contrastOnBackground": 5.5, "role": "operational failure only, never decorative, always with an icon or a text label" },
+      "link": { "value": "#00B4D8", "provenance": "design.md" }
+    },
+    "light": {
+      "background": { "value": "#F5F7FA", "provenance": "design.md" },
+      "surface": { "value": "#FFFFFF", "provenance": "design.md", "role": "card lift on Ice, defined by a Mist border rather than by contrast" },
+      "border": { "value": "#D9DDE1", "provenance": "design.md" },
+      "textPrimary": { "value": "#0A1128", "provenance": "design.md", "contrastOnBackground": 17.4 },
+      "textSecondary": { "value": "#5C6670", "provenance": "design.md", "contrastOnBackground": 5.5 },
+      "link": { "value": "#0466C8", "provenance": "design.md", "contrastOnBackground": 5.2 },
+      "successFill": { "value": "#32D74B", "provenance": "design.md", "role": "fill only, 1.8:1 on Ice" },
+      "accentFill": { "value": "#00B4D8", "provenance": "design.md", "role": "fill only, 2.3:1 on Ice" }
+    }
+  },
+  "chart": {
+    "series1": { "value": "#00B4D8", "provenance": "design.md", "textSafeOnBase": true },
+    "series2": { "value": "#32D74B", "provenance": "design.md", "textSafeOnBase": true },
+    "series3": { "value": "#0466C8", "provenance": "design.md", "textSafeOnBase": false },
+    "series4": { "value": "#A1A7AE", "provenance": "design.md", "textSafeOnBase": true }
+  },
+  "typography": {
+    "webFontLoading": false,
+    "webFontNote": "design.md names Space Mono and Inter. The Console loads no web font: the page's CSP sets font-src 'none', the project is zero-cost, and no external request may leave the page. The families are named first in a fallback stack so a viewer who already has them sees them.",
+    "monoStack": "\"Space Mono\", ui-monospace, Menlo, Consolas, monospace",
+    "sansStack": "Inter, system-ui, \"Segoe UI\", sans-serif",
+    "scale": {
+      "h1": { "family": "mono", "sizePx": 32, "weight": 700, "lineHeight": 1.1, "provenance": "design.md" },
+      "h2": { "family": "mono", "sizePx": 24, "weight": 700, "lineHeight": 1.2, "provenance": "design.md" },
+      "h3": { "family": "mono", "sizePx": 18, "weight": 700, "lineHeight": 1.3, "provenance": "design.md" },
+      "bodyMd": { "family": "sans", "sizePx": 14, "weight": 400, "lineHeight": 1.5, "provenance": "design.md" },
+      "bodySm": { "family": "sans", "sizePx": 12, "weight": 400, "lineHeight": 1.4, "provenance": "design.md" },
+      "label": { "family": "mono", "sizePx": 12, "weight": 400, "lineHeight": 1.0, "provenance": "design.md" },
+      "code": { "family": "mono", "sizePx": 13, "weight": 400, "lineHeight": 1.4, "provenance": "design.md" }
+    }
+  },
+  "radius": {
+    "none": { "value": 0, "provenance": "design.md" },
+    "sm": { "value": 2, "provenance": "design.md" },
+    "md": { "value": 4, "provenance": "design.md", "role": "button, card, input" },
+    "lg": { "value": 8, "provenance": "design.md", "role": "hero" },
+    "full": { "value": 9999, "provenance": "design.md", "role": "badge" }
+  },
+  "spacing": {
+    "xs": { "value": 4, "provenance": "design.md" },
+    "sm": { "value": 8, "provenance": "design.md" },
+    "md": { "value": 16, "provenance": "design.md" },
+    "lg": { "value": 24, "provenance": "design.md" },
+    "xl": { "value": 32, "provenance": "design.md" }
+  },
+  "layout": {
+    "desktopSidebarWidth": { "value": 240, "provenance": "app" },
+    "contentMaxWidth": { "value": 1440, "provenance": "app" },
+    "mobileBreakpoint": { "value": 768, "provenance": "app" }
+  },
+  "rules": {
+    "gradients": false,
+    "dropShadows": false,
+    "depthTechnique": "tonal layers: Base then surface then surface-light",
+    "colorSamplingFromScreenshots": false,
+    "colorAloneConveysMeaning": false,
+    "wcagNormalTextMinimum": 4.5,
+    "darkBodyText": "iceWhite",
+    "lightBodyText": "base",
+    "doNotUseFlopBlueAsBodyTextOnBase": true,
+    "doNotUseGreyAsBodyTextOnBase": true,
+    "mixThemesWithinOneScreen": false,
+    "provenance": "design.md"
+  },
+  "contrast": {
+    "note": "Ratios as published by design.md. A test recomputes each of these from the hex values and fails if a pair marked text-safe does not reach 4.5:1.",
+    "onBase": [
+      { "id": "ice-on-base", "foreground": "#F5F7FA", "background": "#0A1128", "published": 17.4, "textSafe": true },
+      { "id": "green-on-base", "foreground": "#32D74B", "background": "#0A1128", "published": 9.8, "textSafe": true },
+      { "id": "grey-derived-on-base", "foreground": "#A1A7AE", "background": "#0A1128", "published": 7.7, "textSafe": true },
+      { "id": "cyan-on-base", "foreground": "#00B4D8", "background": "#0A1128", "published": 7.6, "textSafe": true },
+      { "id": "red-on-base", "foreground": "#FF453A", "background": "#0A1128", "published": 5.5, "textSafe": true },
+      { "id": "blue-on-base", "foreground": "#0466C8", "background": "#0A1128", "published": 3.3, "textSafe": false },
+      { "id": "grey-on-base", "foreground": "#5C6670", "background": "#0A1128", "published": 3.2, "textSafe": false }
+    ],
+    "onIce": [
+      { "id": "base-on-ice", "foreground": "#0A1128", "background": "#F5F7FA", "published": 17.4, "textSafe": true },
+      { "id": "grey-on-ice", "foreground": "#5C6670", "background": "#F5F7FA", "published": 5.5, "textSafe": true },
+      { "id": "blue-on-ice", "foreground": "#0466C8", "background": "#F5F7FA", "published": 5.2, "textSafe": true },
+      { "id": "cyan-on-ice", "foreground": "#00B4D8", "background": "#F5F7FA", "published": 2.3, "textSafe": false },
+      { "id": "green-on-ice", "foreground": "#32D74B", "background": "#F5F7FA", "published": 1.8, "textSafe": false }
+    ]
+  },
+  "diffFromBaseline": [
+    { "path": "semantic.dark.surface", "old": "#111B36", "new": "#151D32", "reason": "design.md colors.surface", "provenance": "design.md" },
+    { "path": "semantic.dark.surfaceRaised", "old": "#162241", "new": "#232A3E", "reason": "design.md has one raised tone, colors.surface-light, used for both lift and dividers", "provenance": "design.md" },
+    { "path": "semantic.dark.border", "old": "#284164", "new": "#232A3E", "reason": "design.md colors.border equals surface-light", "provenance": "design.md" },
+    { "path": "semantic.dark.textMuted", "old": "#D7DEE8", "new": "#A1A7AE", "reason": "design.md colors.text-secondary, published at 7.7:1 on Base", "provenance": "design.md" },
+    { "path": "theme.dark.primaryHover", "old": null, "new": "#3DC5E0", "reason": "design.md colors.primary-hover; the baseline had no hover token", "provenance": "design.md" },
+    { "path": "theme.dark.error", "old": null, "new": "#FF453A", "reason": "design.md colors.error, operational failure only and never carried by colour alone", "provenance": "design.md" },
+    { "path": "theme.dark.warningFill", "old": null, "new": "#0466C8", "reason": "design.md makes caution a FLOP Blue fill with Ice White text; blue text on Base is forbidden", "provenance": "design.md" },
+    { "path": "semantic.light.surfaceRaised", "old": "#EEF3F8", "new": null, "reason": "design.md has no third light tone; a card on Ice is surface-alt #FFFFFF defined by a Mist border", "provenance": "design.md" },
+    { "path": "semantic.light.border", "old": "#CBD5E1", "new": "#D9DDE1", "reason": "design.md colors.border-alt, derived Mist", "provenance": "design.md" },
+    { "path": "app_design.radius", "old": "8 / 12 / 16 / 999", "new": "0 / 2 / 4 / 8 / 9999", "reason": "design.md rounded scale; foundry sharpness makes md 4px the default for button, card and input", "provenance": "design.md" },
+    { "path": "app_design.spacing.2xl", "old": "48", "new": null, "reason": "design.md stops at xl 32 and says not to introduce arbitrary spacing values", "provenance": "design.md" },
+    { "path": "typography", "old": null, "new": "Space Mono headings and labels, Inter body", "reason": "design.md typography scale; loaded as a fallback stack rather than a web font because font-src is 'none'", "provenance": "design.md" },
+    { "path": "chart", "old": null, "new": "#00B4D8 / #32D74B / #0466C8 / #A1A7AE", "reason": "design.md data-viz series; series 3 is a fill, never text on Base", "provenance": "design.md" },
+    { "path": "rules.dropShadows", "old": null, "new": false, "reason": "design.md forbids drop shadows and uses tonal layers for depth", "provenance": "design.md" },
+    { "path": "app_design.layout", "old": "240 / 1440 / 768", "new": "240 / 1440 / 768", "reason": "not published by design.md; kept as an application token and marked provenance app", "provenance": "app" }
+  ]
+}

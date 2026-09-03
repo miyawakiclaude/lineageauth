@@ -262,7 +262,14 @@ class TestAuthorize:
 
     def test_no_endpoint_posts_or_settles(self, client: TestClient) -> None:
         """The route table is the promise: nothing under /v1/tclk/ is a verb that moves."""
-        paths = [route.path for route in client.app.routes]  # type: ignore[attr-defined]
+        # `getattr`: FastAPI 0.141 puts an included router into `app.routes` as
+        # a wrapper object with no `path` of its own. None of the tclk routes
+        # live behind one, so an empty string for the wrapper is the right
+        # reading -- it contributes no path, which is exactly true.
+        paths = [
+            getattr(route, "path", "")
+            for route in client.app.routes  # type: ignore[attr-defined]
+        ]
         tclk_paths = [p for p in paths if "/tclk/" in p]
         assert sorted(tclk_paths) == [
             "/v1/tclk/authorize",

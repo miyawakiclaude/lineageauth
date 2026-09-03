@@ -1,0 +1,144 @@
+{
+  "_meta": {
+    "synthetic": true,
+    "warning": "SYNTHETIC MOCK DATA — UI prototyping only. Never present as real FLOP activity.",
+    "generated_for": "LineageAuth FLOP Activity Console"
+  },
+  "passport": {
+    "subjectDid": "did:key:z6MkEXAMPLEONLYNOTREAL",
+    "networkPhase": "PRE-TESTNET",
+    "generatedAt": "2026-09-03T12:00:00+09:00",
+    "dataFreshness": "mock",
+    "identity": {
+      "firstObserved": "2026-08-20T00:00:00Z",
+      "lastObserved": "2026-09-03T03:00:00Z",
+      "signedActivityDays": 7,
+      "lineageState": "VALID_AUTHORITY_CHAIN"
+    },
+    "summary": {
+      "usefulWork": 8,
+      "evidencedContributions": 7,
+      "thirdPartyAttestations": 2,
+      "tclkDeals": 1,
+      "testnetInference": null,
+      "suspiciousInstructionsBlocked": 3
+    },
+    "evidenceCoverage": {
+      "covered": 6,
+      "total": 10,
+      "label": "Evidence coverage — not an airdrop score",
+      "categories": [
+        {
+          "id": "identity",
+          "label": "Identity continuity",
+          "state": "STRONG_EVIDENCE"
+        },
+        {
+          "id": "useful-work",
+          "label": "Useful work",
+          "state": "STRONG_EVIDENCE"
+        },
+        {
+          "id": "external-verification",
+          "label": "External verification",
+          "state": "SOME_EVIDENCE"
+        },
+        {
+          "id": "collaboration",
+          "label": "Agent collaboration",
+          "state": "SOME_EVIDENCE"
+        },
+        {
+          "id": "technocore",
+          "label": "Technocore",
+          "state": "STRONG_EVIDENCE"
+        },
+        {
+          "id": "tclk",
+          "label": "tclk",
+          "state": "SOME_EVIDENCE"
+        },
+        {
+          "id": "inference",
+          "label": "Testnet inference",
+          "state": "NOT_YET_AVAILABLE"
+        },
+        {
+          "id": "broker",
+          "label": "Broker demand",
+          "state": "NOT_OBSERVED"
+        },
+        {
+          "id": "creator",
+          "label": "Creator attribution",
+          "state": "NOT_OBSERVED"
+        },
+        {
+          "id": "mainnet",
+          "label": "Mainnet continuation",
+          "state": "NOT_YET_AVAILABLE"
+        }
+      ]
+    },
+    "activities": [
+      {
+        "id": "act-001",
+        "category": "connector",
+        "title": "Technocore integration",
+        "occurredAt": "2026-08-27T10:00:00Z",
+        "sourceClass": "verified-third-party",
+        "evidenceLevel": "evidence-supported",
+        "verificationState": "verified",
+        "artifactHash": "sha256:example001",
+        "source": "mock"
+      },
+      {
+        "id": "act-002",
+        "category": "protocol",
+        "title": "tclk read-only integration",
+        "occurredAt": "2026-09-02T10:00:00Z",
+        "sourceClass": "community",
+        "evidenceLevel": "cryptographically-linked",
+        "verificationState": "partially-verified",
+        "artifactHash": "sha256:example002",
+        "source": "mock"
+      }
+    ],
+    "safety": [
+      {
+        "id": "safe-001",
+        "level": "BLOCKED",
+        "title": "Wallet seed request",
+        "sourceClass": "unknown",
+        "reason": "External untrusted content requested a wallet seed phrase.",
+        "executed": false
+      },
+      {
+        "id": "safe-002",
+        "level": "HIGH RISK",
+        "title": "Unknown Technocore write URL",
+        "sourceClass": "community",
+        "reason": "URL could create a write side effect and was not auto-fetched.",
+        "executed": false
+      }
+    ],
+    "recommendations": [
+      {
+        "id": "rec-001",
+        "title": "Seek independent verification",
+        "type": "evidenceGap",
+        "reason": "Useful-work evidence exists, but additional independent verification would improve evidence coverage.",
+        "confidence": "high",
+        "official": false
+      },
+      {
+        "id": "rec-002",
+        "title": "Wait for official Testnet access",
+        "type": "officialDirection",
+        "reason": "Inference tracking should remain inactive until an official compatible Testnet endpoint/spec is available.",
+        "confidence": "high",
+        "official": true
+      }
+    ]
+  }
+}

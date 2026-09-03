@@ -1,0 +1,634 @@
+/* FLOP Activity Console -- stylesheet.
+ *
+ * Every colour here is a custom property from tokens.css, which is itself
+ * generated from conformance/flop/ui-tokens.json (design.md, then brand,
+ * then this application, in that order of authority -- see that file's
+ * `diffFromBaseline`). No hex literal appears below; `tests/test_flop_a11y.py`
+ * greps for one and fails the build if it finds it.
+ *
+ * Dark is the default and needs no selector. `[data-theme="light"]` swaps a
+ * fixed set of tokens; nothing here mixes a dark token with a light one on
+ * the same element, because tokens.css only ever redefines the same names.
+ *
+ * design.md forbids gradients, drop shadows, sampled colour and a logo or
+ * mascot redraw. None of those appear here. Depth is tonal layering --
+ * background, then surface, then surface-light -- and nothing else.
+ */
+
+@import url("tokens.css");
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  color-scheme: dark;
+}
+
+html[data-theme="light"] {
+  color-scheme: light;
+}
+
+body {
+  margin: 0;
+  background: var(--flop-background);
+  color: var(--flop-text-primary);
+  font-family: var(--flop-font-sans);
+  font-size: var(--flop-text-body-md-size);
+  line-height: var(--flop-text-body-md-line);
+}
+
+h1, h2, h3 {
+  font-family: var(--flop-font-mono);
+  margin: 0 0 var(--flop-space-sm) 0;
+  color: var(--flop-text-primary);
+}
+
+h1 { font-size: var(--flop-text-h1-size); font-weight: var(--flop-text-h1-weight); line-height: var(--flop-text-h1-line); }
+h2 { font-size: var(--flop-text-h2-size); font-weight: var(--flop-text-h2-weight); line-height: var(--flop-text-h2-line); }
+h3 { font-size: var(--flop-text-h3-size); font-weight: var(--flop-text-h3-weight); line-height: var(--flop-text-h3-line); }
+
+p { margin: 0 0 var(--flop-space-sm) 0; }
+
+code, pre {
+  font-family: var(--flop-font-mono);
+  font-size: var(--flop-text-code-size);
+}
+
+pre {
+  background: var(--flop-surface);
+  border: 1px solid var(--flop-border);
+  border-radius: var(--flop-radius-md);
+  padding: var(--flop-space-sm);
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: var(--flop-text-secondary);
+}
+
+a {
+  color: var(--flop-link);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip-link {
+  position: absolute;
+  left: var(--flop-space-sm);
+  top: -100px;
+  background: var(--flop-surface);
+  color: var(--flop-text-primary);
+  padding: var(--flop-space-xs) var(--flop-space-sm);
+  border: 1px solid var(--flop-primary);
+  border-radius: var(--flop-radius-md);
+  z-index: 100;
+  transition: top 0.1s ease;
+}
+
+.skip-link:focus {
+  top: var(--flop-space-sm);
+}
+
+:focus-visible {
+  outline: 2px solid var(--flop-primary);
+  outline-offset: 2px;
+}
+
+button {
+  font-family: var(--flop-font-sans);
+  font-size: var(--flop-text-body-md-size);
+  color: var(--flop-text-primary);
+  background: var(--flop-surface-light);
+  border: 1px solid var(--flop-border);
+  border-radius: var(--flop-radius-md);
+  padding: var(--flop-space-xs) var(--flop-space-md);
+  cursor: pointer;
+}
+
+button:hover:not(:disabled) {
+  border-color: var(--flop-primary);
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+button.primary {
+  background: var(--flop-primary);
+  color: var(--flop-background);
+  border-color: var(--flop-primary);
+}
+
+button.primary:hover:not(:disabled) {
+  background: var(--flop-primary-hover);
+  border-color: var(--flop-primary-hover);
+}
+
+input, textarea, select {
+  font-family: var(--flop-font-sans);
+  font-size: var(--flop-text-body-md-size);
+  color: var(--flop-text-primary);
+  background: var(--flop-surface);
+  border: 1px solid var(--flop-border);
+  border-radius: var(--flop-radius-md);
+  padding: var(--flop-space-xs) var(--flop-space-sm);
+  width: 100%;
+}
+
+label {
+  display: block;
+  font-family: var(--flop-font-mono);
+  font-size: var(--flop-text-label-size);
+  color: var(--flop-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: var(--flop-space-xs);
+  margin-top: var(--flop-space-sm);
+}
+
+form {
+  max-width: 42rem;
+}
+
+/* ------------------------------------------------------------- app shell */
+
+.app-shell {
+  display: flex;
+  min-height: 100vh;
+}
+
+header.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--flop-surface);
+  border-bottom: 1px solid var(--flop-border);
+  padding: var(--flop-space-sm) var(--flop-space-md);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--flop-space-sm) var(--flop-space-md);
+}
+
+header.topbar .brand {
+  font-family: var(--flop-font-mono);
+  font-weight: 700;
+  font-size: var(--flop-text-h3-size);
+  margin-right: auto;
+}
+
+.status-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--flop-space-sm);
+  align-items: center;
+}
+
+.notices {
+  background: var(--flop-surface);
+  border-bottom: 1px solid var(--flop-border);
+  padding: var(--flop-space-xs) var(--flop-space-md);
+  font-size: var(--flop-text-body-sm-size);
+  color: var(--flop-text-secondary);
+}
+
+.notices p {
+  margin: 0;
+}
+
+nav.sidenav {
+  width: var(--flop-sidebar-width);
+  flex: 0 0 var(--flop-sidebar-width);
+  background: var(--flop-surface);
+  border-right: 1px solid var(--flop-border);
+  padding: var(--flop-space-md) var(--flop-space-sm);
+  display: flex;
+  flex-direction: column;
+  gap: var(--flop-space-xs);
+}
+
+nav.sidenav button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--flop-space-sm);
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border-color: transparent;
+}
+
+nav.sidenav button[aria-current="page"] {
+  background: var(--flop-surface-light);
+  border-color: var(--flop-primary);
+}
+
+.soon {
+  font-family: var(--flop-font-mono);
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  color: var(--flop-text-secondary);
+  border: 1px solid var(--flop-border);
+  border-radius: var(--flop-radius-full);
+  padding: 0 var(--flop-space-xs);
+}
+
+nav.bottomnav {
+  display: none;
+}
+
+main {
+  flex: 1;
+  min-width: 0;
+  padding: var(--flop-space-lg);
+  max-width: var(--flop-content-max);
+}
+
+footer.appfoot {
+  border-top: 1px solid var(--flop-border);
+  padding: var(--flop-space-md);
+  color: var(--flop-text-secondary);
+  font-size: var(--flop-text-body-sm-size);
+}
+
+.screen[hidden] {
+  display: none;
+}
+
+.screen-lead {
+  color: var(--flop-text-secondary);
+  max-width: 60ch;
+}
+
+/* ------------------------------------------------------------------ hero */
+
+.hero-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--flop-space-md);
+  margin: var(--flop-space-md) 0;
+}
+
+.hero-card {
+  background: var(--flop-surface);
+  border: 1px solid var(--flop-border);
+  border-radius: var(--flop-radius-lg);
+  padding: var(--flop-space-md);
+}
+
+.hero-card .hero-value {
+  font-family: var(--flop-font-mono);
+  font-size: var(--flop-text-h1-size);
+  font-weight: var(--flop-text-h1-weight);
+  color: var(--flop-text-primary);
+  display: block;
+  margin: var(--flop-space-xs) 0;
+}
+
+.hero-card .hero-label {
+  font-family: var(--flop-font-mono);
+  font-size: var(--flop-text-label-size);
+  color: var(--flop-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.hero-card .hero-note {
+  font-size: var(--flop-text-body-sm-size);
+  color: var(--flop-text-secondary);
+}
+
+/* ---------------------------------------------------------------- cards */
+
+.card {
+  background: var(--flop-surface);
+  border: 1px solid var(--flop-border);
+  border-radius: var(--flop-radius-md);
+  padding: var(--flop-space-md);
+  margin-bottom: var(--flop-space-md);
+}
+
+.card h3 {
+  margin-bottom: var(--flop-space-xs);
+}
+
+.card-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--flop-space-sm);
+  align-items: center;
+  margin-bottom: var(--flop-space-xs);
+}
+
+dl.pairs {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: var(--flop-space-xs) var(--flop-space-md);
+  margin: var(--flop-space-sm) 0;
+}
+
+dl.pairs dt {
+  font-family: var(--flop-font-mono);
+  font-size: var(--flop-text-label-size);
+  color: var(--flop-text-secondary);
+  text-transform: uppercase;
+}
+
+dl.pairs dd {
+  margin: 0;
+  color: var(--flop-text-primary);
+  word-break: break-word;
+}
+
+ul.rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+ul.rows > li {
+  border-bottom: 1px solid var(--flop-border);
+  padding: var(--flop-space-sm) 0;
+}
+
+ul.rows > li:last-child {
+  border-bottom: none;
+}
+
+/* --------------------------------------------------------------- badges */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--flop-space-xs);
+  font-family: var(--flop-font-mono);
+  font-size: var(--flop-text-label-size);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 2px var(--flop-space-sm);
+  border-radius: var(--flop-radius-full);
+  border: 1px solid var(--flop-border);
+  color: var(--flop-text-primary);
+  background: var(--flop-surface-light);
+  white-space: nowrap;
+}
+
+/* Source badges: border colour signals class, the word is what actually says it. */
+.badge-source-official { border-color: var(--flop-success); }
+.badge-source-verified-third-party { border-color: var(--flop-primary); }
+.badge-source-community { border-color: var(--flop-border); }
+.badge-source-unknown { border-color: var(--flop-text-secondary); }
+.badge-source-suspicious { border-color: var(--flop-error); }
+
+/* Evidence badges: four labels, never a score. */
+.badge-evidence-self-claimed { border-color: var(--flop-border); }
+.badge-evidence-cryptographically-linked { border-color: var(--flop-primary); }
+.badge-evidence-evidence-supported { border-color: var(--flop-success); }
+.badge-evidence-third-party-attested { border-color: var(--flop-success); background: var(--flop-surface-light); }
+
+/* Safety levels: caution is the one design.md gives an explicit fill for. */
+.badge-safety-info { border-color: var(--flop-border); }
+.badge-safety-caution {
+  background: var(--flop-warning-fill);
+  border-color: var(--flop-warning-fill);
+  color: var(--flop-warning-text);
+}
+.badge-safety-high_risk { border-color: var(--flop-error); }
+.badge-safety-blocked { border-color: var(--flop-error); }
+
+.badge-phase {
+  border-color: var(--flop-primary);
+  font-size: var(--flop-text-body-sm-size);
+}
+
+.badge-rule-updated {
+  border-color: var(--flop-warning-fill);
+  background: var(--flop-warning-fill);
+  color: var(--flop-warning-text);
+}
+
+.badge-synthetic {
+  /* design.md publishes red-on-Base (5.5:1) but not red-on-Ice, so the border
+     carries the colour and the text stays on the always-safe primary token
+     (17.4:1 on both Base and Ice per the contrast table). */
+  border-color: var(--flop-error);
+  background: transparent;
+}
+
+/* ---------------------------------------------------------------- alerts */
+
+.alert {
+  border: 1px solid var(--flop-border);
+  border-radius: var(--flop-radius-md);
+  padding: var(--flop-space-sm) var(--flop-space-md);
+  margin-bottom: var(--flop-space-sm);
+}
+
+.alert .alert-kicker {
+  font-family: var(--flop-font-mono);
+  font-size: var(--flop-text-label-size);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--flop-text-secondary);
+  display: block;
+  margin-bottom: var(--flop-space-xs);
+}
+
+.alert-info { border-left: 4px solid var(--flop-border); }
+.alert-caution { border-left: 4px solid var(--flop-warning-fill); }
+.alert-high_risk { border-left: 4px solid var(--flop-error); }
+.alert-blocked { border-left: 4px solid var(--flop-error); }
+.alert-banner {
+  border-left: 4px solid var(--flop-error);
+  background: var(--flop-surface-light);
+}
+
+/* ---------------------------------------------------------- empty state */
+
+.empty-future {
+  border: 1px dashed var(--flop-border);
+  border-radius: var(--flop-radius-md);
+  padding: var(--flop-space-md);
+  color: var(--flop-text-secondary);
+  text-align: center;
+}
+
+.empty-future .empty-future-title {
+  font-family: var(--flop-font-mono);
+  color: var(--flop-text-primary);
+  display: block;
+  margin-bottom: var(--flop-space-xs);
+}
+
+/* --------------------------------------------------------------- filters */
+
+.filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--flop-space-xs);
+  margin-bottom: var(--flop-space-md);
+}
+
+.filter-row button {
+  padding: var(--flop-space-xs) var(--flop-space-sm);
+  font-size: var(--flop-text-body-sm-size);
+}
+
+.filter-row button[aria-pressed="true"] {
+  background: var(--flop-primary);
+  color: var(--flop-background);
+  border-color: var(--flop-primary);
+}
+
+/* --------------------------------------------------------------- wizard */
+
+.wizard-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--flop-space-xs);
+  margin-bottom: var(--flop-space-md);
+  list-style: none;
+  padding: 0;
+}
+
+.wizard-steps li {
+  font-family: var(--flop-font-mono);
+  font-size: var(--flop-text-body-sm-size);
+  color: var(--flop-text-secondary);
+  border: 1px solid var(--flop-border);
+  border-radius: var(--flop-radius-full);
+  padding: var(--flop-space-xs) var(--flop-space-sm);
+}
+
+.wizard-steps li[aria-current="step"] {
+  color: var(--flop-text-primary);
+  border-color: var(--flop-primary);
+}
+
+.wizard-steps li[data-done="true"] {
+  border-color: var(--flop-success);
+}
+
+/* ------------------------------------------------------------------ misc */
+
+.note {
+  font-size: var(--flop-text-body-sm-size);
+  color: var(--flop-text-secondary);
+}
+
+.subject-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--flop-space-sm) var(--flop-space-md);
+  align-items: end;
+  max-width: none;
+}
+
+.subject-form .actions {
+  align-self: end;
+}
+
+table.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--flop-text-body-sm-size);
+}
+
+table.data-table th,
+table.data-table td {
+  text-align: left;
+  padding: var(--flop-space-xs) var(--flop-space-sm);
+  border-bottom: 1px solid var(--flop-border);
+  vertical-align: top;
+}
+
+table.data-table th {
+  font-family: var(--flop-font-mono);
+  color: var(--flop-text-secondary);
+  text-transform: uppercase;
+  font-size: var(--flop-text-label-size);
+}
+
+.problem {
+  color: var(--flop-text-primary);
+  border: 1px solid var(--flop-error);
+  border-radius: var(--flop-radius-md);
+  padding: var(--flop-space-sm);
+}
+
+/* ----------------------------------------------------------- responsive */
+
+@media (max-width: 768px) {
+  .app-shell {
+    flex-direction: column;
+  }
+
+  nav.sidenav {
+    display: none;
+  }
+
+  nav.bottomnav {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 10;
+    background: var(--flop-surface);
+    border-top: 1px solid var(--flop-border);
+    padding: var(--flop-space-xs);
+    gap: var(--flop-space-xs);
+  }
+
+  nav.bottomnav button {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    font-size: var(--flop-text-body-sm-size);
+    background: transparent;
+    border-color: transparent;
+  }
+
+  nav.bottomnav button[aria-current="page"] {
+    color: var(--flop-primary);
+    border-color: var(--flop-primary);
+  }
+
+  main {
+    padding: var(--flop-space-md);
+    padding-bottom: calc(var(--flop-space-lg) + 64px);
+  }
+
+  dl.pairs {
+    grid-template-columns: 1fr;
+  }
+}
+
+.notice-synthetic {
+  /* The header's synthetic label. Border-carried colour, same reasoning as
+     .badge-synthetic: red is published against Base and not against Ice, so the
+     text stays on the always-safe primary token. */
+  font-weight: 700;
+  color: var(--flop-text-primary);
+  border: 1px solid var(--flop-error);
+  border-radius: var(--flop-radius-md);
+  padding: var(--flop-space-sm) var(--flop-space-md);
+}
+
+.hero-synthetic {
+  flex-basis: 100%;
+  margin: 0;
+}

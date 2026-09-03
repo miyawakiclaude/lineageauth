@@ -26,6 +26,7 @@ Optional dependency: this imports FastAPI, which the core deliberately does not.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Annotated, Any
@@ -76,6 +77,13 @@ SECURITY_HEADERS = {
 }
 
 EXPLORER_ROOT = Path(__file__).resolve().parents[3] / "apps" / "explorer"
+
+# The FLOP Console lives beside the Explorer and is served under the same
+# discipline: same-origin static files, the same strict CSP, no key material,
+# nothing ingested. `/flop` is a distinct mount point rather than a mode of the
+# Explorer because the two pages disclose different things and must not be
+# confused for one another.
+FLOP_ROOT = Path(__file__).resolve().parents[3] / "apps" / "flop"
 
 # The Explorer's own policy, stricter than a default page would get and looser
 # than the API's `default-src 'none'` in exactly two places: its stylesheet and
@@ -196,12 +204,26 @@ def _moment(value: str | None) -> datetime:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
-def create_app(index: EventIndex, *, title: str = "LineageAuth") -> FastAPI:
+def create_app(
+    index: EventIndex,
+    *,
+    title: str = "LineageAuth",
+    flop_demo_mode: bool = False,
+    flop_demo_approver: str | None = None,
+    flop_demo_sign_receipt: Callable[[dict[str, Any]], Envelope] | None = None,
+) -> FastAPI:
     """Build the API over an existing index.
 
     The index is passed in rather than opened here so a caller decides what this
     process can see. A service handed a read-only projection cannot widen its own
     view by handling a request.
+
+    `flop_demo_mode` is off by default; a production mount never carries it. It
+    exists only so `scripts/serve_flop_console.py` can turn on the FLOP
+    Console's synthetic activity adapter, and every record that adapter
+    produces still carries `synthetic: true` and the `SYNTHETIC MOCK DATA`
+    banner regardless -- the flag chooses whether the mock source is consulted
+    at all, not whether its output is labelled.
     """
     app = FastAPI(
         title=title,
@@ -218,6 +240,20 @@ def create_app(index: EventIndex, *, title: str = "LineageAuth") -> FastAPI:
         for name, value in SECURITY_HEADERS.items():
             response.headers.setdefault(name, value)
         return response
+
+    # The FLOP Console's routes, mounted rather than served separately so they
+    # inherit this app's security headers and its no-ingest rule. The router
+    # reads the same index and adds no way to put an event into it.
+    from lineageauth.flop.api import build_flop_router
+
+    app.include_router(
+        build_flop_router(
+            index,
+            include_mock=flop_demo_mode,
+            demo_approver=flop_demo_approver if flop_demo_mode else None,
+            demo_sign_receipt=flop_demo_sign_receipt if flop_demo_mode else None,
+        )
+    )
 
     @app.get("/healthz")
     def healthz() -> dict[str, Any]:
@@ -272,6 +308,52 @@ def create_app(index: EventIndex, *, title: str = "LineageAuth") -> FastAPI:
         response = PlainTextResponse(path.read_text(encoding="utf-8"), media_type="text/javascript")
         response.headers["Content-Security-Policy"] = EXPLORER_CSP
         return response
+
+    def _flop_file(name: str, media_type: str) -> Response:
+        path = FLOP_ROOT / name
+        if not path.is_file():
+            raise HTTPException(
+                status_code=404,
+                detail=(
+                    "the FLOP Console is not present in this installation; it lives in "
+                    "apps/flop/ in the repository"
+                ),
+            )
+        response: Response
+        if media_type == "text/html":
+            response = HTMLResponse(path.read_text(encoding="utf-8"))
+        else:
+            response = PlainTextResponse(path.read_text(encoding="utf-8"), media_type=media_type)
+        response.headers["Content-Security-Policy"] = EXPLORER_CSP
+        return response
+
+    @app.get("/flop", response_class=HTMLResponse)
+    def flop_console() -> Response:
+        """Serve the FLOP Console from this origin, same-origin for the same reasons."""
+        return _flop_file("index.html", "text/html")
+
+    @app.get("/flop/tokens.css")
+    def flop_tokens_css() -> Response:
+        return _flop_file("tokens.css", "text/css")
+
+    @app.get("/flop/app.css")
+    def flop_app_css() -> Response:
+        return _flop_file("app.css", "text/css")
+
+    @app.get("/flop/app.js")
+    def flop_app_js() -> Response:
+        return _flop_file("app.js", "text/javascript")
+
+    @app.get("/flop/passport/{did}", response_class=HTMLResponse)
+    def flop_passport_page(did: str) -> Response:
+        """A shareable, read-only path into the same page.
+
+        The page itself does the routing: it reads `location.pathname` on load
+        and shows the passport screen for `did` without a further request. This
+        route exists only so a link to it survives a full page load rather than
+        depending on the in-app hash router already having run.
+        """
+        return _flop_file("index.html", "text/html")
 
     @app.get(f"/{API_VERSION}/meta")
     def meta() -> dict[str, Any]:

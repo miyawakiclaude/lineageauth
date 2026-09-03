@@ -96,11 +96,23 @@ class TestServiceShape:
 
     def test_there_is_no_endpoint_that_ingests_an_event(self, client: TestClient) -> None:
         """Events enter through the store. An HTTP request must not add one."""
-        routes = {
-            (route.path, method)
-            for route in client.app.routes  # type: ignore[attr-defined]
-            for method in getattr(route, "methods", set())
-        }
+        # Walked rather than read off `app.routes`: FastAPI 0.141 wraps an
+        # included router in a `_IncludedRouter` instead of flattening its
+        # routes into the app's, so a set built from `app.routes` alone stops
+        # covering everything mounted -- silently, which is the bad kind.
+        routes: set[tuple[str, str]] = set()
+        pending = list(client.app.routes)  # type: ignore[attr-defined]
+        while pending:
+            route = pending.pop()
+            included = getattr(route, "original_router", None)
+            if included is not None:
+                pending.extend(included.routes)
+                continue
+            path = getattr(route, "path", None)
+            if path is None:
+                continue
+            for method in getattr(route, "methods", set()):
+                routes.add((path, method))
         writes = {
             (path, method)
             for path, method in routes
@@ -121,6 +133,21 @@ class TestServiceShape:
             ("/v1/tclk/inspect", "POST"),
             ("/v1/tclk/simulate", "POST"),
             ("/v1/tclk/authorize", "POST"),
+            # The FLOP Console's scanner. It scans untrusted text and stores
+            # nothing: the text is not executed, no URL in it is followed, and
+            # the scan result is computed and returned rather than recorded.
+            ("/v1/flop/safety/scan", "POST"),
+            # The FLOP testnet executor (docs/FLOP_TESTNET_EXECUTOR.md). None of
+            # these reaches a network: quote and prepare compute an exact action
+            # and hold it in memory, approve checks an existing receipt without
+            # consuming it, execute answers 409 TESTNET_NOT_LIVE before reading
+            # anything, and the simulation runs against an origin RFC 6761
+            # guarantees cannot resolve.
+            ("/v1/flop/testnet/inference/quote", "POST"),
+            ("/v1/flop/testnet/inference/prepare", "POST"),
+            ("/v1/flop/testnet/inference/approve", "POST"),
+            ("/v1/flop/testnet/inference/execute", "POST"),
+            ("/v1/flop/testnet/simulation/run", "POST"),
         }
 
     def test_verifying_an_event_does_not_index_it(self, client: TestClient) -> None:

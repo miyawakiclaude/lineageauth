@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FLOP Activity Console</title>
+<!--
+  Repeated as a meta tag for a static hosting target that cannot set headers;
+  the local server sends the stricter header version (frame-ancestors and
+  form-action are header-only and ignored here, same reasoning as the
+  Explorer's page). No inline script, no eval, nothing loaded cross-origin.
+-->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'none'; font-src 'none'; base-uri 'none'">
+<link rel="stylesheet" href="/flop/tokens.css">
+<link rel="stylesheet" href="/flop/app.css">
+</head>
+<body>
+
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <span class="brand">FLOP Activity Console</span>
+  <div class="status-strip" id="status-strip" aria-live="polite">
+    <span id="phase-badge" class="badge badge-phase">-</span>
+    <span id="freshness" class="note">-</span>
+    <span id="security-status" class="note">-</span>
+    <button type="button" id="sync-btn">Sync (read-only)</button>
+    <button type="button" id="theme-toggle" aria-pressed="false">Light theme</button>
+  </div>
+</header>
+
+<div class="notices">
+  <p id="notice-synthetic" class="notice-synthetic" hidden></p>
+  <p id="notice-affiliation"></p>
+  <p id="notice-seed"></p>
+  <p id="notice-value">Testnet tokens have no assumed monetary value.</p>
+</div>
+
+<div class="app-shell">
+
+<nav class="sidenav" aria-label="FLOP Console sections">
+  <button type="button" data-screen="overview">Overview</button>
+  <button type="button" data-screen="activity">Activity</button>
+  <button type="button" data-screen="evidence">Evidence</button>
+  <button type="button" data-screen="technocore">Technocore</button>
+  <button type="button" data-screen="tclk">tclk</button>
+  <button type="button" data-screen="inference">Inference</button>
+  <button type="button" data-screen="passport">Passport</button>
+  <button type="button" data-screen="safety">Safety</button>
+  <button type="button" data-screen="sources">Sources</button>
+  <button type="button" data-screen="settings">Settings</button>
+</nav>
+
+<nav class="bottomnav" aria-label="FLOP Console sections, compact">
+  <button type="button" data-screen="overview">Overview</button>
+  <button type="button" data-screen="activity">Activity</button>
+  <button type="button" data-screen="passport">Passport</button>
+  <button type="button" data-screen="safety">Safety</button>
+  <button type="button" data-screen="settings">More</button>
+</nav>
+
+<main id="main">
+
+<div id="live-region" class="sr-only" role="status" aria-live="polite"></div>
+<p id="offline" hidden class="problem">
+  Nothing answered on this origin. Start the local API:
+  <code>py -3 -m uv run python scripts/serve_flop_console.py</code>
+  then open <code>http://127.0.0.1:8792/flop</code>.
+</p>
+
+<section id="screen-overview" class="screen" data-index="01">
+  <h1>Overview</h1>
+  <p class="screen-lead">
+    What this tool has actually observed about one DID, and what it refuses to
+    guess. Nothing on this screen is an eligibility calculation.
+  </p>
+
+  <form id="subject-form" class="subject-form">
+    <div>
+      <label for="subject-lineage">Lineage id</label>
+      <input id="subject-lineage" type="text" spellcheck="false" placeholder="sha256:...">
+    </div>
+    <div>
+      <label for="subject-did">did:key</label>
+      <input id="subject-did" type="text" spellcheck="false" placeholder="did:key:z6Mk...">
+    </div>
+    <div class="actions">
+      <button type="submit" class="primary">Load subject</button>
+    </div>
+  </form>
+
+  <div id="hero-row" class="hero-row"></div>
+  <h2>Next best action</h2>
+  <div id="next-best-action"></div>
+</section>
+
+<section id="screen-activity" class="screen" data-index="02" hidden>
+  <h1>Activity</h1>
+  <p class="screen-lead">Every record an adapter found, and how well it is backed.</p>
+  <div class="filter-row" id="activity-filters" role="group" aria-label="Filter activity by category"></div>
+  <ul id="activity-list" class="rows"></ul>
+</section>
+
+<section id="screen-evidence" class="screen" data-index="03" hidden>
+  <h1>Evidence</h1>
+  <p class="screen-lead">
+    One record, in detail. Open it from the Activity screen, or read the raw
+    projection below.
+  </p>
+  <div id="evidence-detail"></div>
+</section>
+
+<section id="screen-technocore" class="screen" data-index="04" hidden>
+  <h1>Technocore</h1>
+  <p class="screen-lead">
+    Room participation, read from Technocore. Volume is shown because it is a
+    fact, and kept out of coverage because it is not evidence of useful work.
+  </p>
+  <div id="technocore-out"></div>
+</section>
+
+<section id="screen-tclk" class="screen" data-index="05" hidden>
+  <h1>tclk</h1>
+  <p class="screen-lead">
+    tclk/1 deals observed for this subject. Read-only: nothing here posts a
+    frame, binds a rail, or moves value.
+  </p>
+  <div id="tclk-out"></div>
+</section>
+
+<section id="screen-inference" class="screen" data-index="06" hidden>
+  <h1>Inference</h1>
+  <div id="inference-state"></div>
+
+  <h2>Simulation walkthrough</h2>
+  <ol class="wizard-steps" id="wizard-steps">
+    <li data-step="purpose">1. Purpose</li>
+    <li data-step="quote">2. Quote</li>
+    <li data-step="review">3. Security review</li>
+    <li data-step="run">4. Approve &amp; Run</li>
+  </ol>
+
+  <form id="inference-form">
+    <label for="inference-purpose">Purpose</label>
+    <select id="inference-purpose">
+      <option value="evaluation">evaluation</option>
+      <option value="translation">translation</option>
+      <option value="summarisation">summarisation</option>
+      <option value="code-review">code-review</option>
+      <option value="research">research</option>
+      <option value="other">other</option>
+    </select>
+    <label for="inference-prompt">Prompt (never a seed phrase or private key)</label>
+    <textarea id="inference-prompt" rows="4" spellcheck="false"></textarea>
+    <label for="inference-max-spend">Max spend (test FLOP)</label>
+    <input id="inference-max-spend" type="text" inputmode="decimal" value="5">
+    <label for="inference-evidence-label">Evidence label (optional)</label>
+    <input id="inference-evidence-label" type="text" spellcheck="false">
+    <label for="inference-receipt">Approval receipt (signed LAP envelope as JSON, optional)</label>
+    <textarea id="inference-receipt" rows="3" spellcheck="false"></textarea>
+    <p class="hint">
+      The page holds no keys, so it cannot approve anything itself. Paste a
+      receipt signed by an approver the grant names, bound to the request hash
+      shown in the security review. A demo server signs one with its public
+      test key instead, and the run says so.
+    </p>
+    <p>
+      <button type="submit">1. Get quote</button>
+      <button type="button" id="inference-run-btn" disabled>4. Approve &amp; Run (SIMULATION)</button>
+    </p>
+  </form>
+  <div id="inference-out"></div>
+
+  <h2>Live testnet</h2>
+  <div id="inference-live-out"></div>
+</section>
+
+<section id="screen-passport" class="screen" data-index="07" hidden>
+  <h1>Passport</h1>
+  <p class="screen-lead">
+    The whole projection for one DID. Four evidence categories, ten coverage
+    categories, no combined score.
+  </p>
+  <form id="passport-form">
+    <label for="passport-lineage">Lineage id</label>
+    <input id="passport-lineage" type="text" spellcheck="false">
+    <label for="passport-did">did:key</label>
+    <input id="passport-did" type="text" spellcheck="false">
+    <button type="submit">Show passport</button>
+  </form>
+  <div id="passport-out"></div>
+</section>
+
+<section id="screen-safety" class="screen" data-index="08" hidden>
+  <h1>Safety</h1>
+  <p class="screen-lead">
+    Paste text from anywhere in the FLOP ecosystem and see what this scanner
+    notices. It executes nothing and follows no URL it finds.
+  </p>
+  <form id="safety-form">
+    <label for="safety-text">Untrusted text</label>
+    <textarea id="safety-text" rows="6" spellcheck="false"></textarea>
+    <label for="safety-source-class">Where it came from</label>
+    <select id="safety-source-class">
+      <option value="">unspecified</option>
+      <option value="verified-third-party">verified-third-party</option>
+      <option value="community">community</option>
+      <option value="unknown" selected>unknown</option>
+      <option value="suspicious">suspicious</option>
+    </select>
+    <button type="submit">Scan</button>
+    <p class="note">
+      There is no "official" option and no phase selector. Official is decided by
+      origin, and the network phase is the one this service observed - letting a
+      form set either would let the reader switch off the checks that matter.
+    </p>
+  </form>
+  <div id="safety-out"></div>
+</section>
+
+<section id="screen-sources" class="screen" data-index="09" hidden>
+  <h1>Sources</h1>
+  <p class="screen-lead">
+    Official is decided by origin, never by a nickname, a room name or a
+    signature. Every rule below quotes the source it came from.
+  </p>
+  <h2>Official source snapshots</h2>
+  <div id="sources-out"></div>
+  <h2>Rules</h2>
+  <div id="rules-out"></div>
+</section>
+
+<section id="screen-settings" class="screen" data-index="10" hidden>
+  <h1>Settings</h1>
+  <div id="settings-out"></div>
+</section>
+
+</main>
+</div>
+
+<footer class="appfoot">
+  <p>
+    Independent tool for the FLOP ecosystem - not affiliated with or endorsed
+    by FLOP Labs.
+  </p>
+  <p>
+    This page renders every value as text and never as markup. Activity
+    titles, room names and prompts were written by someone else, and a viewer
+    that executed them would be a worse problem than anything it was built to
+    display.
+  </p>
+</footer>
+
+<script type="module" src="/flop/app.js"></script>
+</body>
+</html>

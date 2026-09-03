@@ -26,6 +26,7 @@ from lineageauth.builders import build_approval_receipt, sign_payload
 from lineageauth.bundle import EventBundle
 from lineageauth.envelope import Envelope
 from lineageauth.errors import LineageAuthError, ReasonCode
+from lineageauth.flop.cli import flop_app
 from lineageauth.lineage import LineageState, resolve_lineage
 from lineageauth.timeutil import format_instant, parse_instant
 from lineageauth.verify import EventVerification, verify_event_json
@@ -1605,6 +1606,12 @@ def tclk_prepare(
         )
         return
     typer.echo(prepared.preview())
+
+
+# The FLOP layer's own sub-app (docs/FLOP_TESTNET_EXECUTOR.md). It is built in
+# `lineageauth.flop.cli` rather than here so that this file keeps holding the
+# core commands only, and so the FLOP layer stays a thing that can be removed.
+app.add_typer(flop_app)
 
 
 if __name__ == "__main__":  # pragma: no cover

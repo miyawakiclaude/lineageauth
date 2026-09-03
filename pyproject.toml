@@ -78,7 +78,7 @@ packages = ["lineageauth"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = [".", "packages/py"]
-addopts = "-q --strict-markers"
+addopts = "-q --strict-markers -m 'not network'"
 markers = [
     "network: test requires network access (NOT run by default; CLAUDE.md 2.3)",
 ]
