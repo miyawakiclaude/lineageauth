@@ -66,7 +66,13 @@ def genesis() -> Envelope:
     return sign_payload(build_root_create(root_did=ROOT.did, issued_at=AT), [ROOT])
 
 
-def grant(*, approval: str = "required", subject: LocalSigner = AGENT) -> Envelope:
+def grant(
+    *,
+    approval: str = "required",
+    subject: LocalSigner = AGENT,
+    approvers: tuple[LocalSigner, ...] = (ROOT,),
+) -> Envelope:
+    """ROOT -> subject. D-107: the grant names who may approve; ROOT unless told."""
     payload = build_delegation_grant(
         lineage=LINEAGE,
         issuer=ROOT.did,
@@ -79,6 +85,7 @@ def grant(*, approval: str = "required", subject: LocalSigner = AGENT) -> Envelo
         expires_at=UNTIL,
         max_depth=0,
         approval=approval,
+        approvers=[signer.did for signer in approvers],
         issued_at=AT,
     )
     return sign_payload(payload, [ROOT])
@@ -216,53 +223,82 @@ class TestExactBinding:
         assert any("not signed by its declared approver" in w for w in decision.warnings)
 
     def test_a_stranger_may_not_approve(self) -> None:
-        """D-042: consent must come from someone in the authority above the agent."""
+        """D-107: consent must come from a party the authority path designates."""
         decision = execute(genesis(), grant(), receipt(approver=STRANGER))
         assert not decision.may_execute
         assert decision.reason is ReasonCode.DENIED
-        assert "neither the current root nor an issuer" in decision.detail
+        assert "not an approver the authority path designates" in decision.detail
 
-    def test_an_intermediate_issuer_may_approve(self) -> None:
-        parent = build_delegation_grant(
-            lineage=LINEAGE,
-            issuer=ROOT.did,
-            subject=OPERATOR.did,
-            epoch=0,
-            scopes=[
-                {"namespace": "technocore", "resource": "room:lobby", "actions": ["read", "write"]}
-            ],
-            not_before=FROM,
-            expires_at=UNTIL,
-            max_depth=1,
-            approval="required",
-            issued_at=AT,
+    def _two_hops(
+        self, parent_names: list[str], child_names: list[str]
+    ) -> tuple[Envelope, Envelope]:
+        """ROOT -> OPERATOR (depth 1) -> AGENT, each hop designating as told."""
+        scopes = [
+            {"namespace": "technocore", "resource": "room:lobby", "actions": ["read", "write"]}
+        ]
+        parent = sign_payload(
+            build_delegation_grant(
+                lineage=LINEAGE,
+                issuer=ROOT.did,
+                subject=OPERATOR.did,
+                epoch=0,
+                scopes=scopes,
+                not_before=FROM,
+                expires_at=UNTIL,
+                max_depth=1,
+                approval="required",
+                approvers=parent_names,
+                issued_at=AT,
+            ),
+            [ROOT],
         )
-        parent_env = sign_payload(parent, [ROOT])
         child = sign_payload(
             build_delegation_grant(
                 lineage=LINEAGE,
                 issuer=OPERATOR.did,
                 subject=AGENT.did,
                 epoch=0,
-                scopes=[
-                    {
-                        "namespace": "technocore",
-                        "resource": "room:lobby",
-                        "actions": ["read", "write"],
-                    }
-                ],
+                scopes=scopes,
                 not_before=FROM,
                 expires_at=UNTIL,
                 max_depth=0,
                 approval="required",
-                parent=parent_env.event_id,
+                approvers=child_names,
+                parent=parent.event_id,
                 issued_at=AT,
             ),
             [OPERATOR],
         )
-        decision = execute(genesis(), parent_env, child, receipt(approver=OPERATOR))
+        return parent, child
+
+    def test_a_designated_intermediate_may_approve(self) -> None:
+        """The operator that delegated to the agent approves -- because it was named."""
+        parent, child = self._two_hops([ROOT.did, OPERATOR.did], [OPERATOR.did])
+        decision = execute(genesis(), parent, child, receipt(approver=OPERATOR))
         assert decision.may_execute
         assert decision.approver == OPERATOR.did
+
+    def test_an_issuer_on_the_path_is_not_entitled_by_position(self) -> None:
+        """D-107, the behaviour that changed.
+
+        Under D-042 the operator here was entitled because it *issued* the leaf
+        grant. Now it is entitled only if a grant names it, and this chain names
+        ROOT alone.
+        """
+        parent, child = self._two_hops([ROOT.did], [ROOT.did])
+        refused = execute(genesis(), parent, child, receipt(approver=OPERATOR))
+        assert not refused.may_execute
+        assert refused.reason is ReasonCode.DENIED
+        assert "designates" in refused.detail
+        # Positive control: the named party's receipt goes through.
+        assert execute(genesis(), parent, child, receipt(approver=ROOT)).may_execute
+
+    def test_the_root_is_not_entitled_unless_named_either(self) -> None:
+        """Nobody is entitled by position, the root included."""
+        parent, child = self._two_hops([OPERATOR.did], [OPERATOR.did])
+        refused = execute(genesis(), parent, child, receipt(approver=ROOT))
+        assert not refused.may_execute
+        assert refused.reason is ReasonCode.DENIED
 
 
 # ------------------------------------------------------------------ time
@@ -527,26 +563,29 @@ class TestTimeOfCheckTimeOfUse:
 
 
 class TestStandingThroughAKeyTheAgentAlsoControls:
-    """How much of the 2026-08-28 audit finding is actually closed. Less than was
-    claimed, and this class exists to say exactly how much (D-105).
+    """How much of the 2026-08-28 audit finding is closed, stated exactly.
 
     Every edge attenuates properly, so nothing in the delegation rules objects.
-    What the operator gains is not authority -- it is *standing*: by routing the
-    chain through a key it also controls, it appears among the issuers that
-    `_approvers_entitled` reads, and a receipt from that key counts as somebody
-    else consenting.
+    What the operator was after is not authority -- it is *standing*: by routing
+    the chain through a key it also controls, it used to appear among the
+    issuers that `_approvers_entitled` read, and a receipt from that key counted
+    as somebody else consenting.
 
-    Three locks were added. Two hold and one was removed. `read_receipt` refuses
-    `approver == agent`, and the entitled set discards the requester -- both
-    decidable from the bundle. The third refused a chain that repeated a subject,
-    and Alan Karp showed on ucan-wg/spec#206 that it refused a legitimate pattern
-    while the operator simply moved the throwaway key to the other end.
+    Three locks were added in D-086b; one was removed in D-105 after Alan Karp
+    showed on ucan-wg/spec#206 that it refused a legitimate pattern while the
+    operator simply moved the throwaway key to the other end. D-107 then changed
+    the question: entitlement is no longer read off the chain at all. A grant
+    designates its approvers and a child may only narrow that list, so a key the
+    operator slips onto the path is entitled to nothing unless the party above
+    named it.
 
-    What replaced it holds an operator to its own disclosure, and nothing more.
-    Both halves are tested below, including the half that still gets through.
+    What remains is the naming decision itself. A delegator that names a key it
+    wrongly believes is a person is not caught, and the disclosure rule is the
+    only thing that still speaks to that. Both halves are tested below,
+    including the half that still gets through.
     """
 
-    def _loop(self) -> tuple[Envelope, Envelope, Envelope]:
+    def _loop(self, designated: list[str]) -> tuple[Envelope, Envelope, Envelope]:
         """ROOT -> AGENT (depth 2), AGENT -> OPERATOR, OPERATOR -> AGENT."""
         scopes = [
             {"namespace": "technocore", "resource": "room:lobby", "actions": ["read", "write"]}
@@ -564,6 +603,7 @@ class TestStandingThroughAKeyTheAgentAlsoControls:
                     expires_at=UNTIL,
                     max_depth=depth,
                     approval="required",
+                    approvers=designated,
                     parent=parent,
                     issued_at=AT,
                 ),
@@ -598,26 +638,36 @@ class TestStandingThroughAKeyTheAgentAlsoControls:
         ]
         return [created, *bound]
 
-    def test_an_undisclosed_key_the_agent_controls_is_not_detected(self) -> None:
-        """The honest half, and it must be written down rather than assumed away.
+    def test_a_key_on_the_path_is_entitled_to_nothing_unless_named(self) -> None:
+        """D-107 closes the laundering structurally.
 
-        OPERATOR stands for a throwaway key the agent generated. Nothing in the
-        bundle distinguishes it from a real second party. This used to be refused
-        by a rule about the shape of the chain; Karp showed the shape is free to
-        change, so the rule bought nothing and cost a legitimate pattern (D-105).
-
-        A test asserting `may_execute` here looks like the wrong side to be on.
-        It is the point: the limitation is now visible in the suite, so it cannot
-        quietly stop being true.
+        ROOT named only itself, so the throwaway key OPERATOR sits on the path as
+        an issuer and still may not consent. Under D-042 this same bundle
+        executed.
         """
-        g1, g2, g3 = self._loop()
+        g1, g2, g3 = self._loop([ROOT.did])
+        decision = execute(genesis(), g1, g2, g3, receipt(approver=OPERATOR))
+        assert not decision.may_execute
+        assert decision.reason is ReasonCode.DENIED
+
+    def test_a_named_key_the_agent_secretly_controls_is_not_detected(self) -> None:
+        """The honest half, written down rather than assumed away.
+
+        ROOT named OPERATOR believing it a person; OPERATOR is a key the agent
+        generated. Nothing in the bundle distinguishes the two, so the receipt
+        verifies. Designation moved this from a property of the chain's shape to
+        the delegator's own decision, which is where it can be got right -- but
+        the verifier cannot check it, and a test asserting `may_execute` keeps
+        that limitation visible in the suite.
+        """
+        g1, g2, g3 = self._loop([ROOT.did, OPERATOR.did])
         decision = execute(genesis(), g1, g2, g3, receipt(approver=OPERATOR))
         assert decision.may_execute
         assert decision.reason is ReasonCode.VALID_AUTHORITY_CHAIN
 
     def test_the_same_key_is_refused_once_the_operator_discloses_it(self) -> None:
         """What the exclusion does buy: it holds an operator to its own statement."""
-        g1, g2, g3 = self._loop()
+        g1, g2, g3 = self._loop([ROOT.did, OPERATOR.did])
         decision = execute(
             genesis(),
             g1,
@@ -632,7 +682,7 @@ class TestStandingThroughAKeyTheAgentAlsoControls:
     def test_a_stranger_is_still_refused(self) -> None:
         """The negative control. Excluding fleet siblings must not be the only
         thing left standing -- a party off the path was never entitled either."""
-        g1, g2, g3 = self._loop()
+        g1, g2, g3 = self._loop([ROOT.did, OPERATOR.did])
         decision = execute(genesis(), g1, g2, g3, receipt(approver=STRANGER))
         assert not decision.may_execute
         assert decision.reason is ReasonCode.DENIED

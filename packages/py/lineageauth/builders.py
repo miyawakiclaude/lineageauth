@@ -155,6 +155,19 @@ def sign_payload(payload: dict[str, Any], signers: list[LocalSigner]) -> Envelop
     return Envelope(payload=payload, proofs=proofs)
 
 
+def _designated_approvers(approvers: list[str] | None) -> list[str]:
+    """Validate and normalise a grant's designated approvers: sorted, no repeats."""
+    if not approvers:
+        return []
+    seen: set[str] = set()
+    for did in approvers:
+        public_key_from_did_key(did)
+        if did in seen:
+            raise MalformedEventError(f"approvers lists {did} twice")
+        seen.add(did)
+    return sorted(seen)
+
+
 def build_delegation_grant(
     *,
     lineage: str,
@@ -166,6 +179,7 @@ def build_delegation_grant(
     expires_at: datetime,
     max_depth: int = 0,
     approval: str = "none",
+    approvers: list[str] | None = None,
     parent: str | None = None,
     issued_at: datetime,
 ) -> dict[str, Any]:
@@ -178,6 +192,12 @@ def build_delegation_grant(
 
     `maxDepth` is how many *further* delegations this grant permits, so a leaf
     grant is depth 0. `approval` may only be strengthened by a child.
+
+    `approvers` designates who may sign an approval receipt for an action this
+    grant, or one derived from it, authorizes. A grant whose `approval` is
+    anything but `none` must designate at least one, and a child may only
+    narrow the set (D-107). Entitlement is named here by the delegator, not
+    inferred from who sits on the chain.
     """
     if epoch < 0:
         raise MalformedEventError("epoch must be a non-negative integer")
@@ -203,7 +223,12 @@ def build_delegation_grant(
         }
         for parsed in parse_scopes(scopes)
     ]
-    ApprovalMode.parse(approval)
+    mode = ApprovalMode.parse(approval)
+    designated = _designated_approvers(approvers)
+    if mode is not ApprovalMode.NONE and not designated:
+        raise MalformedEventError(
+            "a grant that demands approval must designate who may give it (D-107)"
+        )
 
     payload = _common("delegation.grant", lineage, issued_at) | {
         "issuer": issuer,
@@ -217,6 +242,8 @@ def build_delegation_grant(
     }
     if parent is not None:
         payload["parent"] = parent
+    if designated:
+        payload["approvers"] = designated
     return payload
 
 

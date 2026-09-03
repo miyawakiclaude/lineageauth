@@ -147,6 +147,9 @@ every edge, and thereby appear among the issuers on its own authorizing path —
 which is the set consulted to decide who may sign an approval. Every individual
 check passed. `confused deputy` covers this in name; the chain walk refused loops
 by event id, which stops only a grant naming itself as its own parent. (D-086b.)
+The loop rule was later withdrawn as both over- and under-inclusive (D-105), and
+the set consulted stopped being read off the chain at all: a grant now designates
+its approvers, and a child may only narrow the list (D-107).
 
 ### The guard that is not on duty
 

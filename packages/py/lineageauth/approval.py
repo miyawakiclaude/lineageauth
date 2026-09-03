@@ -274,36 +274,51 @@ def _approvers_entitled(
 ) -> set[str]:
     """Who may approve an exercise of this authority.
 
-    The party that delegated authority is the party entitled to consent to its
-    use, so the set is the issuers along the path that authorized the action,
-    plus the current root (D-042). Anyone else signing a receipt is a stranger
-    consenting on someone else's behalf.
+    The grants on the authorizing path *designate* who may consent to an action
+    they authorize (D-107). A grant that names approvers narrows the set -- a
+    child may only name a subset of its parent's -- so the entitled set is the
+    intersection along the path, which by construction is the leaf's own list.
+    Nobody is entitled by position: neither the root nor an issuer on the path
+    may approve unless a grant names them.
 
-    Two exclusions, and it is worth being exact about how much each buys.
+    This replaced D-042, which derived the set from the chain: issuers plus the
+    root. Alan Karp pointed out on ucan-wg/spec#206 that a chain says who
+    delegated, not who may consent, and that a chain with no human on it would
+    otherwise let one agent's key stand in for a person. Designation puts the
+    question where it can be answered -- on the grant, by the delegator, in a
+    field the verifier reads.
 
-    The agent asking is never entitled to consent on its own behalf, whatever the
-    path says. That much is decidable from the bundle: two DIDs are equal or they
-    are not.
+    Two exclusions remain, and it is still worth being exact about them.
+
+    The agent asking is never entitled to consent on its own behalf, even if a
+    grant names it. That much is decidable from the bundle.
 
     A DID that a disclosure ties to the agent is excluded too (D-105), the same
     rule `jury._detect_conflicts` applies to a juror who shares a fleet with a
-    party. This one is only as good as the disclosure -- it stops an operator who
-    said so, and says nothing about one who did not. Excluding it is not a
-    penalty for disclosing: it stops the relationship *counting as independent*,
-    which is the rule `fleet.py` states and the only version safe to publish.
+    party. This one is only as good as the disclosure: it holds an operator to
+    what it said, and says nothing about one who stayed quiet.
 
-    What neither exclusion buys is the claim that a human other than the agent's
-    operator consented. DIDs are free, so an operator holding two keys can put
-    one on the authorizing path and act with the other -- and no rule about the
-    shape of the chain can tell that apart from a real second party (D-105).
+    What designation does not buy is proof that a named key is a person, or a
+    person other than the agent's operator. That is now the delegator's naming
+    decision rather than a property of the chain's shape, which is the honest
+    place for it; `docs/28` still says so.
+
+    Fail closed: a path that cannot be re-read, or a grant on it that demands
+    approval and names nobody, entitles nobody.
     """
-    entitled: set[str] = set()
-    if decision.root is not None:
-        entitled.add(decision.root)
+    entitled: set[str] | None = None
     for event_id in decision.path:
         grant = grants.get(event_id)
-        if grant is not None:
-            entitled.add(grant.issuer)
+        if grant is None:
+            return set()
+        if not grant.approvers:
+            if grant.approval is not ApprovalMode.NONE:
+                return set()
+            continue
+        named = set(grant.approvers)
+        entitled = named if entitled is None else entitled & named
+    if not entitled:
+        return set()
 
     agent = decision.request.agent
     entitled.discard(agent)
@@ -431,7 +446,7 @@ def check_execution(
                 (
                     ReasonCode.DENIED,
                     f"receipt {receipt.event_id} is signed by {receipt.approver}, who is "
-                    "neither the current root nor an issuer on the authority path (D-042)",
+                    "not an approver the authority path designates (D-107)",
                 )
             )
             continue

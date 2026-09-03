@@ -367,6 +367,7 @@ class LineageAuthTools:
         expires_at: str,
         max_depth: int = 0,
         approval: str = "none",
+        approvers: list[str] | None = None,
         parent: str | None = None,
         issued_at: str | None = None,
     ) -> dict[str, Any]:
@@ -381,6 +382,7 @@ class LineageAuthTools:
             expires_at=parse_instant(expires_at, field="expiresAt"),
             max_depth=max_depth,
             approval=approval,
+            approvers=approvers,
             parent=parent,
             issued_at=_moment(issued_at),
         )
@@ -572,6 +574,7 @@ DECLARATIONS: tuple[ToolDeclaration, ...] = (
                 "expires_at": _STR,
                 "max_depth": {"type": "integer"},
                 "approval": {"type": "string", "enum": ["none", "external-only", "required"]},
+                "approvers": {"type": "array", "items": _STR},
                 "parent": _STR,
                 "issued_at": _AT,
             },

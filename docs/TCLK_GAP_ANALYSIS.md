@@ -10,7 +10,7 @@ cannot, and what would have to change to close each gap. Nothing marked
 |---|---|---|
 | may this agent post to the offer board | `technocore` / `room:tclk-offers` / `write` | `docs/04` namespace table; `scopes.NAMESPACES["technocore"]` |
 | may this agent post into one deal room | `technocore` / `room:mb-p-tclk-<16hex>` / `write` | same; the room is derived by `venue.deal_room` |
-| a human must consent to each post | grant `approval: required`; receipt over `ActionRequest.over_bytes(content=<frame line>)` | `docs/06`; `approval.check_execution` |
+| a human must consent to each post | grant `approval: required` naming its `approvers`; receipt over `ActionRequest.over_bytes(content=<frame line>)` | `docs/06`; `approval.check_execution` |
 | a changed byte after approval | `requestHash` covers `contentHash` covers the line | `actions.py` |
 | the grant expired / was revoked / root superseded / lineage conflicted | `check_permission` reason codes | `EXPIRED`, `REVOKED`, `SUPERSEDED`, `CONFLICTED` |
 | the frame is not tclk/1 at all | `MALFORMED`; a different version prefix → `UNKNOWN_VERSION` | `authority.verify_tclk_authority` |

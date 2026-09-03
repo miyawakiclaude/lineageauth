@@ -53,7 +53,7 @@ makes no claim about anyone's eligibility for anything. See
 | The signed event is the source of truth — never a server, index, or cache | [D-001](docs/29_DECISIONS.md) |
 | Verification runs offline: no network, no database, no private keys | [docs/01](docs/01_SYSTEM_ARCHITECTURE.md) |
 | Deny by default; authority only attenuates down a chain | [D-005, D-006](docs/29_DECISIONS.md) |
-| Human approval binds one exact action, and never creates missing authority | [D-009, D-010](docs/29_DECISIONS.md) |
+| Human approval binds one exact action, comes from a party the grant names, and never creates missing authority | [D-009, D-010, D-107](docs/29_DECISIONS.md) |
 | Ambiguous competing roots fail closed as `CONFLICTED` | [D-008](docs/29_DECISIONS.md) |
 | RFC 8785 JCS + SHA-256 + Ed25519, no home-grown crypto or canonical JSON | [D-002 – D-004](docs/29_DECISIONS.md) |
 | Everything runs at ¥0 — no paid service is required for correctness | [docs/31](docs/31_ZERO_COST_OPERATIONS.md) |

@@ -2375,3 +2375,55 @@ Git/GitHub writes require confirmation of active account + repository owner + re
 - Interop impact:
 - Decision:
 - Migration:
+
+## D-107: who may approve is designated on the grant, not inferred from the chain
+
+- **Date:** 2026-09-03
+- **Problem:** D-042 said the parties entitled to approve an exercise of
+  authority are the issuers along the authorizing path plus the current root:
+  whoever delegated it may consent to its use. Alan Karp, replying on
+  [ucan-wg/spec#206](https://github.com/ucan-wg/spec/discussions/206) after
+  D-105, asked what the rule means when nobody on the chain is a human -- an
+  agent that delegated to another agent would be "the human in the loop" -- and
+  suggested the verifier should instead ask a *designated* party. D-086b and
+  D-105 had already shown the derived rule was the wrong shape: an operator
+  could put a key it controls on the path (D-086b), the loop rule that tried to
+  stop it refused a legitimate confused-deputy chain and was bypassable
+  (D-105), and what remained was a disclosure-only exclusion.
+- **Decision:** a `delegation.grant` carries `approvers`, a list of did:key
+  values. It is required whenever `approval` is not `none`; a grant that
+  demands approval and names nobody is refused by the builder **and** by
+  `read_grant`, so a hand-built payload cannot fall open to "anyone on the
+  chain" (fail closed; the alternative of treating a missing list as "the root"
+  was considered and rejected as a silent default). The list attenuates: a
+  child may only name a subset of its parent's (`SCOPE_VIOLATION` otherwise);
+  a parent naming nobody constrains nothing. `_approvers_entitled` is now the
+  intersection of the lists along the path -- the leaf's own list by
+  construction -- minus the agent, minus any DID a fleet disclosure ties to the
+  agent (D-105). Nobody is entitled by position: neither the root nor an issuer
+  on the path may approve unless named. The `DENIED` detail says so.
+- **What it closes.** The laundering D-086b found is closed structurally, not
+  by a rule about the chain's shape: a throwaway key on the path is entitled to
+  nothing unless the party above named it, and `tests/test_approval.py`
+  pins the bundle that used to execute and now does not.
+- **What it does not close, said flatly.** A delegator that names a key it
+  wrongly believes is a person -- including the agent operator's second key --
+  is not caught; the receipt verifies as a second party's would. The question
+  moved from the chain's shape to the delegator's decision, which is where it
+  can be answered. `docs/28` says so, and the suite keeps a test asserting
+  `may_execute` for exactly that case so the limitation cannot quietly stop
+  being true.
+- **Wire and conformance.** `approvers` is an optional key on the wire
+  (present iff non-empty), so `conformance/frozen-shapes.json` is unchanged:
+  no required key was added, and the `authority` family stays *held*. An
+  implementation that ignores `approvers` and applies D-042 would permit
+  receipts this one refuses -- a stricter-than-before divergence, in the safe
+  direction. The JS package does not evaluate authority and is unaffected.
+- **Security impact.** Strictly narrower. Every receipt that verified before
+  and still verifies is signed by a party a grant names. The agent and
+  disclosed-fleet exclusions are retained as defence in depth on top of
+  designation, not replaced by it.
+- **Migration.** Existing grants with `approval: none` are unaffected. A grant
+  with `approval: external-only` or `required` and no `approvers` is no longer
+  usable and must be reissued naming its approvers. No such grant exists in
+  the conformance vectors, the examples, or the Explorer demo.

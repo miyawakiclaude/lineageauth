@@ -9,7 +9,8 @@ Creates lineage genesis and epoch 0 root.
 Defines recovery members, threshold, policy version.
 
 ### `delegation.grant`
-Delegates attenuated scopes.
+Delegates attenuated scopes. When it demands approval it names who may give it
+(`approvers`, D-107).
 
 ### `delegation.revoke`
 Revokes one grant.

@@ -94,15 +94,20 @@ flatly: **a valid approval receipt proves that a key other than the agent's
 signed consent to one exact action. It does not prove a second person.**
 
 DIDs are free — the table above already says counting them counts nothing — and
-that applies to approval too. One operator holding two keys can put one on the
-authorizing chain and act with the other, and the receipt then verifies exactly
-as a genuine second party's would.
+that applies to approval too. Since D-107 a grant *designates* who may approve,
+and a child may only narrow that list, so a key an operator slips onto the chain
+is entitled to nothing unless the party above named it. What is left is the
+naming itself: a delegator that names a key it wrongly believes is a person —
+including a second key of the agent's own operator — is not caught, and the
+receipt then verifies exactly as a genuine second party's would. The question
+moved from the shape of the chain to the delegator's decision, which is where it
+can be answered; it did not go away.
 
 Two exclusions are enforced, and both are narrow. The agent is never entitled to
-consent on its own behalf. Neither is a DID that a **disclosure** ties to the
-agent (D-105), the same rule that disqualifies a juror sharing a fleet with a
-party. The second holds an operator to what it said; it detects nothing about an
-operator that stayed quiet.
+consent on its own behalf, named or not. Neither is a DID that a **disclosure**
+ties to the agent (D-105), the same rule that disqualifies a juror sharing a
+fleet with a party. The second holds an operator to what it said; it detects
+nothing about an operator that stayed quiet.
 
 An earlier version refused a delegation chain that reached the same DID twice,
 believing that closed it. Alan Karp pointed out on
@@ -111,6 +116,8 @@ failed both ways round, and both halves were reproduced here: it refused the
 chain a *correct* deputy needs — when B asks A to act, A must exercise B's
 authority or become a confused deputy — while the operator moved its throwaway
 key to the far end and laundered standing exactly as before. The rule is gone.
+Karp's second observation, that the verifier should ask a *designated* party
+rather than infer one from the chain, is what D-107 adopted.
 
 If you need two-person control, bind identity outside this layer. Nothing here
 can supply it.

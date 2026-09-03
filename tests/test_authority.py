@@ -30,7 +30,7 @@ from lineageauth.builders import (
 from lineageauth.bundle import EventBundle
 from lineageauth.crypto import LocalSigner
 from lineageauth.envelope import Envelope
-from lineageauth.errors import ReasonCode
+from lineageauth.errors import MalformedEventError, ReasonCode
 from lineageauth.scopes import ApprovalMode
 from tests.testkeys import AGENT_1, OUTSIDER, RECOVERY_1, ROOT_A, ROOT_B, unsafe_signer
 
@@ -64,9 +64,13 @@ def grant(
     expires_at: datetime = UNTIL,
     max_depth: int = 1,
     approval: str = "none",
+    approvers: list[str] | None = None,
     parent: str | None = None,
     signers: list[LocalSigner] | None = None,
 ) -> Envelope:
+    # D-107: a grant that demands approval must name who gives it. ROOT, unless told.
+    if approvers is None and approval != "none":
+        approvers = [ROOT.did]
     payload = build_delegation_grant(
         lineage=LINEAGE,
         issuer=issuer.did,
@@ -77,6 +81,7 @@ def grant(
         expires_at=expires_at,
         max_depth=max_depth,
         approval=approval,
+        approvers=approvers,
         parent=parent,
         issued_at=AT,
     )
@@ -261,6 +266,27 @@ class TestAttenuation:
         assert decision.reason is ReasonCode.APPROVAL_REQUIRED
         assert decision.approval is ApprovalMode.REQUIRED
 
+    def test_a_child_may_not_widen_the_designated_approvers(self) -> None:
+        """D-107: the approver list attenuates like everything else."""
+        parent = grant(max_depth=1, approval="required", approvers=[ROOT.did])
+        child = self._child(parent, approval="required", approvers=[ROOT.did, STRANGER.did])
+        decision = check(genesis(), parent, child, agent=SUB_AGENT)
+        assert decision.reason is ReasonCode.SCOPE_VIOLATION
+        assert any("only narrow the set of approvers" in r.detail for r in decision.refusals)
+
+    def test_a_child_may_narrow_the_designated_approvers(self) -> None:
+        parent = grant(max_depth=1, approval="required", approvers=[ROOT.did, STRANGER.did])
+        child = self._child(parent, approval="required", approvers=[STRANGER.did])
+        decision = check(genesis(), parent, child, agent=SUB_AGENT)
+        assert decision.reason is ReasonCode.APPROVAL_REQUIRED
+
+    def test_a_child_may_introduce_approvers_when_its_parent_named_none(self) -> None:
+        """A parent needing no approval constrains nothing; strengthening is free."""
+        parent = grant(max_depth=1, approval="none")
+        child = self._child(parent, approval="required", approvers=[STRANGER.did])
+        decision = check(genesis(), parent, child, agent=SUB_AGENT)
+        assert decision.reason is ReasonCode.APPROVAL_REQUIRED
+
     def test_only_the_holder_of_a_grant_may_delegate_from_it(self) -> None:
         parent = grant(subject=AGENT, max_depth=1)
         # STRANGER did not receive the parent grant, but names it as their parent.
@@ -433,6 +459,38 @@ class TestApproval:
         decision = check(genesis(), parent, child, agent=SUB_AGENT)
         assert decision.approval is ApprovalMode.REQUIRED
 
+    def test_a_required_grant_that_designates_nobody_is_refused(self) -> None:
+        """D-107, option A: fail closed at the builder and again at the verifier.
+
+        The builder is a convenience; the verifier is the rule. A hand-built
+        grant demanding approval with no `approvers` is not read as "anyone on
+        the chain may consent". It is not a usable grant.
+        """
+        with pytest.raises(MalformedEventError, match="designate"):
+            grant(approval="required", approvers=[])
+        payload = build_delegation_grant(
+            lineage=LINEAGE,
+            issuer=ROOT.did,
+            subject=AGENT.did,
+            epoch=0,
+            scopes=[LOBBY_WRITE],
+            not_before=FROM,
+            expires_at=UNTIL,
+            max_depth=0,
+            approval="required",
+            approvers=[ROOT.did],
+            issued_at=AT,
+        )
+        del payload["approvers"]
+        decision = check(genesis(), sign_payload(payload, [ROOT]))
+        assert not decision.allowed
+        assert decision.reason is not ReasonCode.APPROVAL_REQUIRED
+        assert any("designates no approver" in r.detail for r in decision.refusals)
+
+    def test_a_grant_needing_no_approval_need_not_name_anyone(self) -> None:
+        decision = check(genesis(), grant(approval="none"))
+        assert decision.allowed
+
 
 # ------------------------------------------------------------------ lineage coupling
 
@@ -571,9 +629,11 @@ class TestADelegationLoopIsWalkedNotRefused:
     is still an issuer entitled to approve A'. A DID costs nothing, so no rule
     about the shape of a chain separates a throwaway key from a second party.
 
-    What remains is in `approval._approvers_entitled`: the agent is excluded, and
-    so is any DID a *disclosure* ties to it. That covers operators who said so and
-    nothing else, which is the most an offline verifier can honestly claim.
+    What replaced it is not a rule about the chain at all. D-107 has the grant
+    *designate* its approvers, narrowing down the chain, so a key on the path is
+    entitled to nothing unless the party above named it. `_approvers_entitled`
+    still excludes the agent and any DID a *disclosure* ties to it; what it
+    cannot check is whether a named key is the person the delegator believed.
     """
 
     def _looped_bundle(self) -> tuple[EventBundle, str]:

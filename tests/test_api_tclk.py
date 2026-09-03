@@ -100,6 +100,7 @@ def grant(*, approval: str = "none") -> Envelope:
             expires_at=AT + timedelta(days=30),
             max_depth=0,
             approval=approval,
+            approvers=[ROOT.did] if approval != "none" else None,
             issued_at=AT,
         ),
         [ROOT],

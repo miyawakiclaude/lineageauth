@@ -89,6 +89,12 @@ because it is signed rather than append-only by convention, and it carries two
 things that schema does not — a receipt spendable exactly once, and a re-check
 of authority in the gap between the decision and the execution.
 
+Who may sign that receipt is designated on the grant rather than inferred from
+the delegation chain (D-107). That change was made on Alan Karp's suggestion in
+[ucan-wg/spec#206](https://github.com/ucan-wg/spec/discussions/206), and no
+novelty is claimed for it: asking a named party is the ordinary shape of an
+approval workflow, and the earlier chain-derived rule was the departure.
+
 It is worth saying what that schema does that this does not. Its fourth query
 asks *did anything execute without approval*, a left join from side effects to
 approvals. There is no equivalent here, because the link is optional:

@@ -58,6 +58,18 @@ Constraint monotonicity:
 
 A child can strengthen but never weaken.
 
+### Designated approvers
+A grant whose `approval` is anything but `none` must carry `approvers`: the
+did:key values entitled to sign a receipt for an action it authorizes. A grant
+that demands approval and names nobody is refused (D-107, fail closed).
+
+`approvers` attenuates like everything else: a child may only name a subset of
+its parent's. A parent that names nobody (and so needs no approval) constrains
+nothing, and a child may introduce a list when it strengthens `approval`.
+
+Nobody is entitled by position. Neither the root nor an issuer on the path may
+approve unless a grant names them. The agent is never entitled, named or not.
+
 ## Namespaces
 
 ### Technocore

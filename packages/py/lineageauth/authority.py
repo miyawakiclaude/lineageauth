@@ -66,6 +66,7 @@ class Grant:
     expires_at: datetime
     max_depth: int
     approval: ApprovalMode
+    approvers: tuple[str, ...]
     parent: str | None
 
     @property
@@ -184,6 +185,25 @@ def read_grant(event: AdmittedEvent) -> Grant | str:
         if parent == event.event_id:
             return "a grant cannot be its own parent"
 
+    raw_approvers = event.get("approvers")
+    approvers: tuple[str, ...] = ()
+    if raw_approvers is not None:
+        if not isinstance(raw_approvers, list) or not raw_approvers:
+            return "approvers must be a non-empty list of did:key values when present"
+        names: list[str] = []
+        for item in raw_approvers:
+            did = _as_did(item)
+            if did is None:
+                return "approvers must all be usable Ed25519 did:key values"
+            if did in names:
+                return f"approvers lists {did} twice"
+            names.append(did)
+        approvers = tuple(names)
+    if approval is not ApprovalMode.NONE and not approvers:
+        # A grant that demands consent without saying whose is not read as
+        # "anyone on the chain may give it". It is refused (D-107).
+        return "demands approval but designates no approver (D-107)"
+
     return Grant(
         event_id=event.event_id,
         issuer=issuer,
@@ -194,6 +214,7 @@ def read_grant(event: AdmittedEvent) -> Grant | str:
         expires_at=expires_at,
         max_depth=max_depth,
         approval=approval,
+        approvers=approvers,
         parent=parent,
     )
 
@@ -318,6 +339,12 @@ def _edge_failure(child: Grant, parent: Grant) -> str | None:
         return (
             f"weakens the approval requirement from {parent.approval.wire_name} to "
             f"{child.approval.wire_name}; a child may only strengthen it"
+        )
+    if parent.approvers and not set(child.approvers) <= set(parent.approvers):
+        added = ", ".join(sorted(set(child.approvers) - set(parent.approvers)))
+        return (
+            f"designates approvers its parent did not ({added}); "
+            "a child may only narrow the set of approvers"
         )
     if child.epoch != parent.epoch:
         return f"anchored to epoch {child.epoch} while its parent is anchored to {parent.epoch}"
