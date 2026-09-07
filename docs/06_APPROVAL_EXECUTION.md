@@ -67,7 +67,7 @@ Immediately before execution:
 ## Who may approve
 
 The grants on the authorizing path say. Each grant that demands approval
-carries `approvers`, and a child may only narrow its parent's list, so the set
+carries `approvers`, and a child carries its parent's list unchanged (D-111), so the set
 entitled to sign a receipt is the leaf grant's own list (D-107).
 
 - A receipt from anyone else is `DENIED`, not ignored, so an operator can see

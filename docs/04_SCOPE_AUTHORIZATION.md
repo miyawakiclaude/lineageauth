@@ -63,9 +63,12 @@ A grant whose `approval` is anything but `none` must carry `approvers`: the
 did:key values entitled to sign a receipt for an action it authorizes. A grant
 that demands approval and names nobody is refused (D-107, fail closed).
 
-`approvers` attenuates like everything else: a child may only name a subset of
-its parent's. A parent that names nobody (and so needs no approval) constrains
-nothing, and a child may introduce a list when it strengthens `approval`.
+`approvers` does not attenuate; it travels. Once a grant names approvers, every
+grant below it carries the same list (D-111): a child may neither add a name,
+which would reopen the laundering D-086b found, nor drop one, which would let
+it drop the approver it expects to say no. A parent that names nobody (and so
+needs no approval) constrains nothing, and a child may introduce a list when it
+strengthens `approval`.
 
 Nobody is entitled by position. Neither the root nor an issuer on the path may
 approve unless a grant names them. The agent is never entitled, named or not.

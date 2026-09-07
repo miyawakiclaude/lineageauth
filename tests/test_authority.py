@@ -266,17 +266,31 @@ class TestAttenuation:
         assert decision.reason is ReasonCode.APPROVAL_REQUIRED
         assert decision.approval is ApprovalMode.REQUIRED
 
-    def test_a_child_may_not_widen_the_designated_approvers(self) -> None:
-        """D-107: the approver list attenuates like everything else."""
+    def test_a_child_may_not_add_a_designated_approver(self) -> None:
+        """D-107/D-111: adding a name is the laundering channel; refused."""
         parent = grant(max_depth=1, approval="required", approvers=[ROOT.did])
         child = self._child(parent, approval="required", approvers=[ROOT.did, STRANGER.did])
         decision = check(genesis(), parent, child, agent=SUB_AGENT)
         assert decision.reason is ReasonCode.SCOPE_VIOLATION
-        assert any("only narrow the set of approvers" in r.detail for r in decision.refusals)
+        assert any("changes the designated approvers (adds" in r.detail for r in decision.refusals)
 
-    def test_a_child_may_narrow_the_designated_approvers(self) -> None:
+    def test_a_child_may_not_drop_a_designated_approver(self) -> None:
+        """D-111, Alan Karp's case: a child must not drop the approver it expects to say no.
+
+        Under D-107 this narrowing was allowed as attenuation. It is not the
+        child's authority being attenuated -- it is the parent's designation
+        being edited -- so the list now travels unchanged.
+        """
         parent = grant(max_depth=1, approval="required", approvers=[ROOT.did, STRANGER.did])
         child = self._child(parent, approval="required", approvers=[STRANGER.did])
+        decision = check(genesis(), parent, child, agent=SUB_AGENT)
+        assert decision.reason is ReasonCode.SCOPE_VIOLATION
+        assert any("changes the designated approvers (drops" in r.detail for r in decision.refusals)
+
+    def test_a_child_carries_its_parents_approvers_unchanged(self) -> None:
+        """The same set, in any order, is the only list a child may carry."""
+        parent = grant(max_depth=1, approval="required", approvers=[ROOT.did, STRANGER.did])
+        child = self._child(parent, approval="required", approvers=[STRANGER.did, ROOT.did])
         decision = check(genesis(), parent, child, agent=SUB_AGENT)
         assert decision.reason is ReasonCode.APPROVAL_REQUIRED
 
@@ -630,7 +644,7 @@ class TestADelegationLoopIsWalkedNotRefused:
     about the shape of a chain separates a throwaway key from a second party.
 
     What replaced it is not a rule about the chain at all. D-107 has the grant
-    *designate* its approvers, narrowing down the chain, so a key on the path is
+    *designate* its approvers, carried down the chain unchanged, so a key on the path is
     entitled to nothing unless the party above named it. `_approvers_entitled`
     still excludes the agent and any DID a *disclosure* ties to it; what it
     cannot check is whether a named key is the person the delegator believed.

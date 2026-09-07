@@ -95,7 +95,7 @@ signed consent to one exact action. It does not prove a second person.**
 
 DIDs are free — the table above already says counting them counts nothing — and
 that applies to approval too. Since D-107 a grant *designates* who may approve,
-and a child may only narrow that list, so a key an operator slips onto the chain
+and that list travels down the chain unchanged (D-111), so a key an operator slips onto the chain
 is entitled to nothing unless the party above named it. What is left is the
 naming itself: a delegator that names a key it wrongly believes is a person —
 including a second key of the agent's own operator — is not caught, and the

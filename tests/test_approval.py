@@ -273,7 +273,7 @@ class TestExactBinding:
 
     def test_a_designated_intermediate_may_approve(self) -> None:
         """The operator that delegated to the agent approves -- because it was named."""
-        parent, child = self._two_hops([ROOT.did, OPERATOR.did], [OPERATOR.did])
+        parent, child = self._two_hops([ROOT.did, OPERATOR.did], [ROOT.did, OPERATOR.did])
         decision = execute(genesis(), parent, child, receipt(approver=OPERATOR))
         assert decision.may_execute
         assert decision.approver == OPERATOR.did
@@ -575,7 +575,7 @@ class TestStandingThroughAKeyTheAgentAlsoControls:
     showed on ucan-wg/spec#206 that it refused a legitimate pattern while the
     operator simply moved the throwaway key to the other end. D-107 then changed
     the question: entitlement is no longer read off the chain at all. A grant
-    designates its approvers and a child may only narrow that list, so a key the
+    designates its approvers and the list travels down unchanged, so a key the
     operator slips onto the path is entitled to nothing unless the party above
     named it.
 

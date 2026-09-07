@@ -2595,3 +2595,32 @@ Git/GitHub writes require confirmation of active account + repository owner + re
   hidden.
 - **Interop impact.** None. A reader that does not know the media type sees an
   ordinary artifact registration with an ordinary hash.
+
+## D-111: the designated approvers travel down the chain unchanged
+
+- **Date:** 2026-09-07
+- **Problem:** D-107 let a child grant name a *subset* of its parent's
+  approvers, on the reasoning that narrowing is attenuation. Alan Karp asked
+  on [ucan-wg/spec#206](https://github.com/ucan-wg/spec/discussions/206)
+  whether a child could drop the approver it expects to say no, and suggested
+  a "child may not change the list" rule. Under the any-of semantics the
+  receipt check uses, dropping a name gains an attacker nothing today -- the
+  remaining name could already approve alone -- but it would the moment an
+  all-of or m-of-n form is added, and the permission was never really
+  attenuation: the child's own authority is untouched; what it edits is the
+  parent's designation of who may consent.
+- **Decision:** once a grant names approvers, every grant below it carries the
+  same set (order is not significant). A child that adds or drops a name is
+  refused at the edge with `SCOPE_VIOLATION` and a detail naming the change.
+  A parent that names nobody still constrains nothing, so a child may
+  introduce a list when it strengthens `approval`. `_approvers_entitled` is
+  unchanged: the intersection along the path is now the list itself.
+- **What is given up.** The "narrow responsibility" use -- an operator
+  sub-delegating one agent's slice and naming only the person responsible for
+  it -- no longer exists. Under any-of it bought no security, only routing;
+  routing belongs in the tool that asks approvers, not in the verifier.
+- **Security impact.** Strictly narrower than D-107. Nothing that verified
+  before verifies now unless every grant on the path already carried the same
+  list. Wire format unchanged; `conformance/frozen-shapes.json` unchanged.
+- **Migration.** A chain whose child narrowed the list must be reissued with
+  the parent's list. No such chain exists in the vectors, examples or demos.

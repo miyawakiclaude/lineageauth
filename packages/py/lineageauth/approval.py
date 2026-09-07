@@ -276,7 +276,7 @@ def _approvers_entitled(
 
     The grants on the authorizing path *designate* who may consent to an action
     they authorize (D-107). A grant that names approvers narrows the set -- a
-    child may only name a subset of its parent's -- so the entitled set is the
+    child carries its parent's list unchanged (D-111) -- so the entitled set is the
     intersection along the path, which by construction is the leaf's own list.
     Nobody is entitled by position: neither the root nor an issuer on the path
     may approve unless a grant names them.

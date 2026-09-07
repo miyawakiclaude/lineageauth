@@ -83,7 +83,7 @@ uv run pytest && uv run ruff check . && uv run mypy
       the human reads before consenting
 - [x] nonce — at least 16 bytes, canonical unpadded base64url
 - [x] expiry — exclusive at the boundary; a future-dated receipt is refused
-- [x] approver authority — designated on the grant, narrowing down the chain
+- [x] approver authority — designated on the grant, carried down the chain unchanged
       (D-107; replaced the chain-derived rule of D-042)
 - [x] spent store — `InMemorySpentStore` and durable `SqliteSpentStore`
 - [x] atomic reserve — primary-key insert, no read-then-write (D-044)

@@ -196,7 +196,7 @@ def build_delegation_grant(
     `approvers` designates who may sign an approval receipt for an action this
     grant, or one derived from it, authorizes. A grant whose `approval` is
     anything but `none` must designate at least one, and a child may only
-    narrow the set (D-107). Entitlement is named here by the delegator, not
+    change the list once it is set (D-107, D-111). Entitlement is named here by the delegator, not
     inferred from who sits on the chain.
     """
     if epoch < 0:

@@ -340,11 +340,25 @@ def _edge_failure(child: Grant, parent: Grant) -> str | None:
             f"weakens the approval requirement from {parent.approval.wire_name} to "
             f"{child.approval.wire_name}; a child may only strengthen it"
         )
-    if parent.approvers and not set(child.approvers) <= set(parent.approvers):
-        added = ", ".join(sorted(set(child.approvers) - set(parent.approvers)))
+    if parent.approvers and set(child.approvers) != set(parent.approvers):
+        # Once a grant names who may consent, the list travels unchanged. A
+        # child that could add a name would reopen the laundering D-086b found;
+        # a child that could drop one could drop the approver it expects to say
+        # no (Alan Karp, ucan-wg/spec#206). Neither direction is attenuation of
+        # the child's own authority, so neither is the child's to decide (D-111).
+        added = sorted(set(child.approvers) - set(parent.approvers))
+        dropped = sorted(set(parent.approvers) - set(child.approvers))
+        change = "; ".join(
+            part
+            for part in (
+                f"adds {', '.join(added)}" if added else "",
+                f"drops {', '.join(dropped)}" if dropped else "",
+            )
+            if part
+        )
         return (
-            f"designates approvers its parent did not ({added}); "
-            "a child may only narrow the set of approvers"
+            f"changes the designated approvers ({change}); once a grant names "
+            "approvers, every grant below it carries the same list"
         )
     if child.epoch != parent.epoch:
         return f"anchored to epoch {child.epoch} while its parent is anchored to {parent.epoch}"
