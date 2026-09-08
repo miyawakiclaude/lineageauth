@@ -1616,3 +1616,67 @@ app.add_typer(flop_app)
 
 if __name__ == "__main__":  # pragma: no cover
     app()
+
+
+technocore_app = typer.Typer(
+    name="technocore",
+    help=(
+        "Read Technocore's own records. Read-only: nothing here posts, writes a note "
+        "or holds a key."
+    ),
+    no_args_is_help=True,
+)
+app.add_typer(technocore_app)
+
+
+@technocore_app.command("delegations")
+def technocore_delegations(
+    root: Annotated[str, typer.Option("--root", help="The root did:key whose note this is.")],
+    note: Annotated[
+        str, typer.Option("--note", help="File holding the note body, or '-' for stdin.")
+    ],
+    at: Annotated[str | None, typer.Option("--at", help="Instant (RFC3339 UTC).")] = None,
+    as_json: Annotated[bool, typer.Option("--json", help="Emit every verdict.")] = False,
+) -> None:
+    """Verify the `delegate:` records in a DID note against its root.
+
+    Mirrors `scripts/sign.py check` from flop-labs/technocore-chat, with one
+    ordering difference: signatures are checked before nonces are ranked, so a
+    forged record with a large nonce cannot report a real grant as SUPERSEDED
+    (technocore-chat#782). Exit code is 0 when at least one record is live, 1
+    otherwise; every record is still printed.
+    """
+    from lineageauth.adapters.technocore.delegation import check_delegations, note_path
+
+    body = _read_source(note)
+    try:
+        moment = parse_instant(at, field="--at") if at is not None else datetime.now(tz=UTC)
+        checked = check_delegations(root, body, at=moment)
+    except LineageAuthError as exc:
+        typer.secho(f"error: {exc}", fg=typer.colors.RED, err=True)
+        raise typer.Exit(code=2) from exc
+    if as_json:
+        typer.echo(
+            jsonio.dumps(
+                {
+                    "root": root,
+                    "notePath": note_path(root),
+                    "records": [entry.to_dict() for entry in checked],
+                    "live": sum(1 for entry in checked if entry.live),
+                    "note": (
+                        "A live record proves that the root key signed it. It is not a "
+                        "LineageAuth grant and it creates no LAP authority."
+                    ),
+                }
+            )
+        )
+    else:
+        typer.echo(f"note {note_path(root)} for {root}")
+        if not checked:
+            typer.echo("  (no delegate: records found)")
+        for entry in checked:
+            verdict = str(entry.verdict).ljust(10)
+            typer.echo(f"  {verdict} {entry.record.agent} {entry.record.scope}  ({entry.detail})")
+        live = sum(1 for entry in checked if entry.live)
+        typer.echo(f"  {live} live delegation(s); a live record is not a LineageAuth grant")
+    raise typer.Exit(code=0 if any(entry.live for entry in checked) else 1)

@@ -133,6 +133,7 @@ Three inputs the client does not get to choose:
 true`) rather than as a constant, and `walletCustody` from the signer.
 
 CLI, ASCII output only:
+- `la technocore delegations --root <did> --note <file> [--at …] [--json]` — verify the `delegate:` records in a DID note; read-only, no LAP authority
 - `la flop status | sources | rules`
 - `la flop testnet simulate --did … [--lineage … --bundle … --at …]`
 - `la flop faucet prepare --did …` — unavailable / simulation output only

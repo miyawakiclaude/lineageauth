@@ -2670,3 +2670,41 @@ Git/GitHub writes require confirmation of active account + repository owner + re
   quotation; one that is checked by nobody is a paraphrase with quotation
   marks. The check is now the generator, so the registry cannot drift from
   its sources without the script saying so.
+
+## D-113: read Technocore's native delegation records; issue none; rank after verifying
+
+- **Date:** 2026-09-08
+- **What appeared upstream.** Technocore's `llms.txt` (served 2026-09-08)
+  documents DELEGATION: a root key appends `delegate: <agent-did> <scope>
+  <expires> <nonce> <sig>` to its own DID note, signed over
+  `delegate|<root>|<agent>|<scope>|<expires>|<nonce>`; scope is `*`,
+  `r:<room>` or `kv:<ns>`; expiry is the only revocation; the server checks
+  and stores nothing. `scripts/sign.py delegate|check` is the reference.
+- **Decision:** a reader, `adapters/technocore/delegation.py`, and a CLI
+  command, `la technocore delegations`. It parses by token, verifies against
+  the root, applies expiry, and ranks by highest nonce per agent. It does not
+  issue records, hold keys, or fetch notes on its own (the existing
+  `TechnocoreReader.note` does the fetch, through the route classifier).
+- **What it is not.** A live record is Technocore-side standing that
+  Technocore itself never checks. It is not a `delegation.grant`; nothing in
+  `authority.py` reads it; `check_permission` is unchanged. `delegation_scopes`
+  maps a record's scope to the LAP `technocore` scopes it would correspond to
+  so the two views can be compared -- read and write on the named room or
+  note namespace -- and manufactures nothing.
+- **One ordering difference from the reference, on purpose.** The nonce
+  ranking runs over records whose signature verified. The reference at
+  45921c3e ranks every record first, so a forged record with a large nonce --
+  in a note anyone can write to -- reports the real grant as SUPERSEDED.
+  This is flop-labs/technocore-chat#782, filed 2026-09-07 by another reader;
+  the port reproduces the finding as a test rather than inheriting the bug.
+  Everything else follows the reference, including that an expired re-issue
+  still supersedes an older live grant: the root's last word stands even
+  after it lapses, because the alternative lets a replayed old record widen a
+  narrowing.
+- **Security impact.** Additive and read-only. The note body is untrusted
+  text; the reader follows nothing in it. `LocalSigner` is never named in the
+  module, and a test walks its imports for anything that opens a socket.
+- **Relation to #430.** The assumptions the Technocore adapter encodes are
+  open for correction upstream there; this module adds one more assumption to
+  that list -- that the reference will rank after verifying once #782 lands --
+  and says so in its docstring.
