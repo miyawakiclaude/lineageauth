@@ -128,8 +128,8 @@ class TestLookalikesAreLouderThanUnknowns:
 class TestTheRecordedSnapshot:
     def test_it_loads_and_records_when_it_was_taken(self) -> None:
         snapshot = load_snapshot()
-        assert snapshot.fetched_at == "2026-09-03T04:25:46Z"
-        assert len(snapshot.snapshots) >= 8
+        assert snapshot.fetched_at == "2026-09-08T03:40:53Z"
+        assert len(snapshot.snapshots) >= 15
 
     def test_every_source_is_itself_official(self) -> None:
         for entry in load_snapshot().snapshots:

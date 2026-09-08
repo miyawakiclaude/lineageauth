@@ -79,7 +79,7 @@ defaults to off so the mock adapter is never consulted in a production mount
 |---|---|---|
 | The lineage's own signed events | verified by the core before the adapter sees them | the only records that reach `cryptographically-linked` or better without a third party |
 | `conformance/flop/official-sources.json` | eight snapshots, hashes only, `fetchedAt` 2026-09-03T04:25:46Z | the definition of *official* (`docs/FLOP_SAFETY.md`) |
-| `conformance/flop/rule-registry.json` | eighteen rules, eleven `official-draft`, seven `unknown` | quoted, hashed, marked stale when the source moves (`docs/FLOP_RULE_REGISTRY.md`) |
+| `conformance/flop/rule-registry.json` | thirty rules at the 2026-09-08 snapshot, twenty-three `official-draft`, seven `unknown` | quoted, hashed, marked stale when the source moves (`docs/FLOP_RULE_REGISTRY.md`) |
 | `conformance/flop/public-evidence.json` | thirteen real public contributions of the subject DID | `partially-verified` at most: the URL is on record, this session did not re-fetch it; a third party's public citation is `evidence-supported`, not attested, because no attestation event exists |
 | `conformance/flop/mock-activity.json` | the directive's synthetic sample | every record `synthetic: true` and the banner `SYNTHETIC MOCK DATA`; only with `flop_demo_mode=True` |
 | Technocore rooms | community, via `adapters.technocore` | message volume shown as a number and excluded from coverage; GET-write URLs refused before reading |

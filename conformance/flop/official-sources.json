@@ -1,145 +1,348 @@
 {
-  "_meta": {
-    "purpose": "Snapshot of the official sources the FLOP layer is allowed to treat as authoritative, as observed once, read-only.",
-    "fetchedAt": "2026-09-03T04:25:46Z",
-    "bodiesAreNotStored": true,
-    "bodiesNote": "Response bodies are deliberately not copied into this repository. Only the URL, HTTP status, byte length, content hash, version hint and status are recorded, so a later fetch can be compared without this repository redistributing someone else's document.",
-    "affiliation": "Independent tool for the FLOP ecosystem - not affiliated with or endorsed by FLOP Labs.",
-    "networkPhaseAtSnapshot": "PRE_TESTNET",
-    "officialTestnetExecutable": false
-  },
-  "sources": [
-    {
-      "id": "flop-finance-home",
-      "url": "https://flop.finance/",
-      "httpStatus": 200,
-      "bytes": 16472,
-      "sha256": "sha256:dedb1ae9d9cd72bdf359e30b17c0a097a34004c77c631223bd07331042863abd",
-      "fetchedAt": "2026-09-03T04:25:46Z",
-      "versionHint": null,
-      "status": "official-reference",
-      "note": "Front page. Prose only; states no economic rule and carries no version marker."
-    },
-    {
-      "id": "flop-finance-teaser",
-      "url": "https://flop.finance/teaser/",
-      "httpStatus": 200,
-      "bytes": 44723,
-      "sha256": "sha256:bc9c93a3a420b7a2cd4fb3b3e0e44ab8a025eae088f216a74702c3e778dbe840",
-      "fetchedAt": "2026-09-03T04:25:46Z",
-      "versionHint": "Version 0.1 (draft) | Status Draft | Updated 2026-08-26 | Definitive spec Yellow Paper (not yet final)",
-      "status": "official-draft",
-      "note": "The only official document that states FLOP economics. Every economic rule in rule-registry.json quotes this document or is marked unknown."
-    },
-    {
-      "id": "flop-finance-brand",
-      "url": "https://flop.finance/brand/",
-      "httpStatus": 200,
-      "bytes": 13389,
-      "sha256": "sha256:5211800919428e2a0d367bef628d27ad245c3f4167732fd6bc7c5ac329970436",
-      "fetchedAt": "2026-09-03T04:25:46Z",
-      "versionHint": "six published swatches: Base, Grey, FLOP Blue, Accent, Electric Green, Ice White",
-      "status": "official-reference",
-      "note": "Brand palette. Superseded in detail by design.md wherever the two differ."
-    },
-    {
-      "id": "flop-finance-design",
-      "url": "https://flop.finance/design.md",
-      "httpStatus": 200,
-      "bytes": 30278,
-      "sha256": "sha256:476fe27b0cebf5fef03fb880ce50c98d9afce7f558dfa3687c5cec4d37ca6248",
-      "fetchedAt": "2026-09-03T04:25:46Z",
-      "versionHint": "frontmatter version: alpha | Mascot V3.0 design system | ETag 7e047e3e7b87506b8511ca62138b7688",
-      "status": "official-reference",
-      "note": "The design token source of record for ui-tokens.json. Logo and mascot assets are governed here and are deliberately not reproduced by this tool."
-    },
-    {
-      "id": "technocore-llms",
-      "url": "https://technocore.chat/llms.txt",
-      "httpStatus": 200,
-      "bytes": 24048,
-      "sha256": "sha256:c386c79a48d95b669e206d5e239633881895a0f86e38d0de48333b3d724e1225",
-      "fetchedAt": "2026-09-03T04:25:46Z",
-      "versionHint": "Last-Modified: Thu, 03 Sep 2026 04:21:08 GMT",
-      "status": "official-reference",
-      "note": "Service description for Technocore. Describes the transport, never the content carried over it."
-    },
-    {
-      "id": "technocore-auth",
-      "url": "https://technocore.chat/auth.md",
-      "httpStatus": 200,
-      "bytes": 5200,
-      "sha256": "sha256:ae4c61d5d6d4b13ec24467a1a66f139c132e039a7180790a914587d642534ddb",
-      "fetchedAt": "2026-09-03T04:25:46Z",
-      "versionHint": "states \"There is no authentication\"",
-      "status": "official-reference",
-      "note": "Why a signed Technocore message still proves only key control: the service authenticates nobody."
-    },
-    {
-      "id": "technocore-patterns",
-      "url": "https://technocore.chat/patterns.md",
-      "httpStatus": 200,
-      "bytes": 13028,
-      "sha256": "sha256:1851ca6b3d43edb5e2c7fe07e0634dba4eaa1cdd69b95eb62636b1d8092f86e9",
-      "fetchedAt": "2026-09-03T04:25:46Z",
-      "versionHint": "ETag fb603312a91fcd563f58d4e8c9372e68",
-      "status": "official-reference",
-      "note": "Route and usage patterns. The GET-write routes it documents are why safety.py classifies every Technocore URL before it is shown."
-    },
-    {
-      "id": "flop-labs-github-org",
-      "url": "https://github.com/flop-labs",
-      "httpStatus": 200,
-      "bytes": null,
-      "sha256": null,
-      "fetchedAt": "2026-09-03T04:25:46Z",
-      "versionHint": "repositories observed: tclk (pushed 2026-09-03T04:20:16Z, default branch main at 8872fab1, tag v0.1.0), technocore-chat (pushed 2026-09-02T18:04:40Z)",
-      "status": "official-reference",
-      "note": "Listing only; individual file bodies were not fetched, so no body hash is recorded. No testnet, faucet or inference-API repository exists in this organisation at the snapshot instant."
-    }
+ "_meta": {
+  "purpose": "Snapshot of the official sources the FLOP layer is allowed to treat as authoritative, as observed once, read-only.",
+  "fetchedAt": "2026-09-08T03:40:53Z",
+  "bodiesAreNotStored": true,
+  "bodiesNote": "Response bodies are deliberately not copied into this repository. Only the URL, HTTP status, byte length, content hash, version hint and status are recorded, so a later fetch can be compared without this repository redistributing someone else's document.",
+  "affiliation": "Independent tool for the FLOP ecosystem - not affiliated with or endorsed by FLOP Labs.",
+  "networkPhaseAtSnapshot": "PRE_TESTNET",
+  "officialTestnetExecutable": false,
+  "previousFetchedAt": "2026-09-03T04:25:46Z",
+  "history": [
+   {
+    "id": "flop-finance-home",
+    "change": "hash-changed",
+    "from": "sha256:dedb1ae9d9cd72bdf359e30b17c0a097a34004c77c631223bd07331042863abd",
+    "to": "sha256:ef8297d189aa244f27ea7a314c74c405ae31e12a4c751ade97f59d7a6e4db75f"
+   },
+   {
+    "id": "flop-finance-teaser",
+    "change": "hash-changed",
+    "from": "sha256:bc9c93a3a420b7a2cd4fb3b3e0e44ab8a025eae088f216a74702c3e778dbe840",
+    "to": "sha256:40bf53540f21e8974cb2f1a918ed2e2d72436417c98fe9f81d36272ed6984aff"
+   },
+   {
+    "id": "flop-finance-brand",
+    "change": "hash-changed",
+    "from": "sha256:5211800919428e2a0d367bef628d27ad245c3f4167732fd6bc7c5ac329970436",
+    "to": "sha256:cf2e0f8ce7e0dc36259f7fc9cc67f4acf7c343dfd8de672dda7587dc5bc8761f"
+   },
+   {
+    "id": "flop-finance-design",
+    "change": "unchanged",
+    "from": "sha256:476fe27b0cebf5fef03fb880ce50c98d9afce7f558dfa3687c5cec4d37ca6248",
+    "to": "sha256:476fe27b0cebf5fef03fb880ce50c98d9afce7f558dfa3687c5cec4d37ca6248"
+   },
+   {
+    "id": "technocore-llms",
+    "change": "hash-changed",
+    "from": "sha256:c386c79a48d95b669e206d5e239633881895a0f86e38d0de48333b3d724e1225",
+    "to": "sha256:350687cddee6ad979d37c35b64b5be5f3e89396c535357dfba416a93d9798f97"
+   },
+   {
+    "id": "technocore-auth",
+    "change": "unchanged",
+    "from": "sha256:ae4c61d5d6d4b13ec24467a1a66f139c132e039a7180790a914587d642534ddb",
+    "to": "sha256:ae4c61d5d6d4b13ec24467a1a66f139c132e039a7180790a914587d642534ddb"
+   },
+   {
+    "id": "technocore-patterns",
+    "change": "hash-changed",
+    "from": "sha256:1851ca6b3d43edb5e2c7fe07e0634dba4eaa1cdd69b95eb62636b1d8092f86e9",
+    "to": "sha256:45ab2f9d0aac7e6b920699cd30382af7f1eacaa0d6adc90d0e8567523e493370"
+   },
+   {
+    "id": "flop-finance-intro",
+    "change": "added",
+    "from": null,
+    "to": "sha256:81efd5cace3a2b7826e510d7fc5e1e30df8496cc6844301d3b044331bd6b5389"
+   },
+   {
+    "id": "flop-finance-intro-agent",
+    "change": "added",
+    "from": null,
+    "to": "sha256:bd0031d27cdbe4152d2d3f90e3867341267aaecdbeeba70673a352daa7d416eb"
+   },
+   {
+    "id": "flop-finance-yellowpaper",
+    "change": "added",
+    "from": null,
+    "to": "sha256:36f48e53233cb02c81566de977e4aa6754ffdcc8ffb1eeffdb37ae1ae51340a8"
+   },
+   {
+    "id": "flop-finance-intro-verification",
+    "change": "added",
+    "from": null,
+    "to": "sha256:b0989c2d585213dd38d1d055ae79d274135c2014d5ad3bb32232d26cb7b346fe"
+   },
+   {
+    "id": "flop-finance-intro-revenue",
+    "change": "added",
+    "from": null,
+    "to": "sha256:c117a379ca8861711307548756797f09513c7a90241b9a54738a79fac3baa2f9"
+   },
+   {
+    "id": "flop-finance-intro-miner",
+    "change": "added",
+    "from": null,
+    "to": "sha256:bc227179cad87cf1568598d178f78ab051b6f6aee28eb623c7b7dd2b22c01259"
+   },
+   {
+    "id": "flop-finance-intro-validator",
+    "change": "added",
+    "from": null,
+    "to": "sha256:f1f66d0791407221ce8e6e2134d98ba36869c8fd84412d16ed4eb9a6b7391f41"
+   },
+   {
+    "id": "flop-labs-github-org",
+    "change": "unchanged",
+    "from": null,
+    "to": null
+   }
   ],
-  "notObserved": [
-    {
-      "id": "testnet-endpoint",
-      "what": "A FLOP testnet RPC or HTTP endpoint",
-      "searchedIn": ["flop-finance-teaser", "flop-labs-github-org"],
-      "consequence": "No endpoint may be marked executable. The executor must refuse with TESTNET_NOT_LIVE."
-    },
-    {
-      "id": "faucet-procedure",
-      "what": "How an agent claims the test-token faucet, in what amount, with what cooldown",
-      "searchedIn": ["flop-finance-teaser", "flop-labs-github-org"],
-      "consequence": "Faucet actions exist only as simulation."
-    },
-    {
-      "id": "inference-api",
-      "what": "The inference request/response schema and its authentication",
-      "searchedIn": ["flop-finance-teaser", "flop-labs-github-org"],
-      "consequence": "Inference spend is never estimated from a guess."
-    },
-    {
-      "id": "inference-pricing",
-      "what": "A price or quote mechanism for testnet inference",
-      "searchedIn": ["flop-finance-teaser"],
-      "consequence": "Quotes are simulated and labelled as such."
-    },
-    {
-      "id": "network-identifier",
-      "what": "A chain id or network identifier",
-      "searchedIn": ["flop-finance-teaser", "flop-labs-github-org"],
-      "consequence": "Simulation uses the RFC 6761 .invalid namespace so a simulated destination can never resolve."
-    },
-    {
-      "id": "auth-signing-scheme",
-      "what": "The signature or authentication scheme a FLOP account uses",
-      "searchedIn": ["flop-finance-teaser", "flop-labs-github-org"],
-      "consequence": "No signer is implemented and no key is held."
-    },
-    {
-      "id": "yellow-paper",
-      "what": "The Yellow Paper, described by the teaser as the definitive specification",
-      "searchedIn": ["flop-finance-home", "flop-finance-teaser"],
-      "consequence": "Every economic rule stays official-draft and may change."
-    }
-  ]
+  "historyNote": "Diff against the previous snapshot, by source id and body hash. Bodies are not stored; a reader with the previous hash can confirm the change but not read the old page here."
+ },
+ "sources": [
+  {
+   "id": "flop-finance-home",
+   "url": "https://flop.finance/",
+   "httpStatus": 200,
+   "bytes": 17396,
+   "sha256": "sha256:ef8297d189aa244f27ea7a314c74c405ae31e12a4c751ade97f59d7a6e4db75f",
+   "fetchedAt": "2026-09-08T03:40:53Z",
+   "versionHint": null,
+   "status": "official-reference",
+   "note": "Front page. Prose only; links the /intro/ pages. States no economic rule."
+  },
+  {
+   "id": "flop-finance-teaser",
+   "url": "https://flop.finance/teaser/",
+   "httpStatus": 200,
+   "bytes": 57164,
+   "sha256": "sha256:40bf53540f21e8974cb2f1a918ed2e2d72436417c98fe9f81d36272ed6984aff",
+   "fetchedAt": "2026-09-08T03:40:53Z",
+   "versionHint": "Version 0.1 (draft) | Status Draft | Updated 2026-08-26 | Definitive spec Yellow Paper (not yet final) | page banner added: two figures lead the parameters of record and are not yet ratified",
+   "status": "official-draft",
+   "note": "The teaser. Since 2026-09-08 its own banner says the 3.5bn genesis figure and the 85/15 fee split lead the protocol parameters of record and are not ratified; the Yellow Paper carries the parameters."
+  },
+  {
+   "id": "flop-finance-brand",
+   "url": "https://flop.finance/brand/",
+   "httpStatus": 200,
+   "bytes": 13739,
+   "sha256": "sha256:cf2e0f8ce7e0dc36259f7fc9cc67f4acf7c343dfd8de672dda7587dc5bc8761f",
+   "fetchedAt": "2026-09-08T03:40:53Z",
+   "versionHint": "six published swatches: Base, Grey, FLOP Blue, Accent, Electric Green, Ice White",
+   "status": "official-reference",
+   "note": "Brand palette. Superseded in detail by design.md wherever the two differ. Body unchanged since 2026-09-03 except page chrome."
+  },
+  {
+   "id": "flop-finance-design",
+   "url": "https://flop.finance/design.md",
+   "httpStatus": 200,
+   "bytes": 30278,
+   "sha256": "sha256:476fe27b0cebf5fef03fb880ce50c98d9afce7f558dfa3687c5cec4d37ca6248",
+   "fetchedAt": "2026-09-08T03:40:53Z",
+   "versionHint": "frontmatter version: alpha | Mascot V3.0 design system | ETag 7e047e3e7b87506b8511ca62138b7688",
+   "status": "official-reference",
+   "note": "The design token source of record for ui-tokens.json. Byte-identical to the 2026-09-03 snapshot."
+  },
+  {
+   "id": "technocore-llms",
+   "url": "https://technocore.chat/llms.txt",
+   "httpStatus": 200,
+   "bytes": 26180,
+   "sha256": "sha256:350687cddee6ad979d37c35b64b5be5f3e89396c535357dfba416a93d9798f97",
+   "fetchedAt": "2026-09-08T03:40:53Z",
+   "versionHint": "served 2026-09-08; documents DELEGATION records in DID notes, CAPACITY 163840 rooms / 5242880 notes, a 10 s POST deadline, and the 422 duplicate guidance",
+   "status": "official-reference",
+   "note": "Service description for Technocore. Describes the transport, never the content carried over it. Changed since 2026-09-03: capacity doubled, native delegation records, upload deadline."
+  },
+  {
+   "id": "technocore-auth",
+   "url": "https://technocore.chat/auth.md",
+   "httpStatus": 200,
+   "bytes": 5200,
+   "sha256": "sha256:ae4c61d5d6d4b13ec24467a1a66f139c132e039a7180790a914587d642534ddb",
+   "fetchedAt": "2026-09-08T03:40:53Z",
+   "versionHint": "states \"There is no authentication\"",
+   "status": "official-reference",
+   "note": "Why a signed Technocore message still proves only key control: the service authenticates nobody. Byte-identical to the 2026-09-03 snapshot."
+  },
+  {
+   "id": "technocore-patterns",
+   "url": "https://technocore.chat/patterns.md",
+   "httpStatus": 200,
+   "bytes": 14282,
+   "sha256": "sha256:45ab2f9d0aac7e6b920699cd30382af7f1eacaa0d6adc90d0e8567523e493370",
+   "fetchedAt": "2026-09-08T03:40:53Z",
+   "versionHint": "served 2026-09-08; gained section 7 (what a 422 is telling you)",
+   "status": "official-reference",
+   "note": "Route and usage patterns. The GET-write routes it documents are why safety.py classifies every Technocore URL before it is shown."
+  },
+  {
+   "id": "flop-finance-intro",
+   "url": "https://flop.finance/intro/",
+   "httpStatus": 200,
+   "bytes": 28415,
+   "sha256": "sha256:81efd5cace3a2b7826e510d7fc5e1e30df8496cc6844301d3b044331bd6b5389",
+   "fetchedAt": "2026-09-08T03:42:20Z",
+   "versionHint": "Project intro . Draft whitepaper | Draft . Updated 2026-08-27",
+   "status": "official-draft",
+   "note": "Overview of the project intro. Restates block time, block reward, halving and the validator cap."
+  },
+  {
+   "id": "flop-finance-intro-agent",
+   "url": "https://flop.finance/intro/agent/",
+   "httpStatus": 200,
+   "bytes": 27548,
+   "sha256": "sha256:bd0031d27cdbe4152d2d3f90e3867341267aaecdbeeba70673a352daa7d416eb",
+   "fetchedAt": "2026-09-08T03:42:20Z",
+   "versionHint": "Compute buyer . Draft whitepaper | Draft . Updated 2026-08-27",
+   "status": "official-draft",
+   "note": "The agent page: session request fields, account features and spend control, the 3:1 unlock, HTLC swaps. No faucet procedure, endpoint or API."
+  },
+  {
+   "id": "flop-finance-yellowpaper",
+   "url": "https://flop.finance/intro/yellowpaper/",
+   "httpStatus": 200,
+   "bytes": 427403,
+   "sha256": "sha256:36f48e53233cb02c81566de977e4aa6754ffdcc8ffb1eeffdb37ae1ae51340a8",
+   "fetchedAt": "2026-09-08T03:42:20Z",
+   "versionHint": "Version 0.5.0 (draft) | Status Implementation spec - iterating | Updated 2026-09-05 | Draft - the normative specification of the protocol",
+   "status": "official-draft",
+   "note": "The Yellow Paper, published between the two snapshots. Normative but a draft; sections marked planned are not implemented. Carries the protocol parameters of record (genesis_supply = 2,483,460,000 FLOP)."
+  },
+  {
+   "id": "flop-finance-intro-verification",
+   "url": "https://flop.finance/intro/verification/",
+   "httpStatus": 200,
+   "bytes": 32302,
+   "sha256": "sha256:b0989c2d585213dd38d1d055ae79d274135c2014d5ad3bb32232d26cb7b346fe",
+   "fetchedAt": "2026-09-08T03:42:20Z",
+   "versionHint": "Draft . Updated 2026-08-27",
+   "status": "official-draft",
+   "note": "Proof of Useful Inference explained for readers; the normative text is the Yellow Paper section 3."
+  },
+  {
+   "id": "flop-finance-intro-revenue",
+   "url": "https://flop.finance/intro/revenue/",
+   "httpStatus": 200,
+   "bytes": 110594,
+   "sha256": "sha256:c117a379ca8861711307548756797f09513c7a90241b9a54738a79fac3baa2f9",
+   "fetchedAt": "2026-09-08T03:42:20Z",
+   "versionHint": "Draft . Updated 2026-08-27",
+   "status": "official-draft",
+   "note": "Revenue model page. No agent-side rule this tool relies on."
+  },
+  {
+   "id": "flop-finance-intro-miner",
+   "url": "https://flop.finance/intro/miner/",
+   "httpStatus": 200,
+   "bytes": 31491,
+   "sha256": "sha256:bc227179cad87cf1568598d178f78ab051b6f6aee28eb623c7b7dd2b22c01259",
+   "fetchedAt": "2026-09-08T03:42:20Z",
+   "versionHint": "Draft . Updated 2026-08-27",
+   "status": "official-draft",
+   "note": "Miner page. No agent-side rule this tool relies on."
+  },
+  {
+   "id": "flop-finance-intro-validator",
+   "url": "https://flop.finance/intro/validator/",
+   "httpStatus": 200,
+   "bytes": 28027,
+   "sha256": "sha256:f1f66d0791407221ce8e6e2134d98ba36869c8fd84412d16ed4eb9a6b7391f41",
+   "fetchedAt": "2026-09-08T03:42:20Z",
+   "versionHint": "Draft . Updated 2026-08-27",
+   "status": "official-draft",
+   "note": "Validator page. No agent-side rule this tool relies on."
+  },
+  {
+   "id": "flop-labs-github-org",
+   "url": "https://github.com/flop-labs",
+   "httpStatus": 200,
+   "bytes": null,
+   "sha256": null,
+   "fetchedAt": "2026-09-08T03:40:53Z",
+   "versionHint": "repositories observed: technocore-chat (pushed 2026-09-07T07:40:34Z, releases v0.12.1 2026-09-05 and v0.13.0 2026-09-07), tclk (pushed 2026-09-03T17:43:54Z, main at 5cc4ab93, tag v0.1.0), .github",
+   "status": "official-reference",
+   "note": "Listing only; individual file bodies were not fetched, so no body hash is recorded. No testnet, faucet or inference-API repository exists in this organisation at the snapshot instant."
+  }
+ ],
+ "notObserved": [
+  {
+   "id": "testnet-endpoint",
+   "what": "A FLOP testnet RPC or HTTP endpoint",
+   "searchedIn": [
+    "flop-finance-teaser",
+    "flop-finance-intro-agent",
+    "flop-finance-yellowpaper",
+    "flop-labs-github-org"
+   ],
+   "consequence": "No endpoint may be marked executable. The executor must refuse with TESTNET_NOT_LIVE."
+  },
+  {
+   "id": "faucet-procedure",
+   "what": "How an agent claims the test-token faucet, in what amount, with what cooldown",
+   "searchedIn": [
+    "flop-finance-teaser",
+    "flop-finance-intro-agent",
+    "flop-finance-yellowpaper",
+    "flop-labs-github-org"
+   ],
+   "consequence": "Faucet actions exist only as simulation. The word faucet does not occur in the Yellow Paper."
+  },
+  {
+   "id": "inference-api",
+   "what": "The inference request/response schema and its authentication",
+   "searchedIn": [
+    "flop-finance-teaser",
+    "flop-finance-intro-agent",
+    "flop-finance-yellowpaper",
+    "flop-labs-github-org"
+   ],
+   "consequence": "Inference spend is never estimated from a guess. The agent page names five session-request fields; no wire schema is published."
+  },
+  {
+   "id": "inference-pricing",
+   "what": "A price or quote mechanism for testnet inference",
+   "searchedIn": [
+    "flop-finance-teaser",
+    "flop-finance-intro-agent",
+    "flop-finance-yellowpaper"
+   ],
+   "consequence": "Quotes are simulated and labelled as such."
+  },
+  {
+   "id": "network-identifier",
+   "what": "A chain id or network identifier",
+   "searchedIn": [
+    "flop-finance-teaser",
+    "flop-finance-yellowpaper",
+    "flop-labs-github-org"
+   ],
+   "consequence": "Simulation uses the RFC 6761 .invalid namespace so a simulated destination can never resolve. The Yellow Paper names an SS58Prefix but not its value."
+  },
+  {
+   "id": "auth-signing-scheme",
+   "what": "How an agent authenticates to the testnet (as opposed to how a chain transaction is signed, which the Yellow Paper section 6.5 fixes: sr25519 by default)",
+   "searchedIn": [
+    "flop-finance-teaser",
+    "flop-finance-intro-agent",
+    "flop-finance-yellowpaper",
+    "flop-labs-github-org"
+   ],
+   "consequence": "No signer is implemented and no key is held."
+  },
+  {
+   "id": "airdrop-claim-path",
+   "what": "How an agent's airdrop allocation is claimed and vested",
+   "searchedIn": [
+    "flop-finance-teaser",
+    "flop-finance-intro-agent",
+    "flop-finance-yellowpaper"
+   ],
+   "consequence": "The Yellow Paper says of airdrop-vesting that its tier set, schedule, performance adjustment and claim path are unspecified. Nothing here may claim to know them."
+  }
+ ]
 }

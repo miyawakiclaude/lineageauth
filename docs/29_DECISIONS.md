@@ -2624,3 +2624,49 @@ Git/GitHub writes require confirmation of active account + repository owner + re
   list. Wire format unchanged; `conformance/frozen-shapes.json` unchanged.
 - **Migration.** A chain whose child narrowed the list must be reissued with
   the parent's list. No such chain exists in the vectors, examples or demos.
+
+## D-112: the second official-source snapshot, and quotations checked by machine
+
+- **Date:** 2026-09-08
+- **What changed upstream.** Between the snapshots of 2026-09-03 and
+  2026-09-08, flop.finance published the Yellow Paper (`/intro/yellowpaper/`,
+  v0.5.0 draft, "Implementation spec - iterating", updated 2026-09-05) and
+  six `/intro/` pages, and the teaser gained a banner saying its 3.5bn
+  genesis figure and 85/15 fee split lead the protocol parameters of record
+  and are not ratified. Technocore's `llms.txt` doubled its capacity figures
+  and documents native `delegate:` records in DID notes. Five of the seven
+  original sources changed hash; `design.md` and `auth.md` did not.
+- **Decision:** the snapshot is replaced, not appended to. Every source keeps
+  its id; changed sources get their new hash; the previous hashes are kept
+  under `_meta.history` so the change is visible without the bodies, which
+  are still not stored. The rule registry is regenerated from a script that
+  refuses to write a quotation unless it is a substring (whitespace- and
+  dash-insensitive) of the fetched body it cites. That check found six
+  quotations in the first registry that were paraphrases of the teaser --
+  semicolons inserted into a table, a heading joined to a sentence, a
+  validator sentence that does not exist -- and they are now verbatim or
+  gone. Rules from the Yellow Paper were added (`flop-genesis-supply-parameter`,
+  `flop-agent-wallet-caps`, `flop-session-key-lifetime`,
+  `flop-delegate-revocable`, `flop-attenuable-capabilities-future`,
+  `flop-account-signature-schemes`, `flop-airdrop-vesting-unspecified`,
+  `flop-yellow-paper-status`), from the agent page
+  (`flop-agent-unlock-ratio-intro`) and from `llms.txt`
+  (`technocore-native-delegation`, `technocore-capacity`). The unknown
+  `flop-yellow-paper` is retired; `flop-airdrop-claim-path` joins the
+  unknowns, because the Yellow Paper says in so many words that the claim
+  path is unspecified.
+- **What is not changed.** The 3.5bn figure is still quoted, because the
+  teaser still prints it; its `consequence` says the parameter of record is
+  2,483,460,000 and the teaser itself calls the 3.5bn unratified. The 3:1
+  unlock stays as data. Every rule stays `official-draft`: the Yellow Paper
+  calls itself a draft. The network phase stays `PRE_TESTNET`: no endpoint,
+  faucet, schema, price, network identifier or agent authentication scheme
+  is published, and the word faucet does not occur in the Yellow Paper.
+- **Security impact.** None on the protocol. For the console: the executor's
+  freshness check binds prepared actions to the new hashes, so an action
+  prepared against the old snapshot is `REPREPARE_REQUIRED`, which is the
+  intended behaviour of a rule change.
+- **Lesson recorded.** A quotation that is checked by a reader is a
+  quotation; one that is checked by nobody is a paraphrase with quotation
+  marks. The check is now the generator, so the registry cannot drift from
+  its sources without the script saying so.

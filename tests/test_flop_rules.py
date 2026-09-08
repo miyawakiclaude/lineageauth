@@ -42,10 +42,10 @@ class TestEveryRuleCarriesItsSource:
             assert rule.source.source_date
             assert rule.source.fetched_at
 
-    def test_nothing_claims_to_be_final_while_the_yellow_paper_is_unpublished(
+    def test_nothing_claims_to_be_final_while_the_yellow_paper_is_a_draft(
         self, registry: FlopRuleRegistry
     ) -> None:
-        """The teaser says of itself that its figures may change."""
+        """The Yellow Paper calls itself a draft and an implementation spec, iterating."""
         assert registry.with_status(RuleStatus.OFFICIAL_FINAL) == ()
 
     def test_a_derived_statement_may_not_claim_to_be_a_quotation(
@@ -81,8 +81,21 @@ class TestUnknownIsRecordedRatherThanFilledIn:
             "flop-inference-pricing",
             "flop-network-identifier",
             "flop-auth-signing-scheme",
-            "flop-yellow-paper",
+            "flop-airdrop-claim-path",
         } <= ids
+
+    def test_the_yellow_paper_is_now_a_draft_source_not_an_unknown(
+        self, registry: FlopRuleRegistry
+    ) -> None:
+        """Second snapshot: the definitive spec was published, as a draft (D-112)."""
+        assert registry.get("flop-yellow-paper") is None
+        status = registry.get("flop-yellow-paper-status")
+        assert status is not None and status.status is RuleStatus.OFFICIAL_DRAFT
+        genesis = registry.get("flop-genesis-supply-parameter")
+        assert genesis is not None and "2,483,460,000" in genesis.statement
+        teaser_pool = registry.get("flop-genesis-airdrop-pool")
+        assert teaser_pool is not None and teaser_pool.consequence
+        assert "2,483,460,000" in teaser_pool.consequence
 
     def test_an_unknown_rule_says_so_in_the_statement(self, registry: FlopRuleRegistry) -> None:
         for rule in registry.unknown_rules:
