@@ -1,7 +1,7 @@
 {
  "_meta": {
   "purpose": "Every FLOP economic rule this tool relies on, with the official text it came from. Nothing here is a business rule the code may assume; the code reads this file.",
-  "generatedAt": "2026-09-08T03:40:53Z",
+  "generatedAt": "2026-09-14T00:39:16Z",
   "statusVocabulary": [
    "official-final",
    "official-draft",
@@ -11,8 +11,13 @@
   "unknownStatement": "UNKNOWN_FROM_OFFICIAL_SPEC",
   "note": "A rule whose recorded hash no longer matches the current snapshot of its source is stale. A stale rule is reported as RULE UPDATED and is never silently treated as current.",
   "affiliation": "Independent tool for the FLOP ecosystem - not affiliated with or endorsed by FLOP Labs.",
-  "previousGeneratedAt": "2026-09-03T04:25:46Z",
-  "revisionNote": "Re-verified 2026-09-08 against the second snapshot: every quotation was checked to be a substring of the fetched body it cites. Rules from the Yellow Paper (published 2026-09-05, v0.5.0 draft) were added; flop-yellow-paper (unknown) became flop-yellow-paper-status; flop-airdrop-claim-path was added as the seventh unknown."
+  "previousGeneratedAt": "2026-09-08T03:40:53Z",
+  "revisionNote": "Re-verified 2026-09-14 against the third snapshot: every quotation was checked to be a substring of the fetched body it cites. The genesis supply moved 2,483,460,000 -> 4,400,000,000 in the Yellow Paper (whose printed version and date did not change) and 3,500,000,000 -> 4,400,000,000 in the teaser table; flop-genesis-cohort-parameters was added; Technocore capacity changed again.",
+  "snapshotHistory": [
+   "2026-09-03T04:25:46Z",
+   "2026-09-08T03:40:53Z",
+   "2026-09-14T00:39:16Z"
+  ]
  },
  "rules": [
   {
@@ -26,8 +31,8 @@
     "sourceUrl": "https://flop.finance/teaser/",
     "sourceVersion": "0.1 (draft)",
     "sourceDate": "2026-08-26",
-    "fetchedAt": "2026-09-08T03:40:53Z",
-    "hash": "sha256:40bf53540f21e8974cb2f1a918ed2e2d72436417c98fe9f81d36272ed6984aff"
+    "fetchedAt": "2026-09-14T00:39:16Z",
+    "hash": "sha256:f915fade0f3b84f68c27a8fb7e72d55faeeebf1ab8a39ca3c6702b39bfa812d0"
    }
   },
   {
@@ -41,72 +46,88 @@
     "sourceUrl": "https://flop.finance/teaser/",
     "sourceVersion": "0.1 (draft)",
     "sourceDate": "2026-08-26",
-    "fetchedAt": "2026-09-08T03:40:53Z",
-    "hash": "sha256:40bf53540f21e8974cb2f1a918ed2e2d72436417c98fe9f81d36272ed6984aff"
+    "fetchedAt": "2026-09-14T00:39:16Z",
+    "hash": "sha256:f915fade0f3b84f68c27a8fb7e72d55faeeebf1ab8a39ca3c6702b39bfa812d0"
    }
   },
   {
    "id": "flop-teaser-unratified-figures",
-   "statement": "Draft. Two figures on this page LEAD the protocol parameters of record and are not yet ratified: the 3.5bn genesis airdrop (the parameters say 2,483,460,000) and the 85/15 inference-fee split (settlement pays the miner 99%, with 1% to the audit pool, until the validator fee leg lands). Everything else on this page reconciles to the parameters.",
+   "statement": "Draft. One figure on this page LEADS the protocol parameters of record and is not yet ratified: the 85/15 inference-fee split (settlement pays the miner 99%, with 1% to the audit pool, until the validator fee leg lands). Everything else on this page reconciles to the parameters, the 3.5bn genesis airdrop included (ratified by D-0438).",
    "statementIsQuotation": true,
    "status": "official-draft",
    "effectiveNetworkPhase": "any",
-   "consequence": "flop-genesis-airdrop-pool and flop-inference-fee-split below quote the teaser's own table and are, by the teaser's own banner, not the parameters of record. flop-genesis-supply-parameter carries the figure the Yellow Paper fixes.",
+   "consequence": "The banner still writes 3.5bn while the table below it and the Yellow Paper both say 4,400,000,000; read the figure from flop-genesis-supply-parameter, not from this sentence. Only the fee split remains unratified by the teaser's own account.",
    "source": {
     "sourceId": "flop-finance-teaser",
     "sourceUrl": "https://flop.finance/teaser/",
     "sourceVersion": "0.1 (draft)",
     "sourceDate": "2026-08-26",
-    "fetchedAt": "2026-09-08T03:40:53Z",
-    "hash": "sha256:40bf53540f21e8974cb2f1a918ed2e2d72436417c98fe9f81d36272ed6984aff"
+    "fetchedAt": "2026-09-14T00:39:16Z",
+    "hash": "sha256:f915fade0f3b84f68c27a8fb7e72d55faeeebf1ab8a39ca3c6702b39bfa812d0"
    }
   },
   {
    "id": "flop-genesis-airdrop-pool",
-   "statement": "The genesis airdrop of 3,500,000,000 $FLOP - 20.4% of the total network supply at year 10 - is allocated as follows: Cohort Allocation ($FLOP) Earned by Miners up to 1,200,000,000 (7.0%) Compute provided through verified inference and valid blocks Agents up to 1,200,000,000 (7.0%) Compute consumed through inference requests Validators 305,505,000 (1.8%) The aggregate stake that secures the network at launch Reserve / incentives 794,495,000 (4.6%) Ecosystem and growth incentives Total 3,500,000,000 (20.4%) Full genesis pool",
+   "statement": "The genesis airdrop of 4,400,000,000 $FLOP - 24.3% of the total network supply at year 10 - is allocated as follows: Cohort Allocation ($FLOP) Earned by Miners up to 1,200,000,000 (6.6%) Compute provided through verified inference and valid blocks Agents up to 1,200,000,000 (6.6%) Compute consumed through inference requests Validators 1,200,000,000 (6.6%) The aggregate stake that secures the network at launch Reserve / incentives 800,000,000 (4.4%) Ecosystem and growth incentives Total 4,400,000,000 (24.3%) Full genesis pool",
    "statementIsQuotation": true,
    "status": "official-draft",
    "effectiveNetworkPhase": "genesis",
-   "consequence": "Not the parameters of record: the teaser's banner says this figure leads them and is not ratified, and the Yellow Paper fixes genesis_supply at 2,483,460,000 FLOP (flop-genesis-supply-parameter). The per-cohort split is not restated in the Yellow Paper.",
+   "consequence": "Now agrees with the Yellow Paper's genesis_supply (flop-genesis-supply-parameter) and per-cohort parameters (flop-genesis-cohort-parameters). This table read 3,500,000,000 on 2026-09-08 and the Yellow Paper read 2,483,460,000; both moved to 4,400,000,000 by 2026-09-14.",
    "source": {
     "sourceId": "flop-finance-teaser",
     "sourceUrl": "https://flop.finance/teaser/",
     "sourceVersion": "0.1 (draft)",
     "sourceDate": "2026-08-26",
-    "fetchedAt": "2026-09-08T03:40:53Z",
-    "hash": "sha256:40bf53540f21e8974cb2f1a918ed2e2d72436417c98fe9f81d36272ed6984aff"
+    "fetchedAt": "2026-09-14T00:39:16Z",
+    "hash": "sha256:f915fade0f3b84f68c27a8fb7e72d55faeeebf1ab8a39ca3c6702b39bfa812d0"
    }
   },
   {
    "id": "flop-genesis-supply-parameter",
-   "statement": "Total genesis supply MUST be genesis_supply = 2,483,460,000 FLOP (18 decimals), allocated to airdrop accounts only - no VC pre-mint, no auction (§9.1 R9.4).",
+   "statement": "Total genesis supply MUST be genesis_supply = 4,400,000,000 FLOP (18 decimals), held at genesis only by the three airdrop cohorts and the ecosystem reserve of §9.1 R9.4 - no VC pre-mint, no auction, no team allocation.",
    "statementIsQuotation": true,
    "status": "official-draft",
    "effectiveNetworkPhase": "genesis",
-   "consequence": "The parameter of record for the genesis pool. Still a draft: the Yellow Paper calls itself an implementation spec, iterating.",
+   "consequence": "The parameter of record for the genesis pool, ratified by D-0438 per the teaser banner. It was 2,483,460,000 in the same document on 2026-09-08; still a draft that calls itself an implementation spec, iterating.",
    "source": {
     "sourceId": "flop-finance-yellowpaper",
     "sourceUrl": "https://flop.finance/intro/yellowpaper/",
     "sourceVersion": "0.5.0 (draft)",
     "sourceDate": "2026-09-05",
-    "fetchedAt": "2026-09-08T03:42:20Z",
-    "hash": "sha256:36f48e53233cb02c81566de977e4aa6754ffdcc8ffb1eeffdb37ae1ae51340a8"
+    "fetchedAt": "2026-09-14T00:39:22Z",
+    "hash": "sha256:89e2575de061eb6446dffe3f05f99fbbf0c9bda097ddcbe6080724cb473afb12"
+   }
+  },
+  {
+   "id": "flop-genesis-cohort-parameters",
+   "statement": "genesis_agent_airdrop = 1,200,000,000; plus the genesis_reserve = 800,000,000 residual (ecosystem/incentives, not an airdrop)",
+   "statementIsQuotation": true,
+   "status": "official-draft",
+   "effectiveNetworkPhase": "genesis",
+   "consequence": "The agent cohort's parameter of record. The Yellow Paper's parameter table gives miner, validator and agent airdrops of 1,200,000,000 each (27.27% of genesis supply) and an 800,000,000 reserve.",
+   "source": {
+    "sourceId": "flop-finance-yellowpaper",
+    "sourceUrl": "https://flop.finance/intro/yellowpaper/",
+    "sourceVersion": "0.5.0 (draft)",
+    "sourceDate": "2026-09-05",
+    "fetchedAt": "2026-09-14T00:39:22Z",
+    "hash": "sha256:89e2575de061eb6446dffe3f05f99fbbf0c9bda097ddcbe6080724cb473afb12"
    }
   },
   {
    "id": "flop-agent-airdrop-allocation",
-   "statement": "Agents up to 1,200,000,000 (7.0%) Compute consumed through inference requests",
+   "statement": "Agents up to 1,200,000,000 (6.6%) Compute consumed through inference requests",
    "statementIsQuotation": true,
    "status": "official-draft",
    "effectiveNetworkPhase": "genesis",
-   "consequence": "Teaser table figure. The Yellow Paper gives the total genesis supply and no per-cohort split, so this number is unratified twice over.",
+   "consequence": "Teaser table figure; the Yellow Paper now restates it as genesis_agent_airdrop = 1,200,000,000 (flop-genesis-cohort-parameters). The percentage moved from 7.0% to 6.6% because the pool grew.",
    "source": {
     "sourceId": "flop-finance-teaser",
     "sourceUrl": "https://flop.finance/teaser/",
     "sourceVersion": "0.1 (draft)",
     "sourceDate": "2026-08-26",
-    "fetchedAt": "2026-09-08T03:40:53Z",
-    "hash": "sha256:40bf53540f21e8974cb2f1a918ed2e2d72436417c98fe9f81d36272ed6984aff"
+    "fetchedAt": "2026-09-14T00:39:16Z",
+    "hash": "sha256:f915fade0f3b84f68c27a8fb7e72d55faeeebf1ab8a39ca3c6702b39bfa812d0"
    }
   },
   {
@@ -120,8 +141,8 @@
     "sourceUrl": "https://flop.finance/teaser/",
     "sourceVersion": "0.1 (draft)",
     "sourceDate": "2026-08-26",
-    "fetchedAt": "2026-09-08T03:40:53Z",
-    "hash": "sha256:40bf53540f21e8974cb2f1a918ed2e2d72436417c98fe9f81d36272ed6984aff"
+    "fetchedAt": "2026-09-14T00:39:16Z",
+    "hash": "sha256:f915fade0f3b84f68c27a8fb7e72d55faeeebf1ab8a39ca3c6702b39bfa812d0"
    }
   },
   {
@@ -144,8 +165,8 @@
     "sourceUrl": "https://flop.finance/teaser/",
     "sourceVersion": "0.1 (draft)",
     "sourceDate": "2026-08-26",
-    "fetchedAt": "2026-09-08T03:40:53Z",
-    "hash": "sha256:40bf53540f21e8974cb2f1a918ed2e2d72436417c98fe9f81d36272ed6984aff"
+    "fetchedAt": "2026-09-14T00:39:16Z",
+    "hash": "sha256:f915fade0f3b84f68c27a8fb7e72d55faeeebf1ab8a39ca3c6702b39bfa812d0"
    }
   },
   {
@@ -160,8 +181,8 @@
     "sourceUrl": "https://flop.finance/intro/agent/",
     "sourceVersion": "Draft whitepaper",
     "sourceDate": "2026-08-27",
-    "fetchedAt": "2026-09-08T03:42:20Z",
-    "hash": "sha256:bd0031d27cdbe4152d2d3f90e3867341267aaecdbeeba70673a352daa7d416eb"
+    "fetchedAt": "2026-09-14T00:39:22Z",
+    "hash": "sha256:e5486f3ee3fa7045914b8e9080f752340b3aaae97e778f4013c5056a53faf195"
    }
   },
   {
@@ -175,8 +196,8 @@
     "sourceUrl": "https://flop.finance/teaser/",
     "sourceVersion": "0.1 (draft)",
     "sourceDate": "2026-08-26",
-    "fetchedAt": "2026-09-08T03:40:53Z",
-    "hash": "sha256:40bf53540f21e8974cb2f1a918ed2e2d72436417c98fe9f81d36272ed6984aff"
+    "fetchedAt": "2026-09-14T00:39:16Z",
+    "hash": "sha256:f915fade0f3b84f68c27a8fb7e72d55faeeebf1ab8a39ca3c6702b39bfa812d0"
    }
   },
   {
@@ -191,8 +212,8 @@
     "sourceUrl": "https://flop.finance/intro/yellowpaper/",
     "sourceVersion": "0.5.0 (draft)",
     "sourceDate": "2026-09-05",
-    "fetchedAt": "2026-09-08T03:42:20Z",
-    "hash": "sha256:36f48e53233cb02c81566de977e4aa6754ffdcc8ffb1eeffdb37ae1ae51340a8"
+    "fetchedAt": "2026-09-14T00:39:22Z",
+    "hash": "sha256:89e2575de061eb6446dffe3f05f99fbbf0c9bda097ddcbe6080724cb473afb12"
    }
   },
   {
@@ -206,8 +227,8 @@
     "sourceUrl": "https://flop.finance/teaser/",
     "sourceVersion": "0.1 (draft)",
     "sourceDate": "2026-08-26",
-    "fetchedAt": "2026-09-08T03:40:53Z",
-    "hash": "sha256:40bf53540f21e8974cb2f1a918ed2e2d72436417c98fe9f81d36272ed6984aff"
+    "fetchedAt": "2026-09-14T00:39:16Z",
+    "hash": "sha256:f915fade0f3b84f68c27a8fb7e72d55faeeebf1ab8a39ca3c6702b39bfa812d0"
    }
   },
   {
@@ -222,8 +243,8 @@
     "sourceUrl": "https://flop.finance/intro/yellowpaper/",
     "sourceVersion": "0.5.0 (draft)",
     "sourceDate": "2026-09-05",
-    "fetchedAt": "2026-09-08T03:42:20Z",
-    "hash": "sha256:36f48e53233cb02c81566de977e4aa6754ffdcc8ffb1eeffdb37ae1ae51340a8"
+    "fetchedAt": "2026-09-14T00:39:22Z",
+    "hash": "sha256:89e2575de061eb6446dffe3f05f99fbbf0c9bda097ddcbe6080724cb473afb12"
    }
   },
   {
@@ -238,8 +259,8 @@
     "sourceUrl": "https://flop.finance/intro/yellowpaper/",
     "sourceVersion": "0.5.0 (draft)",
     "sourceDate": "2026-09-05",
-    "fetchedAt": "2026-09-08T03:42:20Z",
-    "hash": "sha256:36f48e53233cb02c81566de977e4aa6754ffdcc8ffb1eeffdb37ae1ae51340a8"
+    "fetchedAt": "2026-09-14T00:39:22Z",
+    "hash": "sha256:89e2575de061eb6446dffe3f05f99fbbf0c9bda097ddcbe6080724cb473afb12"
    }
   },
   {
@@ -253,8 +274,8 @@
     "sourceUrl": "https://flop.finance/intro/yellowpaper/",
     "sourceVersion": "0.5.0 (draft)",
     "sourceDate": "2026-09-05",
-    "fetchedAt": "2026-09-08T03:42:20Z",
-    "hash": "sha256:36f48e53233cb02c81566de977e4aa6754ffdcc8ffb1eeffdb37ae1ae51340a8"
+    "fetchedAt": "2026-09-14T00:39:22Z",
+    "hash": "sha256:89e2575de061eb6446dffe3f05f99fbbf0c9bda097ddcbe6080724cb473afb12"
    }
   },
   {
@@ -269,8 +290,8 @@
     "sourceUrl": "https://flop.finance/intro/yellowpaper/",
     "sourceVersion": "0.5.0 (draft)",
     "sourceDate": "2026-09-05",
-    "fetchedAt": "2026-09-08T03:42:20Z",
-    "hash": "sha256:36f48e53233cb02c81566de977e4aa6754ffdcc8ffb1eeffdb37ae1ae51340a8"
+    "fetchedAt": "2026-09-14T00:39:22Z",
+    "hash": "sha256:89e2575de061eb6446dffe3f05f99fbbf0c9bda097ddcbe6080724cb473afb12"
    }
   },
   {
@@ -285,8 +306,8 @@
     "sourceUrl": "https://flop.finance/intro/yellowpaper/",
     "sourceVersion": "0.5.0 (draft)",
     "sourceDate": "2026-09-05",
-    "fetchedAt": "2026-09-08T03:42:20Z",
-    "hash": "sha256:36f48e53233cb02c81566de977e4aa6754ffdcc8ffb1eeffdb37ae1ae51340a8"
+    "fetchedAt": "2026-09-14T00:39:22Z",
+    "hash": "sha256:89e2575de061eb6446dffe3f05f99fbbf0c9bda097ddcbe6080724cb473afb12"
    }
   },
   {
@@ -300,8 +321,8 @@
     "sourceUrl": "https://flop.finance/teaser/",
     "sourceVersion": "0.1 (draft)",
     "sourceDate": "2026-08-26",
-    "fetchedAt": "2026-09-08T03:40:53Z",
-    "hash": "sha256:40bf53540f21e8974cb2f1a918ed2e2d72436417c98fe9f81d36272ed6984aff"
+    "fetchedAt": "2026-09-14T00:39:16Z",
+    "hash": "sha256:f915fade0f3b84f68c27a8fb7e72d55faeeebf1ab8a39ca3c6702b39bfa812d0"
    }
   },
   {
@@ -316,8 +337,8 @@
     "sourceUrl": "https://flop.finance/teaser/",
     "sourceVersion": "0.1 (draft)",
     "sourceDate": "2026-08-26",
-    "fetchedAt": "2026-09-08T03:40:53Z",
-    "hash": "sha256:40bf53540f21e8974cb2f1a918ed2e2d72436417c98fe9f81d36272ed6984aff"
+    "fetchedAt": "2026-09-14T00:39:16Z",
+    "hash": "sha256:f915fade0f3b84f68c27a8fb7e72d55faeeebf1ab8a39ca3c6702b39bfa812d0"
    }
   },
   {
@@ -332,8 +353,8 @@
     "sourceUrl": "https://flop.finance/intro/yellowpaper/",
     "sourceVersion": "0.5.0 (draft)",
     "sourceDate": "2026-09-05",
-    "fetchedAt": "2026-09-08T03:42:20Z",
-    "hash": "sha256:36f48e53233cb02c81566de977e4aa6754ffdcc8ffb1eeffdb37ae1ae51340a8"
+    "fetchedAt": "2026-09-14T00:39:22Z",
+    "hash": "sha256:89e2575de061eb6446dffe3f05f99fbbf0c9bda097ddcbe6080724cb473afb12"
    }
   },
   {
@@ -348,13 +369,13 @@
     "sourceUrl": "https://technocore.chat/llms.txt",
     "sourceVersion": "served 2026-09-08",
     "sourceDate": "2026-09-08",
-    "fetchedAt": "2026-09-08T03:40:53Z",
-    "hash": "sha256:350687cddee6ad979d37c35b64b5be5f3e89396c535357dfba416a93d9798f97"
+    "fetchedAt": "2026-09-14T00:39:16Z",
+    "hash": "sha256:a1ba45aacadbc9bc3f95b7784e0450bc279e2f96548547cfa51e7a6fbf7c41b2"
    }
   },
   {
    "id": "technocore-capacity",
-   "statement": "CAPACITY: at most 163840 rooms, 5242880 notes in total and 163840 per",
+   "statement": "CAPACITY: at most 250000 rooms, 5242880 notes in total and 250000 per",
    "statementIsQuotation": true,
    "status": "official-draft",
    "effectiveNetworkPhase": "any",
@@ -364,8 +385,8 @@
     "sourceUrl": "https://technocore.chat/llms.txt",
     "sourceVersion": "served 2026-09-08",
     "sourceDate": "2026-09-08",
-    "fetchedAt": "2026-09-08T03:40:53Z",
-    "hash": "sha256:350687cddee6ad979d37c35b64b5be5f3e89396c535357dfba416a93d9798f97"
+    "fetchedAt": "2026-09-14T00:39:16Z",
+    "hash": "sha256:a1ba45aacadbc9bc3f95b7784e0450bc279e2f96548547cfa51e7a6fbf7c41b2"
    }
   },
   {
@@ -381,7 +402,7 @@
     "sourceUrl": "https://github.com/flop-labs/tclk/blob/v0.1.0/SPEC.md",
     "sourceVersion": "v0.1.0",
     "sourceDate": "2026-09-03",
-    "fetchedAt": "2026-09-08T03:40:53Z",
+    "fetchedAt": "2026-09-14T00:39:16Z",
     "hash": null
    }
   },
@@ -403,8 +424,8 @@
     "sourceUrl": "https://flop.finance/intro/yellowpaper/",
     "sourceVersion": "0.5.0 (draft)",
     "sourceDate": "2026-09-05",
-    "fetchedAt": "2026-09-08T03:42:20Z",
-    "hash": "sha256:36f48e53233cb02c81566de977e4aa6754ffdcc8ffb1eeffdb37ae1ae51340a8"
+    "fetchedAt": "2026-09-14T00:39:22Z",
+    "hash": "sha256:89e2575de061eb6446dffe3f05f99fbbf0c9bda097ddcbe6080724cb473afb12"
    }
   },
   {
@@ -425,8 +446,8 @@
     "sourceUrl": "https://flop.finance/intro/yellowpaper/",
     "sourceVersion": "0.5.0 (draft)",
     "sourceDate": "2026-09-05",
-    "fetchedAt": "2026-09-08T03:42:20Z",
-    "hash": "sha256:36f48e53233cb02c81566de977e4aa6754ffdcc8ffb1eeffdb37ae1ae51340a8"
+    "fetchedAt": "2026-09-14T00:39:22Z",
+    "hash": "sha256:89e2575de061eb6446dffe3f05f99fbbf0c9bda097ddcbe6080724cb473afb12"
    }
   },
   {
@@ -447,8 +468,8 @@
     "sourceUrl": "https://flop.finance/intro/yellowpaper/",
     "sourceVersion": "0.5.0 (draft)",
     "sourceDate": "2026-09-05",
-    "fetchedAt": "2026-09-08T03:42:20Z",
-    "hash": "sha256:36f48e53233cb02c81566de977e4aa6754ffdcc8ffb1eeffdb37ae1ae51340a8"
+    "fetchedAt": "2026-09-14T00:39:22Z",
+    "hash": "sha256:89e2575de061eb6446dffe3f05f99fbbf0c9bda097ddcbe6080724cb473afb12"
    }
   },
   {
@@ -468,8 +489,8 @@
     "sourceUrl": "https://flop.finance/intro/yellowpaper/",
     "sourceVersion": "0.5.0 (draft)",
     "sourceDate": "2026-09-05",
-    "fetchedAt": "2026-09-08T03:42:20Z",
-    "hash": "sha256:36f48e53233cb02c81566de977e4aa6754ffdcc8ffb1eeffdb37ae1ae51340a8"
+    "fetchedAt": "2026-09-14T00:39:22Z",
+    "hash": "sha256:89e2575de061eb6446dffe3f05f99fbbf0c9bda097ddcbe6080724cb473afb12"
    }
   },
   {
@@ -489,8 +510,8 @@
     "sourceUrl": "https://flop.finance/intro/yellowpaper/",
     "sourceVersion": "0.5.0 (draft)",
     "sourceDate": "2026-09-05",
-    "fetchedAt": "2026-09-08T03:42:20Z",
-    "hash": "sha256:36f48e53233cb02c81566de977e4aa6754ffdcc8ffb1eeffdb37ae1ae51340a8"
+    "fetchedAt": "2026-09-14T00:39:22Z",
+    "hash": "sha256:89e2575de061eb6446dffe3f05f99fbbf0c9bda097ddcbe6080724cb473afb12"
    }
   },
   {
@@ -511,8 +532,8 @@
     "sourceUrl": "https://flop.finance/intro/yellowpaper/",
     "sourceVersion": "0.5.0 (draft)",
     "sourceDate": "2026-09-05",
-    "fetchedAt": "2026-09-08T03:42:20Z",
-    "hash": "sha256:36f48e53233cb02c81566de977e4aa6754ffdcc8ffb1eeffdb37ae1ae51340a8"
+    "fetchedAt": "2026-09-14T00:39:22Z",
+    "hash": "sha256:89e2575de061eb6446dffe3f05f99fbbf0c9bda097ddcbe6080724cb473afb12"
    }
   },
   {
@@ -532,8 +553,8 @@
     "sourceUrl": "https://flop.finance/intro/yellowpaper/",
     "sourceVersion": "0.5.0 (draft)",
     "sourceDate": "2026-09-05",
-    "fetchedAt": "2026-09-08T03:42:20Z",
-    "hash": "sha256:36f48e53233cb02c81566de977e4aa6754ffdcc8ffb1eeffdb37ae1ae51340a8"
+    "fetchedAt": "2026-09-14T00:39:22Z",
+    "hash": "sha256:89e2575de061eb6446dffe3f05f99fbbf0c9bda097ddcbe6080724cb473afb12"
    }
   }
  ]

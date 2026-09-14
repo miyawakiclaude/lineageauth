@@ -92,7 +92,9 @@ class TestUnknownIsRecordedRatherThanFilledIn:
         status = registry.get("flop-yellow-paper-status")
         assert status is not None and status.status is RuleStatus.OFFICIAL_DRAFT
         genesis = registry.get("flop-genesis-supply-parameter")
-        assert genesis is not None and "2,483,460,000" in genesis.statement
+        # The parameter of record moved between snapshots; the statement carries the
+        # current figure and the teaser rule's consequence keeps the previous one.
+        assert genesis is not None and "4,400,000,000" in genesis.statement
         teaser_pool = registry.get("flop-genesis-airdrop-pool")
         assert teaser_pool is not None and teaser_pool.consequence
         assert "2,483,460,000" in teaser_pool.consequence

@@ -50,25 +50,27 @@ part of every `ExecutionPlan`, and an approval granted under one rule set is
 A rule whose `hash` is `null` cannot be checked and is reported as
 `UNVERIFIABLE` freshness — one such rule exists, below.
 
-## The rules, at snapshot 2026-09-08T03:40:53Z
+## The rules, at snapshot 2026-09-14T00:39:16Z
 
-The second snapshot. Between 2026-09-03 and 2026-09-08 flop.finance published
-the Yellow Paper (`/intro/yellowpaper/`, v0.5.0 draft, "Implementation spec -
-iterating", updated 2026-09-05) and a set of `/intro/` pages, and the teaser
-gained a banner saying two of its figures lead the protocol parameters of
-record and are not ratified. Every rule below was re-verified mechanically:
-its quotation is a substring of the body its source hash names, or it is
-marked derived or unknown. The previous snapshot's hashes are kept in
-`official-sources.json` under `_meta.history`.
+The third snapshot. Between 2026-09-08 and 2026-09-14 the genesis supply moved
+to 4,400,000,000 FLOP in both the Yellow Paper (whose printed version, 0.5.0,
+and date, 2026-09-05, did not change -- only the body hash says it moved) and
+the teaser's allocation table, and the teaser's banner now calls the genesis
+airdrop ratified (D-0438) while still writing "3.5bn" in the same sentence.
+Technocore's `llms.txt` changed its room capacity again. Every rule below was
+re-verified mechanically: its quotation is a substring of the body its source
+hash names, or it is marked derived or unknown. The previous snapshot's hashes
+are kept in `official-sources.json` under `_meta.history`.
 
 | id | status | phase | source | what it records |
 |---|---|---|---|---|
 | `flop-testnet-schedule` | official-draft | testnet | `flop-finance-teaser` | Flop Testnet is planned for Q4 2026 and runs for roughly ninety days, with mainnet to follow in Q1 2027. |
 | `flop-figures-provisional` | official-draft | any | `flop-finance-teaser` | Several are still under review against the protocol parameters of record and may change. The Yellow Paper i... |
-| `flop-teaser-unratified-figures` | official-draft | any | `flop-finance-teaser` | Draft. Two figures on this page LEAD the protocol parameters of record and are not yet ratified: the 3.5bn... |
-| `flop-genesis-airdrop-pool` | official-draft | genesis | `flop-finance-teaser` | The genesis airdrop of 3,500,000,000 $FLOP - 20.4% of the total network supply at year 10 - is allocated as... |
-| `flop-genesis-supply-parameter` | official-draft | genesis | `flop-finance-yellowpaper` | Total genesis supply MUST be genesis_supply = 2,483,460,000 FLOP (18 decimals), allocated to airdrop accoun... |
-| `flop-agent-airdrop-allocation` | official-draft | genesis | `flop-finance-teaser` | Agents up to 1,200,000,000 (7.0%) Compute consumed through inference requests |
+| `flop-teaser-unratified-figures` | official-draft | any | `flop-finance-teaser` | Draft. One figure on this page LEADS the protocol parameters of record and is not yet ratified: the 85/15 i... |
+| `flop-genesis-airdrop-pool` | official-draft | genesis | `flop-finance-teaser` | The genesis airdrop of 4,400,000,000 $FLOP - 24.3% of the total network supply at year 10 - is allocated as... |
+| `flop-genesis-supply-parameter` | official-draft | genesis | `flop-finance-yellowpaper` | Total genesis supply MUST be genesis_supply = 4,400,000,000 FLOP (18 decimals), held at genesis only by the... |
+| `flop-genesis-cohort-parameters` | official-draft | genesis | `flop-finance-yellowpaper` | genesis_agent_airdrop = 1,200,000,000; plus the genesis_reserve = 800,000,000 residual (ecosystem/incentive... |
+| `flop-agent-airdrop-allocation` | official-draft | genesis | `flop-finance-teaser` | Agents up to 1,200,000,000 (6.6%) Compute consumed through inference requests |
 | `flop-agent-airdrop-basis` | official-draft | testnet | `flop-finance-teaser` | Agents - claim a test-token faucet and spend it on inference. Their airdrop is based largely on what they s... |
 | `flop-agent-unlock-ratio` | official-draft | mainnet | `flop-finance-teaser` | It arrives locked and spendable only on inference or staking - every 3 $FLOP spent on inference unlocks 1 a... |
 | `flop-agent-unlock-ratio-intro` | official-draft | mainnet | `flop-finance-intro-agent` | Agent airdrops are locked to inference spend or stake delegation. Every 3 FLOP of inference fees unlocks 1... |
@@ -85,7 +87,7 @@ marked derived or unknown. The previous snapshot's hashes are kept in
 | `flop-yellow-paper-status` | official-draft | any | `flop-finance-yellowpaper` | Draft - the normative specification of the protocol. Sections marked planned are not yet implemented. |
 | `technocore-native-delegation` | official-draft | any | `technocore-llms` | DELEGATION: a key can say another key acts for it, so an agent holds its own key
 instead of being handed yo... |
-| `technocore-capacity` | official-draft | any | `technocore-llms` | CAPACITY: at most 163840 rooms, 5242880 notes in total and 163840 per |
+| `technocore-capacity` | official-draft | any | `technocore-llms` | CAPACITY: at most 250000 rooms, 5242880 notes in total and 250000 per |
 | `technocore-not-a-settlement-system` | official-draft, **derived** | any | `flop-labs-github-org` | Technocore is a coordination layer, not a settlement system: parties meet and agree in a room, and value mo... |
 | `flop-testnet-endpoint` | unknown | testnet | `flop-finance-yellowpaper` | `UNKNOWN_FROM_OFFICIAL_SPEC` |
 | `flop-faucet-procedure` | unknown | testnet | `flop-finance-yellowpaper` | `UNKNOWN_FROM_OFFICIAL_SPEC` |
@@ -108,12 +110,13 @@ The `formula` for `flop-agent-unlock-ratio`:
 }
 ```
 
-What changed for a reader of the previous table: the 3.5bn genesis figure is
-still quoted, because the teaser still prints it, but its `consequence` now
-says the Yellow Paper fixes `genesis_supply = 2,483,460,000 FLOP` and the
-teaser's own banner calls the 3.5bn unratified. The fee split is flagged the
-same way. Nothing was silently rewritten; a stale rule would have shown as
-`RULE UPDATED` had the snapshot moved without this re-verification.
+What changed for a reader of the previous table: `flop-genesis-supply-parameter`
+now quotes 4,400,000,000 (it quoted 2,483,460,000 six days earlier, from the
+same document), `flop-genesis-airdrop-pool` quotes the teaser's new 4.4bn
+table, and `flop-genesis-cohort-parameters` is new. The fee split is still
+the one figure the teaser calls unratified. Nothing was silently rewritten:
+the second snapshot's rules would have shown as `RULE UPDATED` against these
+hashes, which is exactly the case the mechanism exists for.
 
 ## Absence is recorded, not filled in
 

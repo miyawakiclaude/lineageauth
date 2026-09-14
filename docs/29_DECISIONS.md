@@ -2708,3 +2708,34 @@ Git/GitHub writes require confirmation of active account + repository owner + re
   open for correction upstream there; this module adds one more assumption to
   that list -- that the reference will rank after verifying once #782 lands --
   and says so in its docstring.
+
+## D-114: the third snapshot -- a parameter of record moved without its document's version moving
+
+- **Date:** 2026-09-14
+- **What changed upstream.** Between 2026-09-08 and 2026-09-14 the Yellow
+  Paper's `genesis_supply` went from 2,483,460,000 to 4,400,000,000 FLOP, the
+  three airdrop cohorts to 1,200,000,000 each and the reserve to 800,000,000,
+  and the teaser's allocation table followed (it had said 3,500,000,000).
+  The Yellow Paper still prints "Version 0.5.0 (draft)" and "Updated
+  2026-09-05"; its body hash is what says it moved. The teaser's banner now
+  calls the genesis airdrop ratified (D-0438) while writing "3.5bn" in the
+  same sentence as a table that says 4.4bn. Technocore's `llms.txt` changed
+  its room capacity again (163840 -> 250000) and its per-room history.
+  `flop-labs/yellowpaper` (a read-only mirror with wire-format vectors) and
+  `flop-labs/technocore-sonnet-challenge` appeared in the organisation.
+- **Decision:** regenerate as in D-112: every quotation re-verified against
+  the fetched body, previous hashes kept in `_meta.history`, a
+  `snapshotHistory` list on the registry. `flop-genesis-cohort-parameters` is
+  new. Nothing else in the registry's shape changed; every rule stays
+  `official-draft`; the phase stays `PRE_TESTNET`.
+- **What this snapshot teaches.** A printed version string is not a change
+  detector: the document with the most consequential change carried the same
+  version and date before and after. The body hash is the only signal that
+  fired, and it fired on every flop.finance page including ones whose text did
+  not change (D-112's hash is over the raw body, so page chrome moves it too).
+  Both facts point the same way: keep the body hash as the trigger, and add a
+  text-normalised hash beside it so a reader can tell "the words changed"
+  from "the page changed". That second hash is not in this snapshot; it is the
+  next change to `sources.py`, recorded here so the reason survives.
+- **Security impact.** None on the protocol. The executor's freshness check
+  binds prepared actions to these hashes as before.
