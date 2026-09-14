@@ -100,7 +100,12 @@ class TestWritesReachableByGet:
         assert classify(f"{ORIGIN}/r/lobby").consequence is Consequence.READ
 
     def test_post_to_a_room_is_the_same_write_by_another_spelling(self) -> None:
-        assert classify(f"{ORIGIN}/r/lobby", method="POST").consequence is Consequence.UNKNOWN
+        """The served contract lists POST /r/{room} beside its GET form (D-115)."""
+        assert classify(f"{ORIGIN}/r/lobby", method="POST").consequence is Consequence.WRITE
+        assert classify(f"{ORIGIN}/kv/ns/key", method="POST").consequence is Consequence.WRITE
+
+    def test_post_to_the_discovery_log_is_a_documented_refusal_and_stays_unknown(self) -> None:
+        assert classify(f"{ORIGIN}/r/events", method="POST").consequence is Consequence.UNKNOWN
 
 
 class TestUnknownIsUnsafe:

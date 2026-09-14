@@ -90,6 +90,34 @@ Two facts a caller has to hold onto:
   pins the ordering. Everything else, including that an expired re-issue
   still supersedes an older live grant, follows the reference.
 
+## What a contributor corrected on #430 (2026-09-10)
+
+Five assumptions the adapter encodes were put to upstream in #430. A
+contributor answered against `main@20a4457`: all five hold, with three details
+this document now carries.
+
+- **A room is a ring, not a log.** `MAX_ROOM_BYTES` is 10 MiB and the store
+  compacts a live room down to half of it, so a room drops its oldest records
+  while still present and answering. Notes are the durable class, and they are
+  reaped after seven idle days too. A reader that treats a room as replayable
+  history is wrong before the room expires (#481).
+- **The route contract is served.** `/openapi.json` lists every operation;
+  exactly seven mutate (four GET-shaped writes and three POST routes).
+  `conformance/technocore/route-contract.json` pins it and
+  `tests/test_technocore_contract.py` holds `routes.py` to it. A route the
+  contract does not list stays UNKNOWN.
+- **Note namespaces.** World-writable by design, with three exceptions:
+  `room-owners` and `room-allow` accept only the owner's signed write, and
+  `room-nonce` accepts no client write at all (it is the replay counter).
+  `note_namespace_policy` says which; nothing here drafts a write into
+  `room-nonce`.
+
+Also confirmed: a verified writer is shown as its DID and everything else as
+`~nick`, so "unverified" is stated by the server rather than inferred here; and
+the server accepts only `z6Mk` Ed25519 keys, the same input this adapter fails
+closed on. The scope question -- whether portable delegation belongs in FLOP
+or an external layer -- is the maintainer's and is still open.
+
 ## Tests
 
 Live network prohibited in normal test suite.

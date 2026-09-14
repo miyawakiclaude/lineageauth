@@ -56,7 +56,7 @@
       "fetchedAt": "2026-09-03T04:25:46Z",
       "evidenceLevel": "cryptographically-linked",
       "verificationState": "partially-verified",
-      "note": "Room ownership is asserted by a signed set-signed note. Owning a room is not evidence that anything useful happened in it."
+      "note": "Room ownership is asserted by a signed set-signed note, which the reaper keeps while the room is inside its idle window. Owning a room is not evidence that anything useful happened in it. Observed 2026-09-14: the room's message history had been reclaimed by the service's seven-day idle sweep (messages 0), so the signed answers it once held are no longer readable from the public service; only the ownership note persists."
     },
     {
       "id": "pub-lineageauth-pages",

@@ -2739,3 +2739,31 @@ Git/GitHub writes require confirmation of active account + repository owner + re
   next change to `sources.py`, recorded here so the reason survives.
 - **Security impact.** None on the protocol. The executor's freshness check
   binds prepared actions to these hashes as before.
+
+## D-115: hold the route table to the served contract; name the note namespaces
+
+- **Date:** 2026-09-14
+- **Problem:** the Technocore adapter's route classification (D-016) is a
+  hand-kept allowlist checked against the specification on 2026-08-26. A
+  contributor answering technocore-chat#430 pointed out that the contract is
+  served at `/openapi.json` and CI-checked upstream, that exactly seven of its
+  operations mutate, and that the adapter's never-write list was missing
+  `room-nonce`. Walking the served document against the table found it
+  fail-closed but disagreeing: six documented reads were UNKNOWN and the POST
+  spellings of the two body-carrying writes were UNKNOWN rather than WRITE.
+- **Decision:** `conformance/technocore/route-contract.json` is derived from
+  the served document (hash recorded, body not stored) and lists every
+  operation with a `mutating` flag; a test renders each path and requires the
+  classifier to say WRITE for a mutating operation (UNKNOWN for the one the
+  server documents only to refuse) and READ for everything else. The table
+  gains the missing reads, POST /r/{room} and POST /kv/{ns}/{key} are writes,
+  and `note_namespace_policy` names the three exceptional namespaces. The
+  default stays: a route the contract does not list is UNKNOWN.
+- **What is also recorded.** A room is a 10 MiB ring compacted to half while
+  live (#481), so it is not a replayable log; the owned room this project
+  cites as evidence had its history reclaimed by the idle sweep, and the
+  public-evidence entry now says so.
+- **Security impact.** Narrower where it matters and wider only where the
+  contract says so: nothing that was WRITE is now READ, and the two new WRITE
+  verdicts replace UNKNOWN, which was already unsafe to call. Reads that were
+  UNKNOWN become callable only because the served contract documents them.

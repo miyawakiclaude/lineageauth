@@ -11,9 +11,14 @@ does not recognise is `UNKNOWN`, and `UNKNOWN` is not "probably a read" -- it is
 "do not call this automatically". Upstream can add routes at any time, and the
 one that gets added while nobody is looking should fail closed.
 
-Classification checked against the official specification on 2026-08-26. It is
-a snapshot of someone else's service and must be re-checked before shipping any
-integration that acts on it.
+Classification checked against the served `/openapi.json` (technocore-chat
+0.13.0) on 2026-09-14; `conformance/technocore/route-contract.json` pins that
+document's hash and every operation in it, and a test walks the two against
+each other. A contributor answering #430 pointed out that the contract is
+served and CI-checked upstream, so a hand-kept table can at least be held to
+it. It is still a snapshot of someone else's service: a route the contract
+does not list stays UNKNOWN here, and the contract does not promise to list a
+route before it ships.
 """
 
 from __future__ import annotations
@@ -79,13 +84,18 @@ ROUTES: tuple[Route, ...] = (
     _route(r"^/kv/[^/]+/[^/]+/set/.*$", Consequence.WRITE, "write an unsigned note"),
     # ---- reads ----
     _route(r"^/r/events$", Consequence.READ, "discovery stream of new public rooms"),
+    _route(r"^/r/[^/]+/export$", Consequence.READ, "export a room's retained ring as JSONL"),
     _route(r"^/r/[^/]+$", Consequence.READ, "read recent messages in a room"),
     _route(r"^/kv/[^/]+/[^/]+$", Consequence.READ, "read one note"),
     _route(r"^/kv/[^/]+$", Consequence.READ, "list the keys in a namespace"),
     _route(r"^/rooms$", Consequence.READ, "enumerate rooms"),
     _route(r"^/openapi\.json$", Consequence.READ, "OpenAPI description"),
-    _route(r"^/\.well-known/[^/]*$", Consequence.READ, "service metadata and limits"),
+    _route(r"^/config$", Consequence.READ, "effective limits and retention of this deployment"),
+    _route(r"^/\.well-known/[^/]+(/[^/]+)*$", Consequence.READ, "service metadata and limits"),
     _route(r"^/healthz$", Consequence.READ, "health probe"),
+    _route(
+        r"^/(humans|robots\.txt|sitemap\.xml)$", Consequence.READ, "pages for people and crawlers"
+    ),
     _route(
         r"^/(llms\.txt|skill\.md|patterns\.md|interop\.md|auth\.md)$",
         Consequence.READ,
@@ -93,6 +103,45 @@ ROUTES: tuple[Route, ...] = (
     ),
     _route(r"^/$", Consequence.READ, "service front page"),
 )
+
+# The two body-carrying spellings of a write. Upstream's contract lists them as
+# POST routes beside their GET forms; a POST to anything else is UNKNOWN, which
+# includes `POST /r/events`, a route the contract documents only to say the
+# server refuses it (the discovery log is server-written).
+POST_WRITES: tuple[Route, ...] = (
+    _route(r"^/r/[^/]+$", Consequence.WRITE, "post a message to a room with a JSON body"),
+    _route(r"^/kv/[^/]+/[^/]+$", Consequence.WRITE, "write a note with a JSON body"),
+)
+
+# Note namespaces. `_note_write_gate` upstream says it outright: a note is
+# world-writable by design and stays that way. Three namespaces are the
+# exceptions, and one of them accepts no client write at all.
+OWNER_SIGNED_NAMESPACES: frozenset[str] = frozenset({"room-owners", "room-allow"})
+SERVER_ONLY_NAMESPACES: frozenset[str] = frozenset({"room-nonce"})
+
+
+class NamespacePolicy(StrEnum):
+    """Who may write a note in a namespace, per the served gate."""
+
+    WORLD_WRITABLE = "world-writable"
+    OWNER_SIGNED = "owner-signed"
+    SERVER_ONLY = "server-only"
+
+
+def note_namespace_policy(namespace: str) -> NamespacePolicy:
+    """The write policy of a note namespace.
+
+    `room-owners` and `room-allow` accept only signed writes, by the key that
+    owns the room; `room-nonce` is the replay counter and accepts no client
+    write (a client gets 403). Everything else, `topic` included, is
+    world-writable. A preparer that drafts a write into `room-nonce` is
+    drafting a request the server will refuse, so it should not.
+    """
+    if namespace in SERVER_ONLY_NAMESPACES:
+        return NamespacePolicy.SERVER_ONLY
+    if namespace in OWNER_SIGNED_NAMESPACES:
+        return NamespacePolicy.OWNER_SIGNED
+    return NamespacePolicy.WORLD_WRITABLE
 
 
 @dataclass(frozen=True, slots=True)
@@ -173,6 +222,27 @@ def classify(url: str, *, method: str = "GET") -> Classification:
             ),
         )
 
+    if method == "POST":
+        if path == "/r/events":
+            # Listed in the served contract only to say the server refuses it:
+            # the discovery log is server-written. Not a write, not a read.
+            return Classification(
+                url=url,
+                consequence=Consequence.UNKNOWN,
+                description="discovery log is server-written",
+                signed=False,
+                detail="POST /r/events is documented only as a refusal",
+            )
+        for route in POST_WRITES:
+            if route.pattern.match(path):
+                return Classification(
+                    url=url,
+                    consequence=Consequence.WRITE,
+                    description=route.description,
+                    signed=False,
+                    detail=f"matched the write route for {route.description}",
+                )
+
     for route in ROUTES:
         if route.pattern.match(path):
             consequence = route.consequence
@@ -201,7 +271,7 @@ def classify(url: str, *, method: str = "GET") -> Classification:
         description="unrecognised route",
         signed=False,
         detail=(
-            f"path {path!r} matches no route in the table checked on 2026-08-26; "
+            f"path {path!r} matches no route in the table checked on 2026-09-14; "
             "an unrecognised Technocore route is treated as unsafe to call, because "
             "writes here are reachable by GET and a new one would look like a read"
         ),
