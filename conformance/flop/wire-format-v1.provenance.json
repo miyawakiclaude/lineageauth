@@ -1,0 +1,11 @@
+{
+ "repository": "flop-labs/yellowpaper",
+ "path": "evidence/wire-format-v1.json",
+ "commit": "cb3cbf97a346ff85aca6dba5e924434270ca672c",
+ "fetchedAt": "2026-09-14T00:55:00Z",
+ "sha256": "sha256:80d4a7e70f984342eb474ae5285a17a6b9348eca887e1689b15e641922051d93",
+ "bytes": 24213,
+ "copiedVerbatim": true,
+ "note": "The Yellow Paper's public wire-format corpus (Appendix F, profile flop-wire-v1, status public-canonical), copied without modification so tests/test_flop_wire.py meets the same bytes every other implementation does.",
+ "commitDate": "2026-09-11T04:35:48Z"
+}

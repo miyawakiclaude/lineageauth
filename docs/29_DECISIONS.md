@@ -2767,3 +2767,34 @@ Git/GitHub writes require confirmation of active account + repository owner + re
   contract says so: nothing that was WRITE is now READ, and the two new WRITE
   verdicts replace UNKNOWN, which was already unsafe to call. Reads that were
   UNKNOWN become callable only because the served contract documents them.
+
+## D-116: Appendix F reproduced from its text, checked against the paper's own corpus
+
+- **Date:** 2026-09-14
+- **Problem:** the testnet executor will one day hold a FLOP compute-channel
+  receipt, and a receipt this project cannot re-derive is one it cannot say
+  anything about. The Yellow Paper's Appendix F fixes those bytes and ships a
+  public corpus, `evidence/wire-format-v1.json`, that Rust, TypeScript and
+  Python consumers are said to share.
+- **Decision:** `flop/wire.py`, written from Appendix F's tables (F.0 codec,
+  F.1 preimages, F.2 attestation, F.3 transcript/Merkle/receipt, F.4 DataRef)
+  with no dependency beyond the standard library, and no sr25519. The corpus
+  is copied verbatim into `conformance/flop/` with commit and hash;
+  `tests/test_flop_wire.py` reproduces every positive vector byte for byte and
+  every negative case the appendix's rules can decide. The secret scanner's
+  mask gains a second scope for that file's `_hex` values, pinned by a test as
+  D-106's tclk scope is.
+- **What the corpus taught.** Its `wrong_path_orientation` negative case
+  flips the orientation of a sibling that is the leaf's own duplicate (the odd
+  last node of a three-leaf tree), so under F.3's `blake2_256(left || right)`
+  the recomputed root is unchanged and the vector cannot be refused as
+  `LeafNotInRoot`. The reference Python folds the same way. Another reader
+  filed this as flop-labs/yellowpaper#44 three days earlier; this project
+  pins the fact in a test rather than inventing an orientation rule, and
+  confirms it upstream from an implementation not derived from the reference.
+- **What is not claimed.** The three sr25519 vectors are checked for shape
+  only. Acceptance of a receipt or attestation depends on chain state this
+  project cannot see; the module recomputes bytes and the two pure F.3 checks
+  (`accepts_leaf_version`, `verified_work_from_turns`) and nothing more.
+- **Security impact.** Additive and offline. Nothing here signs, sends or
+  moves value; the FLOP layer's import guard still holds.

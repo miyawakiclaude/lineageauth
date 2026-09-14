@@ -1,6 +1,6 @@
 # FLOP conformance data
 
-Five data files and this note. Everything the FLOP layer treats as a fact about
+Six data files (one with a provenance record) and this note. Everything the FLOP layer treats as a fact about
 someone else's project lives here, as data, so that changing what FLOP says is a
 diff in this directory rather than an edit spread across the code.
 
@@ -11,6 +11,7 @@ diff in this directory rather than an edit spread across the code.
 | `ui-tokens.json` | The design tokens, each carrying its provenance, plus every difference from the supplied baseline | Yes |
 | `public-evidence.json` | Real public contributions by the subject DID | Yes, at `partially-verified` and no higher |
 | `mock-activity.json` | Synthetic data for the UI, copied unchanged from the directive | Only while it is labelled `SYNTHETIC MOCK DATA` |
+| `wire-format-v1.json` + `.provenance.json` | The Yellow Paper's public wire-format corpus (Appendix F), copied verbatim from `flop-labs/yellowpaper` at the commit and hash recorded beside it | Yes; `tests/test_flop_wire.py` reproduces every positive vector from `flop/wire.py`, see `docs/FLOP_WIRE_FORMAT.md` |
 
 ## The rules these files exist to enforce
 

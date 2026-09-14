@@ -506,6 +506,32 @@ class TestThePrePushCheck:
         assert fires("conformance/vectors/x.json", wire)
         assert module.scannable_text("packages/py/lineageauth/x.py", wire) == wire
 
+    def test_the_yellow_paper_corpus_exemption_is_file_and_key_scoped(self) -> None:
+        """conformance/flop/wire-format-v1.json holds vectors under `_hex` keys. Those
+        values are masked in that file only; the same key elsewhere, or another key
+        in that file, must still fire."""
+        import importlib.util
+
+        spec = importlib.util.spec_from_file_location(
+            "pre_push_check", REPO / "scripts" / "pre_push_check.py"
+        )
+        assert spec and spec.loader
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+
+        bare = "ef" * 32  # assembled, so this file carries no 64-hex literal
+        corpus = module.FLOP_WIRE_CORPUS
+
+        def fires(name: str, text: str) -> bool:
+            scanned = module.scannable_text(name, text)
+            return any(pattern.search(scanned) for pattern in module.SECRETS)
+
+        assert not fires(corpus, f'"hash_hex": "{bare}"')
+        assert not fires(corpus, f'"preimage_hex":"{bare}{bare}"')
+        assert fires(corpus, f'"hash": "{bare}"')
+        assert fires("conformance/flop/rule-registry.json", f'"hash_hex": "{bare}"')
+        assert fires("packages/py/lineageauth/x.py", f'"hash_hex": "{bare}"')
+
     def test_it_says_how_to_bypass_it(self) -> None:
         """A check that cannot be bypassed gets deleted the first time it is wrong."""
         assert "--no-verify" in self._script()

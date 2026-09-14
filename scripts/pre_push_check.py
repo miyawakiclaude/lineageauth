@@ -200,11 +200,27 @@ TCLK_FIXTURES = "conformance/tclk/"
 _TCLK_WIRE_HEX = re.compile(r"0x[0-9a-f]{64}(?![0-9a-fA-F])")
 
 
+# The Yellow Paper's wire-format corpus, copied verbatim (D-116). Its values are
+# hashes, preimages and signatures of test vectors, every one of them under a
+# JSON key that ends in `_hex`. Only those values, and only in that one file,
+# are masked; a bare 64-hex anywhere else in the file, or under any other key,
+# still fires.
+FLOP_WIRE_CORPUS = "conformance/flop/wire-format-v1.json"
+_FLOP_WIRE_HEX = re.compile(r'("[A-Za-z0-9_]*_hex"\s*:\s*")[0-9a-fA-F]*(")')
+
+
 def scannable_text(name: str, text: str) -> str:
-    """The text the secret patterns run over. Identity except under conformance/tclk/."""
-    if not name.startswith(TCLK_FIXTURES):
-        return text
-    return _TCLK_WIRE_HEX.sub("0x<tclk-wire-hex>", text)
+    """The text the secret patterns run over.
+
+    Identity everywhere except two conformance fixtures whose wire format is
+    hex by definition: `0x` + 64 hex under conformance/tclk/, and the `_hex`
+    values of the Yellow Paper corpus.
+    """
+    if name.startswith(TCLK_FIXTURES):
+        return _TCLK_WIRE_HEX.sub("0x<tclk-wire-hex>", text)
+    if name == FLOP_WIRE_CORPUS:
+        return _FLOP_WIRE_HEX.sub(r"\1<flop-wire-hex>\2", text)
+    return text
 
 
 def check_tree() -> list[str]:
