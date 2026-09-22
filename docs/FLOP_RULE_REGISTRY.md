@@ -50,17 +50,20 @@ part of every `ExecutionPlan`, and an approval granted under one rule set is
 A rule whose `hash` is `null` cannot be checked and is reported as
 `UNVERIFIABLE` freshness — one such rule exists, below.
 
-## The rules, at snapshot 2026-09-14T00:39:16Z
+## The rules, at snapshot 2026-09-22T04:44:59Z
 
-The third snapshot. Between 2026-09-08 and 2026-09-14 the genesis supply moved
-to 4,400,000,000 FLOP in both the Yellow Paper (whose printed version, 0.5.0,
-and date, 2026-09-05, did not change -- only the body hash says it moved) and
-the teaser's allocation table, and the teaser's banner now calls the genesis
-airdrop ratified (D-0438) while still writing "3.5bn" in the same sentence.
-Technocore's `llms.txt` changed its room capacity again. Every rule below was
-re-verified mechanically: its quotation is a substring of the body its source
-hash names, or it is marked derived or unknown. The previous snapshot's hashes
-are kept in `official-sources.json` under `_meta.history`.
+The fourth snapshot. Between 2026-09-14 and 2026-09-22 no flop.finance page
+changed its wording: the HTML pages' byte hashes moved through build chrome
+alone, which a text-normalised comparison of each body against the third
+snapshot confirmed and `_meta.history` now records beside the byte hash as
+`textSha256` (the Yellow Paper included). Technocore's
+`llms.txt` changed one line, its capacity, because the operator raised
+`max_rooms` to 300000 and the per-room history shrank to 17.4 KiB; the
+served service version is still 0.13.0, so this is a setting, not a release.
+Every rule below was re-verified mechanically: its quotation is a substring
+of the body its source hash names, or it is marked derived or unknown. The
+previous snapshot's hashes are kept in `official-sources.json` under
+`_meta.history`.
 
 | id | status | phase | source | what it records |
 |---|---|---|---|---|
@@ -87,7 +90,7 @@ are kept in `official-sources.json` under `_meta.history`.
 | `flop-yellow-paper-status` | official-draft | any | `flop-finance-yellowpaper` | Draft - the normative specification of the protocol. Sections marked planned are not yet implemented. |
 | `technocore-native-delegation` | official-draft | any | `technocore-llms` | DELEGATION: a key can say another key acts for it, so an agent holds its own key
 instead of being handed yo... |
-| `technocore-capacity` | official-draft | any | `technocore-llms` | CAPACITY: at most 250000 rooms, 5242880 notes in total and 250000 per |
+| `technocore-capacity` | official-draft | any | `technocore-llms` | CAPACITY: at most 300000 rooms, 5242880 notes in total and 300000 per |
 | `technocore-not-a-settlement-system` | official-draft, **derived** | any | `flop-labs-github-org` | Technocore is a coordination layer, not a settlement system: parties meet and agree in a room, and value mo... |
 | `flop-testnet-endpoint` | unknown | testnet | `flop-finance-yellowpaper` | `UNKNOWN_FROM_OFFICIAL_SPEC` |
 | `flop-faucet-procedure` | unknown | testnet | `flop-finance-yellowpaper` | `UNKNOWN_FROM_OFFICIAL_SPEC` |
@@ -110,13 +113,13 @@ The `formula` for `flop-agent-unlock-ratio`:
 }
 ```
 
-What changed for a reader of the previous table: `flop-genesis-supply-parameter`
-now quotes 4,400,000,000 (it quoted 2,483,460,000 six days earlier, from the
-same document), `flop-genesis-airdrop-pool` quotes the teaser's new 4.4bn
-table, and `flop-genesis-cohort-parameters` is new. The fee split is still
-the one figure the teaser calls unratified. Nothing was silently rewritten:
-the second snapshot's rules would have shown as `RULE UPDATED` against these
-hashes, which is exactly the case the mechanism exists for.
+What changed for a reader of the previous table: only `technocore-capacity`,
+which now quotes 300000 rooms. It has moved at every snapshot (163840, 250000,
+300000) and is an operator setting read from `/config`, not a protocol rule;
+its `consequence` says so. Every other rule, including the genesis figures
+that moved last time, verifies against the same wording as before. This is
+the quiet case the mechanism is for: a reader of the registry can tell a
+snapshot that found nothing from one that was never taken.
 
 ## Absence is recorded, not filled in
 

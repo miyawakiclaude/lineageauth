@@ -1,115 +1,161 @@
 {
  "_meta": {
   "purpose": "Snapshot of the official sources the FLOP layer is allowed to treat as authoritative, as observed once, read-only.",
-  "fetchedAt": "2026-09-14T00:39:16Z",
+  "fetchedAt": "2026-09-22T04:44:59Z",
   "bodiesAreNotStored": true,
-  "bodiesNote": "Response bodies are deliberately not copied into this repository. Only the URL, HTTP status, byte length, content hash, version hint and status are recorded, so a later fetch can be compared without this repository redistributing someone else's document.",
+  "bodiesNote": "Response bodies are deliberately not copied into this repository. Only the URL, HTTP status, byte length, content hash, text hash, version hint and status are recorded, so a later fetch can be compared without this repository redistributing someone else's document.",
   "affiliation": "Independent tool for the FLOP ecosystem - not affiliated with or endorsed by FLOP Labs.",
   "networkPhaseAtSnapshot": "PRE_TESTNET",
   "officialTestnetExecutable": false,
-  "previousFetchedAt": "2026-09-08T03:40:53Z",
+  "previousFetchedAt": "2026-09-14T00:39:16Z",
   "history": [
    {
     "id": "flop-finance-home",
     "change": "hash-changed",
-    "from": "sha256:ef8297d189aa244f27ea7a314c74c405ae31e12a4c751ade97f59d7a6e4db75f",
-    "to": "sha256:b95d150f91b551fe818c923259d4b01f75af8b22f11683d110781764f6bff592"
+    "from": "sha256:b95d150f91b551fe818c923259d4b01f75af8b22f11683d110781764f6bff592",
+    "to": "sha256:078913077b0e050eedbf35976ae93ae4090132d84822e10bd6ed3155c62b9c13",
+    "text": "unchanged",
+    "textFrom": "sha256:d0fad7ae3729b6856bd83d198f827e1b4a52807d12d59c701b7ec38be91b250e",
+    "textTo": "sha256:d0fad7ae3729b6856bd83d198f827e1b4a52807d12d59c701b7ec38be91b250e"
    },
    {
     "id": "flop-finance-teaser",
     "change": "hash-changed",
-    "from": "sha256:40bf53540f21e8974cb2f1a918ed2e2d72436417c98fe9f81d36272ed6984aff",
-    "to": "sha256:f915fade0f3b84f68c27a8fb7e72d55faeeebf1ab8a39ca3c6702b39bfa812d0"
+    "from": "sha256:f915fade0f3b84f68c27a8fb7e72d55faeeebf1ab8a39ca3c6702b39bfa812d0",
+    "to": "sha256:ab7a3789f678593a39e6e88e5dbec606523c98e1d79bb9d8a6132384558b9dc5",
+    "text": "unchanged",
+    "textFrom": "sha256:fc6e267fdcb2d6486aed9c9876a002726fefe6920181537748986e565b97023c",
+    "textTo": "sha256:fc6e267fdcb2d6486aed9c9876a002726fefe6920181537748986e565b97023c"
    },
    {
     "id": "flop-finance-brand",
     "change": "hash-changed",
-    "from": "sha256:cf2e0f8ce7e0dc36259f7fc9cc67f4acf7c343dfd8de672dda7587dc5bc8761f",
-    "to": "sha256:b3c0804ed14699c13325fb9a0f65745b6d879d07bcac3c28b0688d4b82bf2aa1"
+    "from": "sha256:b3c0804ed14699c13325fb9a0f65745b6d879d07bcac3c28b0688d4b82bf2aa1",
+    "to": "sha256:7bdb84f068de7a7e155d4bf77fefd83a155edbbdf241fd401d5ccecdb82283c7",
+    "text": "unchanged",
+    "textFrom": "sha256:63b6ced0dcb9d18a1d83ba1cac46c2328c7dbc908ef827e05936ce2f2a858cb3",
+    "textTo": "sha256:63b6ced0dcb9d18a1d83ba1cac46c2328c7dbc908ef827e05936ce2f2a858cb3"
    },
    {
     "id": "flop-finance-design",
     "change": "unchanged",
     "from": "sha256:476fe27b0cebf5fef03fb880ce50c98d9afce7f558dfa3687c5cec4d37ca6248",
-    "to": "sha256:476fe27b0cebf5fef03fb880ce50c98d9afce7f558dfa3687c5cec4d37ca6248"
+    "to": "sha256:476fe27b0cebf5fef03fb880ce50c98d9afce7f558dfa3687c5cec4d37ca6248",
+    "text": "unchanged",
+    "textFrom": "sha256:d35dc0bb6b084702e92c949f4f3f952f985b2906d37f3e9431c0a65d54a6c3f7",
+    "textTo": "sha256:d35dc0bb6b084702e92c949f4f3f952f985b2906d37f3e9431c0a65d54a6c3f7"
    },
    {
     "id": "technocore-llms",
     "change": "hash-changed",
-    "from": "sha256:350687cddee6ad979d37c35b64b5be5f3e89396c535357dfba416a93d9798f97",
-    "to": "sha256:a1ba45aacadbc9bc3f95b7784e0450bc279e2f96548547cfa51e7a6fbf7c41b2"
+    "from": "sha256:a1ba45aacadbc9bc3f95b7784e0450bc279e2f96548547cfa51e7a6fbf7c41b2",
+    "to": "sha256:40e0bebabcc105a2931805b68e200f1d5fc212e32ca14501ac4d85d105a2bb54",
+    "text": "changed",
+    "textFrom": "sha256:6f1560dede416f351b6583b4a8432c81ea5c7bb4e45bddb6f37ae54c6f4252a0",
+    "textTo": "sha256:ab316cd449a3389561e41caeac5393e92df1fe801ab71b431eef0ab66a85bfee"
    },
    {
     "id": "technocore-auth",
     "change": "unchanged",
     "from": "sha256:ae4c61d5d6d4b13ec24467a1a66f139c132e039a7180790a914587d642534ddb",
-    "to": "sha256:ae4c61d5d6d4b13ec24467a1a66f139c132e039a7180790a914587d642534ddb"
+    "to": "sha256:ae4c61d5d6d4b13ec24467a1a66f139c132e039a7180790a914587d642534ddb",
+    "text": "unchanged",
+    "textFrom": "sha256:7a35bbcb3cebdbe15e21bb26b5e9a24ac3a39d992da6e40cb57e7957b9f06f66",
+    "textTo": "sha256:7a35bbcb3cebdbe15e21bb26b5e9a24ac3a39d992da6e40cb57e7957b9f06f66"
    },
    {
     "id": "technocore-patterns",
     "change": "unchanged",
     "from": "sha256:45ab2f9d0aac7e6b920699cd30382af7f1eacaa0d6adc90d0e8567523e493370",
-    "to": "sha256:45ab2f9d0aac7e6b920699cd30382af7f1eacaa0d6adc90d0e8567523e493370"
+    "to": "sha256:45ab2f9d0aac7e6b920699cd30382af7f1eacaa0d6adc90d0e8567523e493370",
+    "text": "unchanged",
+    "textFrom": "sha256:f3c7e12aca1fffa1196eda6aee7aac3ca1b903b5012403615173e460fd446b69",
+    "textTo": "sha256:f3c7e12aca1fffa1196eda6aee7aac3ca1b903b5012403615173e460fd446b69"
    },
    {
     "id": "flop-finance-intro",
     "change": "hash-changed",
-    "from": "sha256:81efd5cace3a2b7826e510d7fc5e1e30df8496cc6844301d3b044331bd6b5389",
-    "to": "sha256:0dd93a11710e4bb78ed66ece8d17451129cb4db4213623de29095258524c4184"
+    "from": "sha256:0dd93a11710e4bb78ed66ece8d17451129cb4db4213623de29095258524c4184",
+    "to": "sha256:f698fd96fe109f8efaf130f5ba5a1f96e7b0ac0055418ad57044ce69f5ebaa3e",
+    "text": "unchanged",
+    "textFrom": "sha256:38b2e2fc9567fbaaa9200aeededd61711fa31c840f863715bbc88a5bd8ba0cca",
+    "textTo": "sha256:38b2e2fc9567fbaaa9200aeededd61711fa31c840f863715bbc88a5bd8ba0cca"
    },
    {
     "id": "flop-finance-intro-agent",
     "change": "hash-changed",
-    "from": "sha256:bd0031d27cdbe4152d2d3f90e3867341267aaecdbeeba70673a352daa7d416eb",
-    "to": "sha256:e5486f3ee3fa7045914b8e9080f752340b3aaae97e778f4013c5056a53faf195"
+    "from": "sha256:e5486f3ee3fa7045914b8e9080f752340b3aaae97e778f4013c5056a53faf195",
+    "to": "sha256:9320b9e952ba43741c78964fbe46f2ff6d2a1212bd516d8235e52ac04b499d33",
+    "text": "unchanged",
+    "textFrom": "sha256:b80fff7b648cc0bff36c6a745a9b95df8de1288572574d634fd2a838258c9a4f",
+    "textTo": "sha256:b80fff7b648cc0bff36c6a745a9b95df8de1288572574d634fd2a838258c9a4f"
    },
    {
     "id": "flop-finance-yellowpaper",
     "change": "hash-changed",
-    "from": "sha256:36f48e53233cb02c81566de977e4aa6754ffdcc8ffb1eeffdb37ae1ae51340a8",
-    "to": "sha256:89e2575de061eb6446dffe3f05f99fbbf0c9bda097ddcbe6080724cb473afb12"
+    "from": "sha256:89e2575de061eb6446dffe3f05f99fbbf0c9bda097ddcbe6080724cb473afb12",
+    "to": "sha256:0c7b2c0414de8671168b94c92fb3235c75a9d112983309b590346580cbc45b8f",
+    "text": "unchanged",
+    "textFrom": "sha256:0801195b20999725b13c340f5ad7579efd8edc1862ac6788a77bf7328f65d5be",
+    "textTo": "sha256:0801195b20999725b13c340f5ad7579efd8edc1862ac6788a77bf7328f65d5be"
    },
    {
     "id": "flop-finance-intro-verification",
     "change": "hash-changed",
-    "from": "sha256:b0989c2d585213dd38d1d055ae79d274135c2014d5ad3bb32232d26cb7b346fe",
-    "to": "sha256:358b46eb664d1d8e1bba4df8986cbbf5e485702a46f539443688a778fbbca9e1"
+    "from": "sha256:358b46eb664d1d8e1bba4df8986cbbf5e485702a46f539443688a778fbbca9e1",
+    "to": "sha256:1600b323bc8f7bb4f0e5d58b3bcec8152a606470b3d6bac8a358f9fb18e6406b",
+    "text": "unchanged",
+    "textFrom": "sha256:908b4431ae89944470c67e4d2b19e9dc50129dd5b2a160e74e345d1273857fce",
+    "textTo": "sha256:908b4431ae89944470c67e4d2b19e9dc50129dd5b2a160e74e345d1273857fce"
    },
    {
     "id": "flop-finance-intro-revenue",
     "change": "hash-changed",
-    "from": "sha256:c117a379ca8861711307548756797f09513c7a90241b9a54738a79fac3baa2f9",
-    "to": "sha256:c35887387721107a8531d4faa4dcd19b4d3c42a515297ea59b47730f003d278b"
+    "from": "sha256:c35887387721107a8531d4faa4dcd19b4d3c42a515297ea59b47730f003d278b",
+    "to": "sha256:e25c7d9a4e098bd9195883f590bf182f6f36d93a4db0249e8155c1a69eae36e4",
+    "text": "unchanged",
+    "textFrom": "sha256:685f5a340899fcd2b0a197b3b3421a65e7a1b6d9d518797d0f7d7a9fac894722",
+    "textTo": "sha256:685f5a340899fcd2b0a197b3b3421a65e7a1b6d9d518797d0f7d7a9fac894722"
    },
    {
     "id": "flop-finance-intro-miner",
     "change": "hash-changed",
-    "from": "sha256:bc227179cad87cf1568598d178f78ab051b6f6aee28eb623c7b7dd2b22c01259",
-    "to": "sha256:240659c613e94a2bb5a3263b6278da46ca7de3d452ea2cc803719ee33aef8349"
+    "from": "sha256:240659c613e94a2bb5a3263b6278da46ca7de3d452ea2cc803719ee33aef8349",
+    "to": "sha256:5ce0169c825b0c5db4e862de8f46ccb2e89be56a89766b3c1e41e2295046819a",
+    "text": "unchanged",
+    "textFrom": "sha256:b3e9d6a634a3b8586cb6491be3a8a1e32c31a2d1b55dd6a54eb09e361e2db462",
+    "textTo": "sha256:b3e9d6a634a3b8586cb6491be3a8a1e32c31a2d1b55dd6a54eb09e361e2db462"
    },
    {
     "id": "flop-finance-intro-validator",
     "change": "hash-changed",
-    "from": "sha256:f1f66d0791407221ce8e6e2134d98ba36869c8fd84412d16ed4eb9a6b7391f41",
-    "to": "sha256:e661276b4d56c54d23c8c1e9adc91bbfc1cbef2fd794d29fe5b24e6a41e2a13a"
+    "from": "sha256:e661276b4d56c54d23c8c1e9adc91bbfc1cbef2fd794d29fe5b24e6a41e2a13a",
+    "to": "sha256:4e91172556851841486f8deb16d65243413ed0aa475be0ab737af1316faba02b",
+    "text": "unchanged",
+    "textFrom": "sha256:b7c232a5381c58e00550206c7ba9c797f245ac63c99f295ebe18cecec3f6a796",
+    "textTo": "sha256:b7c232a5381c58e00550206c7ba9c797f245ac63c99f295ebe18cecec3f6a796"
    },
    {
     "id": "flop-labs-github-org",
     "change": "unchanged",
     "from": null,
-    "to": null
+    "to": null,
+    "text": "not-compared",
+    "textFrom": null,
+    "textTo": null
    }
   ],
-  "historyNote": "Diff against the previous snapshot, by source id and body hash. Bodies are not stored; a reader with the previous hash can confirm the change but not read the old page here."
+  "historyNote": "Diff against the previous snapshot, by source id and body hash, and since the fourth snapshot by textSha256 as well: sha256 of the body with tags, scripts and styles removed, entities decoded and whitespace collapsed, so a page rebuilt without a word changing shows change=hash-changed, text=unchanged. Bodies are not stored; a reader with the previous hash can confirm the change but not read the old page here."
  },
  "sources": [
   {
    "id": "flop-finance-home",
    "url": "https://flop.finance/",
    "httpStatus": 200,
-   "bytes": 17396,
-   "sha256": "sha256:b95d150f91b551fe818c923259d4b01f75af8b22f11683d110781764f6bff592",
-   "fetchedAt": "2026-09-14T00:39:16Z",
+   "bytes": 17757,
+   "sha256": "sha256:078913077b0e050eedbf35976ae93ae4090132d84822e10bd6ed3155c62b9c13",
+   "textSha256": "sha256:d0fad7ae3729b6856bd83d198f827e1b4a52807d12d59c701b7ec38be91b250e",
+   "fetchedAt": "2026-09-22T04:44:59Z",
    "versionHint": null,
    "status": "official-reference",
    "note": "Front page. Prose only; links the /intro/ pages. States no economic rule."
@@ -118,9 +164,10 @@
    "id": "flop-finance-teaser",
    "url": "https://flop.finance/teaser/",
    "httpStatus": 200,
-   "bytes": 57172,
-   "sha256": "sha256:f915fade0f3b84f68c27a8fb7e72d55faeeebf1ab8a39ca3c6702b39bfa812d0",
-   "fetchedAt": "2026-09-14T00:39:16Z",
+   "bytes": 57533,
+   "sha256": "sha256:ab7a3789f678593a39e6e88e5dbec606523c98e1d79bb9d8a6132384558b9dc5",
+   "textSha256": "sha256:fc6e267fdcb2d6486aed9c9876a002726fefe6920181537748986e565b97023c",
+   "fetchedAt": "2026-09-22T04:44:59Z",
    "versionHint": "Version 0.1 (draft) | Status Draft | Updated 2026-08-26 | Definitive spec Yellow Paper (not yet final) | banner since 2026-09-14: one figure (the 85/15 fee split) leads the parameters; the genesis airdrop is ratified by D-0438 | allocation table now 4,400,000,000",
    "status": "official-draft",
    "note": "The teaser. Its allocation table moved to 4,400,000,000 between the second and third snapshots and its banner now calls the genesis airdrop ratified (D-0438) while still writing 3.5bn in the same sentence; the table and the Yellow Paper say 4.4bn. The Yellow Paper carries the parameters."
@@ -129,9 +176,10 @@
    "id": "flop-finance-brand",
    "url": "https://flop.finance/brand/",
    "httpStatus": 200,
-   "bytes": 13739,
-   "sha256": "sha256:b3c0804ed14699c13325fb9a0f65745b6d879d07bcac3c28b0688d4b82bf2aa1",
-   "fetchedAt": "2026-09-14T00:39:16Z",
+   "bytes": 14100,
+   "sha256": "sha256:7bdb84f068de7a7e155d4bf77fefd83a155edbbdf241fd401d5ccecdb82283c7",
+   "textSha256": "sha256:63b6ced0dcb9d18a1d83ba1cac46c2328c7dbc908ef827e05936ce2f2a858cb3",
+   "fetchedAt": "2026-09-22T04:44:59Z",
    "versionHint": "six published swatches: Base, Grey, FLOP Blue, Accent, Electric Green, Ice White",
    "status": "official-reference",
    "note": "Brand palette. Superseded in detail by design.md wherever the two differ. Body unchanged since 2026-09-03 except page chrome."
@@ -142,7 +190,8 @@
    "httpStatus": 200,
    "bytes": 30278,
    "sha256": "sha256:476fe27b0cebf5fef03fb880ce50c98d9afce7f558dfa3687c5cec4d37ca6248",
-   "fetchedAt": "2026-09-14T00:39:16Z",
+   "textSha256": "sha256:d35dc0bb6b084702e92c949f4f3f952f985b2906d37f3e9431c0a65d54a6c3f7",
+   "fetchedAt": "2026-09-22T04:44:59Z",
    "versionHint": "frontmatter version: alpha | Mascot V3.0 design system | ETag 7e047e3e7b87506b8511ca62138b7688",
    "status": "official-reference",
    "note": "The design token source of record for ui-tokens.json. Byte-identical to the 2026-09-03 snapshot."
@@ -152,11 +201,12 @@
    "url": "https://technocore.chat/llms.txt",
    "httpStatus": 200,
    "bytes": 26182,
-   "sha256": "sha256:a1ba45aacadbc9bc3f95b7784e0450bc279e2f96548547cfa51e7a6fbf7c41b2",
-   "fetchedAt": "2026-09-14T00:39:16Z",
-   "versionHint": "served 2026-09-14; documents DELEGATION records in DID notes, CAPACITY 250000 rooms / 5242880 notes (163840 rooms on 2026-09-08), 20.9 KiB per room, a 10 s POST deadline, and the 422 duplicate guidance",
+   "sha256": "sha256:40e0bebabcc105a2931805b68e200f1d5fc212e32ca14501ac4d85d105a2bb54",
+   "textSha256": "sha256:ab316cd449a3389561e41caeac5393e92df1fe801ab71b431eef0ab66a85bfee",
+   "fetchedAt": "2026-09-22T04:44:59Z",
+   "versionHint": "served 2026-09-22; documents DELEGATION records in DID notes, CAPACITY 300000 rooms / 5242880 notes (250000 rooms on 2026-09-14, 163840 on 2026-09-08), 17.4 KiB per room, a 10 s POST deadline, and the 422 duplicate guidance",
    "status": "official-reference",
-   "note": "Service description for Technocore. Describes the transport, never the content carried over it. Changed again since 2026-09-08: room capacity 163840 -> 250000, per-room history 32 KiB -> 20.9 KiB."
+   "note": "Service description for Technocore. Describes the transport, never the content carried over it. Changed again since 2026-09-14: room capacity 250000 -> 300000 and per-room history 20.9 KiB -> 17.4 KiB, an operator setting (/config max_rooms) rather than a release; the served version is still 0.13.0."
   },
   {
    "id": "technocore-auth",
@@ -164,7 +214,8 @@
    "httpStatus": 200,
    "bytes": 5200,
    "sha256": "sha256:ae4c61d5d6d4b13ec24467a1a66f139c132e039a7180790a914587d642534ddb",
-   "fetchedAt": "2026-09-14T00:39:16Z",
+   "textSha256": "sha256:7a35bbcb3cebdbe15e21bb26b5e9a24ac3a39d992da6e40cb57e7957b9f06f66",
+   "fetchedAt": "2026-09-22T04:44:59Z",
    "versionHint": "states \"There is no authentication\"",
    "status": "official-reference",
    "note": "Why a signed Technocore message still proves only key control: the service authenticates nobody. Byte-identical to the 2026-09-03 snapshot."
@@ -175,8 +226,9 @@
    "httpStatus": 200,
    "bytes": 14282,
    "sha256": "sha256:45ab2f9d0aac7e6b920699cd30382af7f1eacaa0d6adc90d0e8567523e493370",
-   "fetchedAt": "2026-09-14T00:39:16Z",
-   "versionHint": "served 2026-09-14; unchanged since 2026-09-08 (section 7, what a 422 is telling you)",
+   "textSha256": "sha256:f3c7e12aca1fffa1196eda6aee7aac3ca1b903b5012403615173e460fd446b69",
+   "fetchedAt": "2026-09-22T04:44:59Z",
+   "versionHint": "served 2026-09-22; unchanged since 2026-09-08 (section 7, what a 422 is telling you)",
    "status": "official-reference",
    "note": "Route and usage patterns. The GET-write routes it documents are why safety.py classifies every Technocore URL before it is shown."
   },
@@ -184,9 +236,10 @@
    "id": "flop-finance-intro",
    "url": "https://flop.finance/intro/",
    "httpStatus": 200,
-   "bytes": 28423,
-   "sha256": "sha256:0dd93a11710e4bb78ed66ece8d17451129cb4db4213623de29095258524c4184",
-   "fetchedAt": "2026-09-14T00:39:22Z",
+   "bytes": 28784,
+   "sha256": "sha256:f698fd96fe109f8efaf130f5ba5a1f96e7b0ac0055418ad57044ce69f5ebaa3e",
+   "textSha256": "sha256:38b2e2fc9567fbaaa9200aeededd61711fa31c840f863715bbc88a5bd8ba0cca",
+   "fetchedAt": "2026-09-22T04:45:00Z",
    "versionHint": "Project intro . Draft whitepaper | Draft . Updated 2026-08-27",
    "status": "official-draft",
    "note": "Overview of the project intro. Restates block time, block reward, halving and the validator cap."
@@ -195,9 +248,10 @@
    "id": "flop-finance-intro-agent",
    "url": "https://flop.finance/intro/agent/",
    "httpStatus": 200,
-   "bytes": 27548,
-   "sha256": "sha256:e5486f3ee3fa7045914b8e9080f752340b3aaae97e778f4013c5056a53faf195",
-   "fetchedAt": "2026-09-14T00:39:22Z",
+   "bytes": 27909,
+   "sha256": "sha256:9320b9e952ba43741c78964fbe46f2ff6d2a1212bd516d8235e52ac04b499d33",
+   "textSha256": "sha256:b80fff7b648cc0bff36c6a745a9b95df8de1288572574d634fd2a838258c9a4f",
+   "fetchedAt": "2026-09-22T04:45:00Z",
    "versionHint": "Compute buyer . Draft whitepaper | Draft . Updated 2026-08-27",
    "status": "official-draft",
    "note": "The agent page: session request fields, account features and spend control, the 3:1 unlock, HTLC swaps. No faucet procedure, endpoint or API."
@@ -206,9 +260,10 @@
    "id": "flop-finance-yellowpaper",
    "url": "https://flop.finance/intro/yellowpaper/",
    "httpStatus": 200,
-   "bytes": 450919,
-   "sha256": "sha256:89e2575de061eb6446dffe3f05f99fbbf0c9bda097ddcbe6080724cb473afb12",
-   "fetchedAt": "2026-09-14T00:39:22Z",
+   "bytes": 451280,
+   "sha256": "sha256:0c7b2c0414de8671168b94c92fb3235c75a9d112983309b590346580cbc45b8f",
+   "textSha256": "sha256:0801195b20999725b13c340f5ad7579efd8edc1862ac6788a77bf7328f65d5be",
+   "fetchedAt": "2026-09-22T04:45:00Z",
    "versionHint": "Version 0.5.0 (draft) | Status Implementation spec - iterating | Updated 2026-09-05 (still printed) | body revised after 2026-09-08 without a new version or date: genesis_supply 2,483,460,000 -> 4,400,000,000, section 10.2 renamed, F.0 and F.6 added, validator eligibility reworded",
    "status": "official-draft",
    "note": "The Yellow Paper. Normative but a draft; sections marked planned are not implemented. Carries the protocol parameters of record (genesis_supply = 4,400,000,000 FLOP since the third snapshot). Its printed version and date did not move when its body did, so this hash, not the printed date, is what says it changed. Mirror: github.com/flop-labs/yellowpaper (main cb3cbf97, 2026-09-11)."
@@ -217,9 +272,10 @@
    "id": "flop-finance-intro-verification",
    "url": "https://flop.finance/intro/verification/",
    "httpStatus": 200,
-   "bytes": 32302,
-   "sha256": "sha256:358b46eb664d1d8e1bba4df8986cbbf5e485702a46f539443688a778fbbca9e1",
-   "fetchedAt": "2026-09-14T00:39:22Z",
+   "bytes": 32663,
+   "sha256": "sha256:1600b323bc8f7bb4f0e5d58b3bcec8152a606470b3d6bac8a358f9fb18e6406b",
+   "textSha256": "sha256:908b4431ae89944470c67e4d2b19e9dc50129dd5b2a160e74e345d1273857fce",
+   "fetchedAt": "2026-09-22T04:45:00Z",
    "versionHint": "Draft . Updated 2026-08-27",
    "status": "official-draft",
    "note": "Proof of Useful Inference explained for readers; the normative text is the Yellow Paper section 3."
@@ -228,9 +284,10 @@
    "id": "flop-finance-intro-revenue",
    "url": "https://flop.finance/intro/revenue/",
    "httpStatus": 200,
-   "bytes": 113375,
-   "sha256": "sha256:c35887387721107a8531d4faa4dcd19b4d3c42a515297ea59b47730f003d278b",
-   "fetchedAt": "2026-09-14T00:39:22Z",
+   "bytes": 113736,
+   "sha256": "sha256:e25c7d9a4e098bd9195883f590bf182f6f36d93a4db0249e8155c1a69eae36e4",
+   "textSha256": "sha256:685f5a340899fcd2b0a197b3b3421a65e7a1b6d9d518797d0f7d7a9fac894722",
+   "fetchedAt": "2026-09-22T04:45:00Z",
    "versionHint": "Draft . Updated 2026-08-27",
    "status": "official-draft",
    "note": "Revenue model page. No agent-side rule this tool relies on."
@@ -239,9 +296,10 @@
    "id": "flop-finance-intro-miner",
    "url": "https://flop.finance/intro/miner/",
    "httpStatus": 200,
-   "bytes": 31491,
-   "sha256": "sha256:240659c613e94a2bb5a3263b6278da46ca7de3d452ea2cc803719ee33aef8349",
-   "fetchedAt": "2026-09-14T00:39:22Z",
+   "bytes": 31852,
+   "sha256": "sha256:5ce0169c825b0c5db4e862de8f46ccb2e89be56a89766b3c1e41e2295046819a",
+   "textSha256": "sha256:b3e9d6a634a3b8586cb6491be3a8a1e32c31a2d1b55dd6a54eb09e361e2db462",
+   "fetchedAt": "2026-09-22T04:45:00Z",
    "versionHint": "Draft . Updated 2026-08-27",
    "status": "official-draft",
    "note": "Miner page. No agent-side rule this tool relies on."
@@ -250,9 +308,10 @@
    "id": "flop-finance-intro-validator",
    "url": "https://flop.finance/intro/validator/",
    "httpStatus": 200,
-   "bytes": 28178,
-   "sha256": "sha256:e661276b4d56c54d23c8c1e9adc91bbfc1cbef2fd794d29fe5b24e6a41e2a13a",
-   "fetchedAt": "2026-09-14T00:39:22Z",
+   "bytes": 28539,
+   "sha256": "sha256:4e91172556851841486f8deb16d65243413ed0aa475be0ab737af1316faba02b",
+   "textSha256": "sha256:b7c232a5381c58e00550206c7ba9c797f245ac63c99f295ebe18cecec3f6a796",
+   "fetchedAt": "2026-09-22T04:45:00Z",
    "versionHint": "Draft . Updated 2026-08-27",
    "status": "official-draft",
    "note": "Validator page. No agent-side rule this tool relies on."
@@ -263,10 +322,10 @@
    "httpStatus": 200,
    "bytes": null,
    "sha256": null,
-   "fetchedAt": "2026-09-14T00:39:16Z",
-   "versionHint": "repositories observed: technocore-sonnet-challenge (pushed 2026-09-11T17:08:29Z; contest sonnet-2 live 2026-09-11T12:00Z to 2026-09-18T12:00Z), yellowpaper (created 2026-09-04, main cb3cbf97 2026-09-11; read-only mirror with evidence/wire-format-v1.json), .github, technocore-chat (main 20a4457b 2026-09-08, latest release v0.13.0), tclk (main 5cc4ab93, tag v0.1.0)",
+   "fetchedAt": "2026-09-22T04:44:59Z",
+   "versionHint": "repositories observed: technocore-sonnet-challenge (pushed 2026-09-11T17:08:29Z; contest sonnet-2 closed 2026-09-18T12:00Z, result under discussion in its issues), yellowpaper (main cb3cbf97 2026-09-11, unchanged), .github, technocore-chat (main e4c4f73f 2026-09-17 carrying an untagged 0.14.0 version bump; latest release and served version still v0.13.0), tclk (main 5cc4ab93, tag v0.1.0, unchanged)",
    "status": "official-reference",
-   "note": "Listing only; individual file bodies were not fetched, so no body hash is recorded. No testnet, faucet or inference-API repository exists in this organisation at the snapshot instant; the yellowpaper mirror and a Technocore contest package do."
+   "note": "Listing only; individual file bodies were not fetched, so no body hash is recorded. No testnet, faucet or inference-API repository exists in this organisation at the snapshot instant; the yellowpaper mirror and a Technocore contest package do. Between the third and fourth snapshots no repository was added and none but technocore-chat was pushed to."
   }
  ],
  "notObserved": [

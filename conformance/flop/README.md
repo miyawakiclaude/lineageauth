@@ -35,6 +35,15 @@ look like a question nobody asked.
 of each source and none of its text. Comparing a later fetch needs the hash;
 redistributing someone else's document needs a reason this project does not have.
 
+**The wording is hashed beside the bytes.** Since the fourth snapshot (D-117) each
+fetched body also carries `textSha256`: the sha256 of the page with tags, scripts
+and styles removed, entities decoded and whitespace collapsed. A site that
+rebuilds its HTML without changing a word moves `sha256` and not `textSha256`,
+and `_meta.history` says which of the two moved (`text: unchanged | changed |
+not-compared`). `RULE UPDATED` still keys on the byte hash: a rule is re-verified
+against the text whenever the bytes move, and the text hash records what that
+re-verification found.
+
 **Real and synthetic never mix.** `public-evidence.json` sets
 `_meta.synthetic: false`, `mock-activity.json` sets it to `true`, and every
 record that reaches the console carries which one it came from. A test fails if a

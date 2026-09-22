@@ -128,8 +128,27 @@ class TestLookalikesAreLouderThanUnknowns:
 class TestTheRecordedSnapshot:
     def test_it_loads_and_records_when_it_was_taken(self) -> None:
         snapshot = load_snapshot()
-        assert snapshot.fetched_at == "2026-09-14T00:39:16Z"
+        assert snapshot.fetched_at == "2026-09-22T04:44:59Z"
         assert len(snapshot.snapshots) >= 15
+
+    def test_the_wording_is_hashed_beside_the_bytes(self) -> None:
+        """A page rebuilt without a word changing moves its byte hash and not its text
+        hash (D-117). Every fetched body carries both, every history entry says which
+        moved, and at the fourth snapshot only Technocore's llms.txt changed wording."""
+        document = json.loads(OFFICIAL_SOURCES_FILE.read_text(encoding="utf-8"))
+        for entry in document["sources"]:
+            if entry["sha256"] is not None:
+                assert entry["textSha256"].startswith("sha256:"), entry["id"]
+                assert entry["textSha256"] != entry["sha256"], entry["id"]
+        history = {item["id"]: item for item in document["_meta"]["history"]}
+        verdicts = {item["text"] for item in history.values()}
+        assert verdicts <= {"unchanged", "changed", "not-compared"}
+        assert history["technocore-llms"]["change"] == "hash-changed"
+        assert history["technocore-llms"]["text"] == "changed"
+        assert history["flop-finance-yellowpaper"]["change"] == "hash-changed"
+        assert history["flop-finance-yellowpaper"]["text"] == "unchanged"
+        changed = [item["id"] for item in history.values() if item["text"] == "changed"]
+        assert changed == ["technocore-llms"]
 
     def test_every_source_is_itself_official(self) -> None:
         for entry in load_snapshot().snapshots:

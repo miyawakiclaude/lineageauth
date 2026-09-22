@@ -2798,3 +2798,35 @@ Git/GitHub writes require confirmation of active account + repository owner + re
   (`accepts_leaf_version`, `verified_work_from_turns`) and nothing more.
 - **Security impact.** Additive and offline. Nothing here signs, sends or
   moves value; the FLOP layer's import guard still holds.
+
+## D-117: fourth official-source snapshot; the wording hashed beside the bytes
+
+- **Date:** 2026-09-22
+- **Problem:** the daily re-fetch found every flop.finance page's byte hash
+  moved since the third snapshot while no wording had changed (build chrome
+  in the HTML), and one real change hiding among them: Technocore's
+  `llms.txt` now says 300000 rooms and 17.4 KiB of history per room, so the
+  registry's `technocore-capacity` quotation no longer occurs in its source.
+  D-114 had named a text-normalised hash as the next improvement for exactly
+  this: a byte hash cannot tell a rebuilt page from a rewritten one.
+- **Decision:** the fourth snapshot (`fetchedAt` 2026-09-22T04:44:59Z, 15
+  sources, `_meta.history` against the third). Every body now carries
+  `textSha256` beside `sha256` — tags, scripts and styles removed, entities
+  decoded, whitespace collapsed — and each history entry says whether the
+  text moved. Thirteen bodies: bytes moved, text unchanged (the Yellow Paper
+  among them). One body, `llms.txt`: text changed. `technocore-capacity` is
+  re-quoted with a `consequence` that names the figure an operator setting,
+  read from `/config` (the served service is still 0.13.0), and every other
+  rule re-verified mechanically against the same wording as before. Test
+  pins the semantics: every hashed body has a distinct text hash, and the
+  only `text: changed` entry at this snapshot is Technocore's.
+- **What this is not.** `RULE UPDATED` still keys on the byte hash. The text
+  hash does not soften it: a moved byte hash still forces re-verification,
+  and the text hash records what that re-verification found, so a reader can
+  tell a snapshot that found nothing from one that was never taken. The
+  third snapshot's text hashes were computed once, here, from the bodies
+  kept locally from that fetch; they are recorded as `textFrom`, not
+  reconstructed from the repository.
+- **Security impact.** None to the protocol. Bodies are still not stored; the
+  scanner sees only `sha256:`-prefixed values. No external write beyond the
+  push.
