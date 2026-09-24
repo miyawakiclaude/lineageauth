@@ -56,3 +56,6 @@ Thumbs.db
 desktop.ini
 .idea/
 .vscode/
+
+# Official-source bodies kept by scripts/flop_sources.py (D-119). Never committed.
+.flop-sources/

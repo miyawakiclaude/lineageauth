@@ -2857,3 +2857,46 @@ Git/GitHub writes require confirmation of active account + repository owner + re
 - **Security impact.** None. Classification is unchanged; a route the
   contract does not list still stays UNKNOWN. No external write beyond the
   push.
+
+## D-119: the snapshot is taken by a script in the repository
+
+- **Date:** 2026-09-24
+- **Problem:** the four snapshots so far (D-112, D-114, D-117 and the first)
+  were produced by generator scripts that lived outside the repository, each
+  derived from the last by string replacement. Nobody else could reproduce a
+  snapshot, and the derivation itself was fragile: the D-117 generator's
+  `\s+` had become `\\s+` on the way through, so its `textSha256` values
+  were hashed with no whitespace collapsed, contrary to the definition the
+  same commit wrote down. The verdicts were right (both sides of every
+  comparison used the same defective function); the recorded values were
+  not what the note said they were.
+- **Decision:** `lineageauth/flop/snapshot.py` holds the pure half: the
+  text normalisation and both hashes, the per-source history verdict, the
+  quotation check against fetched text, the registry re-stamp, and the docs
+  table. `scripts/flop_sources.py` is the only place that fetches: `check`
+  fetches every source, keeps the bodies under a git-ignored folder, prints
+  what moved and whether every quotation still occurs, and writes nothing
+  under `conformance/`; `snapshot --note "..."` writes the next
+  `official-sources.json`, re-stamps every verified rule and regenerates the
+  rules table between markers in `docs/FLOP_RULE_REGISTRY.md`. A rule whose
+  quotation is gone is left at its old hash, so it shows as `RULE UPDATED`
+  until a person re-quotes it; the script refuses to snapshot over it
+  without `--allow-stale`. The prose around the table, the version hints
+  and the source notes stay a person's job and are passed in explicitly.
+- **The correction.** Every `textSha256` in the fourth snapshot, and the
+  `textFrom`/`textTo` pairs in its history, were recomputed with the
+  documented normalisation from the byte-identical bodies of the third and
+  fourth fetches (byte hashes checked against the recorded ones first).
+  Thirteen verdicts stayed `unchanged` and one `changed`, as before;
+  `_meta.textHashNote` records the correction. Run against the live pages
+  on the same day, `check` reports thirteen sources rebuilt without a word
+  changing and one, `llms.txt`, with the four `probe` lines D-118 noted, and
+  all 23 quotations found.
+- **What is not automated.** The reading of a page (version hints, notes,
+  the paragraph that says what a snapshot found) and the decision to
+  re-quote a moved rule. A snapshot that finds nothing still needs a person
+  to say so.
+- **Security impact.** The FLOP package still imports no network module;
+  the guard test holds. The script fetches only URLs the source classifier
+  calls official, over HTTPS, and sends nothing but the request. Bodies are
+  kept outside version control. No external write beyond the push.

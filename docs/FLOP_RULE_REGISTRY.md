@@ -65,6 +65,7 @@ of the body its source hash names, or it is marked derived or unknown. The
 previous snapshot's hashes are kept in `official-sources.json` under
 `_meta.history`.
 
+<!-- flop-rules-table:begin -->
 | id | status | phase | source | what it records |
 |---|---|---|---|---|
 | `flop-testnet-schedule` | official-draft | testnet | `flop-finance-teaser` | Flop Testnet is planned for Q4 2026 and runs for roughly ninety days, with mainnet to follow in Q1 2027. |
@@ -99,6 +100,7 @@ instead of being handed yo... |
 | `flop-network-identifier` | unknown | testnet | `flop-finance-yellowpaper` | `UNKNOWN_FROM_OFFICIAL_SPEC` |
 | `flop-auth-signing-scheme` | unknown | testnet | `flop-finance-yellowpaper` | `UNKNOWN_FROM_OFFICIAL_SPEC` |
 | `flop-airdrop-claim-path` | unknown | genesis | `flop-finance-yellowpaper` | `UNKNOWN_FROM_OFFICIAL_SPEC` |
+<!-- flop-rules-table:end -->
 
 The `formula` for `flop-agent-unlock-ratio`:
 
@@ -153,11 +155,26 @@ the stage-1 report and is recorded here so the reviewer can find it.
   date, `fetchedAt`, and `RULE UPDATED` when stale (`docs/FLOP_UI_GUIDE.md`).
 - Recommendations carry `ruleId` and are `official` only when the rule is.
 
+## Taking the next snapshot
+
+`uv run python scripts/flop_sources.py check` fetches every source, keeps the
+bodies outside the repository, prints for each whether its bytes and its
+wording moved, and checks every quotation above against the fresh text. It
+writes nothing here. When it reports a quotation as missing, or when a page's
+wording has moved, `uv run python scripts/flop_sources.py snapshot --note "..."`
+writes the next `official-sources.json`, re-stamps every verified rule to the
+new hashes and regenerates the table between the markers in this page. A rule
+whose quotation is gone keeps its old hash and shows as `RULE UPDATED` until
+someone re-quotes it; the script refuses to snapshot over it without
+`--allow-stale`. The paragraph above the table, the version hints and the
+notes are written by a person (D-119).
+
 ## Adding or changing a rule
 
 Edit the JSON. Quote the sentence; record the source hash from
-`official-sources.json` at the time of quoting; set `statementIsQuotation`
-honestly; put arithmetic in `formula`. Do not write the figure into code.
+`official-sources.json` at the time of quoting (`snapshot` does this for every
+rule whose quotation it can find); set `statementIsQuotation` honestly; put
+arithmetic in `formula`. Do not write the figure into code.
 `tests/test_flop_rules.py` checks that every hashed rule matches the shipped
 snapshot, that a missing source is reported rather than ignored, that nothing
 claims to be final while the Yellow Paper is unpublished, that a derived

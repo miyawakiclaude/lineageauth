@@ -6,7 +6,7 @@ diff in this directory rather than an edit spread across the code.
 
 | File | What it is | May the code assume it? |
 |---|---|---|
-| `official-sources.json` | One read-only snapshot of each official source: URL, HTTP status, byte length, content hash, version hint | Yes — it records what was observed, not what is true |
+| `official-sources.json` | One read-only snapshot of each official source: URL, HTTP status, byte length, content hash, text hash, version hint; taken by `scripts/flop_sources.py` | Yes — it records what was observed, not what is true |
 | `rule-registry.json` | Every FLOP economic rule, each quoting the official text it came from | Only through `rules.py`, and only with its status attached |
 | `ui-tokens.json` | The design tokens, each carrying its provenance, plus every difference from the supplied baseline | Yes |
 | `public-evidence.json` | Real public contributions by the subject DID | Yes, at `partially-verified` and no higher |
@@ -43,6 +43,15 @@ and `_meta.history` says which of the two moved (`text: unchanged | changed |
 not-compared`). `RULE UPDATED` still keys on the byte hash: a rule is re-verified
 against the text whenever the bytes move, and the text hash records what that
 re-verification found.
+
+**Taking the next snapshot is one command.** `uv run python scripts/flop_sources.py
+check` fetches every source, keeps the bodies outside the repository, prints
+whether each one's bytes and wording moved, and checks every quotation against
+the fresh text, writing nothing here. `... snapshot --note "..."` writes the next
+`official-sources.json`, re-stamps every verified rule and regenerates the rules
+table in `docs/FLOP_RULE_REGISTRY.md`; a rule whose quotation is gone is left at
+its old hash so it shows as `RULE UPDATED` until a person re-quotes it. The pure
+half lives in `lineageauth/flop/snapshot.py` and is tested without a network.
 
 **Real and synthetic never mix.** `public-evidence.json` sets
 `_meta.synthetic: false`, `mock-activity.json` sets it to `true`, and every

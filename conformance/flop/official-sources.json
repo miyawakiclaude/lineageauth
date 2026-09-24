@@ -15,8 +15,8 @@
     "from": "sha256:b95d150f91b551fe818c923259d4b01f75af8b22f11683d110781764f6bff592",
     "to": "sha256:078913077b0e050eedbf35976ae93ae4090132d84822e10bd6ed3155c62b9c13",
     "text": "unchanged",
-    "textFrom": "sha256:d0fad7ae3729b6856bd83d198f827e1b4a52807d12d59c701b7ec38be91b250e",
-    "textTo": "sha256:d0fad7ae3729b6856bd83d198f827e1b4a52807d12d59c701b7ec38be91b250e"
+    "textFrom": "sha256:f881af0deb4f209e3c7cc7d9757a26b2b5197bb7336d0d46d374150fb00f86e1",
+    "textTo": "sha256:f881af0deb4f209e3c7cc7d9757a26b2b5197bb7336d0d46d374150fb00f86e1"
    },
    {
     "id": "flop-finance-teaser",
@@ -24,8 +24,8 @@
     "from": "sha256:f915fade0f3b84f68c27a8fb7e72d55faeeebf1ab8a39ca3c6702b39bfa812d0",
     "to": "sha256:ab7a3789f678593a39e6e88e5dbec606523c98e1d79bb9d8a6132384558b9dc5",
     "text": "unchanged",
-    "textFrom": "sha256:fc6e267fdcb2d6486aed9c9876a002726fefe6920181537748986e565b97023c",
-    "textTo": "sha256:fc6e267fdcb2d6486aed9c9876a002726fefe6920181537748986e565b97023c"
+    "textFrom": "sha256:bf8704d8e83f5e3b0fe07f067b5ea239cda90dbb5a22a4c415a4824f2b175173",
+    "textTo": "sha256:bf8704d8e83f5e3b0fe07f067b5ea239cda90dbb5a22a4c415a4824f2b175173"
    },
    {
     "id": "flop-finance-brand",
@@ -33,8 +33,8 @@
     "from": "sha256:b3c0804ed14699c13325fb9a0f65745b6d879d07bcac3c28b0688d4b82bf2aa1",
     "to": "sha256:7bdb84f068de7a7e155d4bf77fefd83a155edbbdf241fd401d5ccecdb82283c7",
     "text": "unchanged",
-    "textFrom": "sha256:63b6ced0dcb9d18a1d83ba1cac46c2328c7dbc908ef827e05936ce2f2a858cb3",
-    "textTo": "sha256:63b6ced0dcb9d18a1d83ba1cac46c2328c7dbc908ef827e05936ce2f2a858cb3"
+    "textFrom": "sha256:9b84b78df094f5aad7767ddb3a115655e4161ae4813f02a07ddb117e6461b942",
+    "textTo": "sha256:9b84b78df094f5aad7767ddb3a115655e4161ae4813f02a07ddb117e6461b942"
    },
    {
     "id": "flop-finance-design",
@@ -42,8 +42,8 @@
     "from": "sha256:476fe27b0cebf5fef03fb880ce50c98d9afce7f558dfa3687c5cec4d37ca6248",
     "to": "sha256:476fe27b0cebf5fef03fb880ce50c98d9afce7f558dfa3687c5cec4d37ca6248",
     "text": "unchanged",
-    "textFrom": "sha256:d35dc0bb6b084702e92c949f4f3f952f985b2906d37f3e9431c0a65d54a6c3f7",
-    "textTo": "sha256:d35dc0bb6b084702e92c949f4f3f952f985b2906d37f3e9431c0a65d54a6c3f7"
+    "textFrom": "sha256:a8986736d430c0176146367cd394402429959c09d92d6dbd6c242e08b88bbba4",
+    "textTo": "sha256:a8986736d430c0176146367cd394402429959c09d92d6dbd6c242e08b88bbba4"
    },
    {
     "id": "technocore-llms",
@@ -51,8 +51,8 @@
     "from": "sha256:a1ba45aacadbc9bc3f95b7784e0450bc279e2f96548547cfa51e7a6fbf7c41b2",
     "to": "sha256:40e0bebabcc105a2931805b68e200f1d5fc212e32ca14501ac4d85d105a2bb54",
     "text": "changed",
-    "textFrom": "sha256:6f1560dede416f351b6583b4a8432c81ea5c7bb4e45bddb6f37ae54c6f4252a0",
-    "textTo": "sha256:ab316cd449a3389561e41caeac5393e92df1fe801ab71b431eef0ab66a85bfee"
+    "textFrom": "sha256:541844c5a99b48779fc862448e54fc1369b29eb045204825f0733d82acfb0ba1",
+    "textTo": "sha256:f72b59f2b3b16ba68143a590c9cb7e7ec4004db49522db8f15036c4f635b844a"
    },
    {
     "id": "technocore-auth",
@@ -60,8 +60,8 @@
     "from": "sha256:ae4c61d5d6d4b13ec24467a1a66f139c132e039a7180790a914587d642534ddb",
     "to": "sha256:ae4c61d5d6d4b13ec24467a1a66f139c132e039a7180790a914587d642534ddb",
     "text": "unchanged",
-    "textFrom": "sha256:7a35bbcb3cebdbe15e21bb26b5e9a24ac3a39d992da6e40cb57e7957b9f06f66",
-    "textTo": "sha256:7a35bbcb3cebdbe15e21bb26b5e9a24ac3a39d992da6e40cb57e7957b9f06f66"
+    "textFrom": "sha256:5be70d0ee8fcde94a94330d505d11499e2dddec3debfe78468b4f408899dac7d",
+    "textTo": "sha256:5be70d0ee8fcde94a94330d505d11499e2dddec3debfe78468b4f408899dac7d"
    },
    {
     "id": "technocore-patterns",
@@ -69,8 +69,8 @@
     "from": "sha256:45ab2f9d0aac7e6b920699cd30382af7f1eacaa0d6adc90d0e8567523e493370",
     "to": "sha256:45ab2f9d0aac7e6b920699cd30382af7f1eacaa0d6adc90d0e8567523e493370",
     "text": "unchanged",
-    "textFrom": "sha256:f3c7e12aca1fffa1196eda6aee7aac3ca1b903b5012403615173e460fd446b69",
-    "textTo": "sha256:f3c7e12aca1fffa1196eda6aee7aac3ca1b903b5012403615173e460fd446b69"
+    "textFrom": "sha256:2a6c046a2bdb74b0e6058bd3f5e08e30fe8f6407e49e3d3accde2b3c9fc3f8b2",
+    "textTo": "sha256:2a6c046a2bdb74b0e6058bd3f5e08e30fe8f6407e49e3d3accde2b3c9fc3f8b2"
    },
    {
     "id": "flop-finance-intro",
@@ -78,8 +78,8 @@
     "from": "sha256:0dd93a11710e4bb78ed66ece8d17451129cb4db4213623de29095258524c4184",
     "to": "sha256:f698fd96fe109f8efaf130f5ba5a1f96e7b0ac0055418ad57044ce69f5ebaa3e",
     "text": "unchanged",
-    "textFrom": "sha256:38b2e2fc9567fbaaa9200aeededd61711fa31c840f863715bbc88a5bd8ba0cca",
-    "textTo": "sha256:38b2e2fc9567fbaaa9200aeededd61711fa31c840f863715bbc88a5bd8ba0cca"
+    "textFrom": "sha256:54f4507d1a5b9482941d883d08faa2752ed7b8219d7d80fd1990f594101ec28f",
+    "textTo": "sha256:54f4507d1a5b9482941d883d08faa2752ed7b8219d7d80fd1990f594101ec28f"
    },
    {
     "id": "flop-finance-intro-agent",
@@ -87,8 +87,8 @@
     "from": "sha256:e5486f3ee3fa7045914b8e9080f752340b3aaae97e778f4013c5056a53faf195",
     "to": "sha256:9320b9e952ba43741c78964fbe46f2ff6d2a1212bd516d8235e52ac04b499d33",
     "text": "unchanged",
-    "textFrom": "sha256:b80fff7b648cc0bff36c6a745a9b95df8de1288572574d634fd2a838258c9a4f",
-    "textTo": "sha256:b80fff7b648cc0bff36c6a745a9b95df8de1288572574d634fd2a838258c9a4f"
+    "textFrom": "sha256:a7e2b4220b225490099faf2e4e6cf58f0911903ed5c9784b5cbbf089204a757a",
+    "textTo": "sha256:a7e2b4220b225490099faf2e4e6cf58f0911903ed5c9784b5cbbf089204a757a"
    },
    {
     "id": "flop-finance-yellowpaper",
@@ -96,8 +96,8 @@
     "from": "sha256:89e2575de061eb6446dffe3f05f99fbbf0c9bda097ddcbe6080724cb473afb12",
     "to": "sha256:0c7b2c0414de8671168b94c92fb3235c75a9d112983309b590346580cbc45b8f",
     "text": "unchanged",
-    "textFrom": "sha256:0801195b20999725b13c340f5ad7579efd8edc1862ac6788a77bf7328f65d5be",
-    "textTo": "sha256:0801195b20999725b13c340f5ad7579efd8edc1862ac6788a77bf7328f65d5be"
+    "textFrom": "sha256:a029b38a91c4c0887f74ed3de309447ecc36cd68dc1abad98026159bbc95b8e1",
+    "textTo": "sha256:a029b38a91c4c0887f74ed3de309447ecc36cd68dc1abad98026159bbc95b8e1"
    },
    {
     "id": "flop-finance-intro-verification",
@@ -105,8 +105,8 @@
     "from": "sha256:358b46eb664d1d8e1bba4df8986cbbf5e485702a46f539443688a778fbbca9e1",
     "to": "sha256:1600b323bc8f7bb4f0e5d58b3bcec8152a606470b3d6bac8a358f9fb18e6406b",
     "text": "unchanged",
-    "textFrom": "sha256:908b4431ae89944470c67e4d2b19e9dc50129dd5b2a160e74e345d1273857fce",
-    "textTo": "sha256:908b4431ae89944470c67e4d2b19e9dc50129dd5b2a160e74e345d1273857fce"
+    "textFrom": "sha256:30352a8be8b8eeaa0590fe8371e54ff57b250876a6249963eb5013ad3ea8035b",
+    "textTo": "sha256:30352a8be8b8eeaa0590fe8371e54ff57b250876a6249963eb5013ad3ea8035b"
    },
    {
     "id": "flop-finance-intro-revenue",
@@ -114,8 +114,8 @@
     "from": "sha256:c35887387721107a8531d4faa4dcd19b4d3c42a515297ea59b47730f003d278b",
     "to": "sha256:e25c7d9a4e098bd9195883f590bf182f6f36d93a4db0249e8155c1a69eae36e4",
     "text": "unchanged",
-    "textFrom": "sha256:685f5a340899fcd2b0a197b3b3421a65e7a1b6d9d518797d0f7d7a9fac894722",
-    "textTo": "sha256:685f5a340899fcd2b0a197b3b3421a65e7a1b6d9d518797d0f7d7a9fac894722"
+    "textFrom": "sha256:497232f78762ddb19d5a3011719c39134ed9f2caf76dadf4607c0d4c9f736be3",
+    "textTo": "sha256:497232f78762ddb19d5a3011719c39134ed9f2caf76dadf4607c0d4c9f736be3"
    },
    {
     "id": "flop-finance-intro-miner",
@@ -123,8 +123,8 @@
     "from": "sha256:240659c613e94a2bb5a3263b6278da46ca7de3d452ea2cc803719ee33aef8349",
     "to": "sha256:5ce0169c825b0c5db4e862de8f46ccb2e89be56a89766b3c1e41e2295046819a",
     "text": "unchanged",
-    "textFrom": "sha256:b3e9d6a634a3b8586cb6491be3a8a1e32c31a2d1b55dd6a54eb09e361e2db462",
-    "textTo": "sha256:b3e9d6a634a3b8586cb6491be3a8a1e32c31a2d1b55dd6a54eb09e361e2db462"
+    "textFrom": "sha256:25763364baa2365e3e6a7a20728d076207c8950d9716cdf55e7c94d8821d687c",
+    "textTo": "sha256:25763364baa2365e3e6a7a20728d076207c8950d9716cdf55e7c94d8821d687c"
    },
    {
     "id": "flop-finance-intro-validator",
@@ -132,8 +132,8 @@
     "from": "sha256:e661276b4d56c54d23c8c1e9adc91bbfc1cbef2fd794d29fe5b24e6a41e2a13a",
     "to": "sha256:4e91172556851841486f8deb16d65243413ed0aa475be0ab737af1316faba02b",
     "text": "unchanged",
-    "textFrom": "sha256:b7c232a5381c58e00550206c7ba9c797f245ac63c99f295ebe18cecec3f6a796",
-    "textTo": "sha256:b7c232a5381c58e00550206c7ba9c797f245ac63c99f295ebe18cecec3f6a796"
+    "textFrom": "sha256:adfe1c227810260fd280cf07b11e5cc313cd64147b1a82cf0919695b7417debb",
+    "textTo": "sha256:adfe1c227810260fd280cf07b11e5cc313cd64147b1a82cf0919695b7417debb"
    },
    {
     "id": "flop-labs-github-org",
@@ -145,7 +145,8 @@
     "textTo": null
    }
   ],
-  "historyNote": "Diff against the previous snapshot, by source id and body hash, and since the fourth snapshot by textSha256 as well: sha256 of the body with tags, scripts and styles removed, entities decoded and whitespace collapsed, so a page rebuilt without a word changing shows change=hash-changed, text=unchanged. Bodies are not stored; a reader with the previous hash can confirm the change but not read the old page here."
+  "historyNote": "Diff against the previous snapshot, by source id and body hash, and since the fourth snapshot by textSha256 as well: sha256 of the body with tags, scripts and styles removed, entities decoded and whitespace collapsed, so a page rebuilt without a word changing shows change=hash-changed, text=unchanged. Bodies are not stored; a reader with the previous hash can confirm the change but not read the old page here.",
+  "textHashNote": "textSha256 values were recomputed on 2026-09-24 (D-119) from the byte-identical bodies of the third and fourth fetches, with the normalisation this note documents. The fourth snapshot's generator had collapsed no whitespace (an escaping defect in the derived script), so its recorded values differed from the definition; every text verdict in history was unaffected, both sides having been hashed the same way."
  },
  "sources": [
   {
@@ -154,7 +155,7 @@
    "httpStatus": 200,
    "bytes": 17757,
    "sha256": "sha256:078913077b0e050eedbf35976ae93ae4090132d84822e10bd6ed3155c62b9c13",
-   "textSha256": "sha256:d0fad7ae3729b6856bd83d198f827e1b4a52807d12d59c701b7ec38be91b250e",
+   "textSha256": "sha256:f881af0deb4f209e3c7cc7d9757a26b2b5197bb7336d0d46d374150fb00f86e1",
    "fetchedAt": "2026-09-22T04:44:59Z",
    "versionHint": null,
    "status": "official-reference",
@@ -166,7 +167,7 @@
    "httpStatus": 200,
    "bytes": 57533,
    "sha256": "sha256:ab7a3789f678593a39e6e88e5dbec606523c98e1d79bb9d8a6132384558b9dc5",
-   "textSha256": "sha256:fc6e267fdcb2d6486aed9c9876a002726fefe6920181537748986e565b97023c",
+   "textSha256": "sha256:bf8704d8e83f5e3b0fe07f067b5ea239cda90dbb5a22a4c415a4824f2b175173",
    "fetchedAt": "2026-09-22T04:44:59Z",
    "versionHint": "Version 0.1 (draft) | Status Draft | Updated 2026-08-26 | Definitive spec Yellow Paper (not yet final) | banner since 2026-09-14: one figure (the 85/15 fee split) leads the parameters; the genesis airdrop is ratified by D-0438 | allocation table now 4,400,000,000",
    "status": "official-draft",
@@ -178,7 +179,7 @@
    "httpStatus": 200,
    "bytes": 14100,
    "sha256": "sha256:7bdb84f068de7a7e155d4bf77fefd83a155edbbdf241fd401d5ccecdb82283c7",
-   "textSha256": "sha256:63b6ced0dcb9d18a1d83ba1cac46c2328c7dbc908ef827e05936ce2f2a858cb3",
+   "textSha256": "sha256:9b84b78df094f5aad7767ddb3a115655e4161ae4813f02a07ddb117e6461b942",
    "fetchedAt": "2026-09-22T04:44:59Z",
    "versionHint": "six published swatches: Base, Grey, FLOP Blue, Accent, Electric Green, Ice White",
    "status": "official-reference",
@@ -190,7 +191,7 @@
    "httpStatus": 200,
    "bytes": 30278,
    "sha256": "sha256:476fe27b0cebf5fef03fb880ce50c98d9afce7f558dfa3687c5cec4d37ca6248",
-   "textSha256": "sha256:d35dc0bb6b084702e92c949f4f3f952f985b2906d37f3e9431c0a65d54a6c3f7",
+   "textSha256": "sha256:a8986736d430c0176146367cd394402429959c09d92d6dbd6c242e08b88bbba4",
    "fetchedAt": "2026-09-22T04:44:59Z",
    "versionHint": "frontmatter version: alpha | Mascot V3.0 design system | ETag 7e047e3e7b87506b8511ca62138b7688",
    "status": "official-reference",
@@ -202,7 +203,7 @@
    "httpStatus": 200,
    "bytes": 26182,
    "sha256": "sha256:40e0bebabcc105a2931805b68e200f1d5fc212e32ca14501ac4d85d105a2bb54",
-   "textSha256": "sha256:ab316cd449a3389561e41caeac5393e92df1fe801ab71b431eef0ab66a85bfee",
+   "textSha256": "sha256:f72b59f2b3b16ba68143a590c9cb7e7ec4004db49522db8f15036c4f635b844a",
    "fetchedAt": "2026-09-22T04:44:59Z",
    "versionHint": "served 2026-09-22; documents DELEGATION records in DID notes, CAPACITY 300000 rooms / 5242880 notes (250000 rooms on 2026-09-14, 163840 on 2026-09-08), 17.4 KiB per room, a 10 s POST deadline, and the 422 duplicate guidance",
    "status": "official-reference",
@@ -214,7 +215,7 @@
    "httpStatus": 200,
    "bytes": 5200,
    "sha256": "sha256:ae4c61d5d6d4b13ec24467a1a66f139c132e039a7180790a914587d642534ddb",
-   "textSha256": "sha256:7a35bbcb3cebdbe15e21bb26b5e9a24ac3a39d992da6e40cb57e7957b9f06f66",
+   "textSha256": "sha256:5be70d0ee8fcde94a94330d505d11499e2dddec3debfe78468b4f408899dac7d",
    "fetchedAt": "2026-09-22T04:44:59Z",
    "versionHint": "states \"There is no authentication\"",
    "status": "official-reference",
@@ -226,7 +227,7 @@
    "httpStatus": 200,
    "bytes": 14282,
    "sha256": "sha256:45ab2f9d0aac7e6b920699cd30382af7f1eacaa0d6adc90d0e8567523e493370",
-   "textSha256": "sha256:f3c7e12aca1fffa1196eda6aee7aac3ca1b903b5012403615173e460fd446b69",
+   "textSha256": "sha256:2a6c046a2bdb74b0e6058bd3f5e08e30fe8f6407e49e3d3accde2b3c9fc3f8b2",
    "fetchedAt": "2026-09-22T04:44:59Z",
    "versionHint": "served 2026-09-22; unchanged since 2026-09-08 (section 7, what a 422 is telling you)",
    "status": "official-reference",
@@ -238,7 +239,7 @@
    "httpStatus": 200,
    "bytes": 28784,
    "sha256": "sha256:f698fd96fe109f8efaf130f5ba5a1f96e7b0ac0055418ad57044ce69f5ebaa3e",
-   "textSha256": "sha256:38b2e2fc9567fbaaa9200aeededd61711fa31c840f863715bbc88a5bd8ba0cca",
+   "textSha256": "sha256:54f4507d1a5b9482941d883d08faa2752ed7b8219d7d80fd1990f594101ec28f",
    "fetchedAt": "2026-09-22T04:45:00Z",
    "versionHint": "Project intro . Draft whitepaper | Draft . Updated 2026-08-27",
    "status": "official-draft",
@@ -250,7 +251,7 @@
    "httpStatus": 200,
    "bytes": 27909,
    "sha256": "sha256:9320b9e952ba43741c78964fbe46f2ff6d2a1212bd516d8235e52ac04b499d33",
-   "textSha256": "sha256:b80fff7b648cc0bff36c6a745a9b95df8de1288572574d634fd2a838258c9a4f",
+   "textSha256": "sha256:a7e2b4220b225490099faf2e4e6cf58f0911903ed5c9784b5cbbf089204a757a",
    "fetchedAt": "2026-09-22T04:45:00Z",
    "versionHint": "Compute buyer . Draft whitepaper | Draft . Updated 2026-08-27",
    "status": "official-draft",
@@ -262,7 +263,7 @@
    "httpStatus": 200,
    "bytes": 451280,
    "sha256": "sha256:0c7b2c0414de8671168b94c92fb3235c75a9d112983309b590346580cbc45b8f",
-   "textSha256": "sha256:0801195b20999725b13c340f5ad7579efd8edc1862ac6788a77bf7328f65d5be",
+   "textSha256": "sha256:a029b38a91c4c0887f74ed3de309447ecc36cd68dc1abad98026159bbc95b8e1",
    "fetchedAt": "2026-09-22T04:45:00Z",
    "versionHint": "Version 0.5.0 (draft) | Status Implementation spec - iterating | Updated 2026-09-05 (still printed) | body revised after 2026-09-08 without a new version or date: genesis_supply 2,483,460,000 -> 4,400,000,000, section 10.2 renamed, F.0 and F.6 added, validator eligibility reworded",
    "status": "official-draft",
@@ -274,7 +275,7 @@
    "httpStatus": 200,
    "bytes": 32663,
    "sha256": "sha256:1600b323bc8f7bb4f0e5d58b3bcec8152a606470b3d6bac8a358f9fb18e6406b",
-   "textSha256": "sha256:908b4431ae89944470c67e4d2b19e9dc50129dd5b2a160e74e345d1273857fce",
+   "textSha256": "sha256:30352a8be8b8eeaa0590fe8371e54ff57b250876a6249963eb5013ad3ea8035b",
    "fetchedAt": "2026-09-22T04:45:00Z",
    "versionHint": "Draft . Updated 2026-08-27",
    "status": "official-draft",
@@ -286,7 +287,7 @@
    "httpStatus": 200,
    "bytes": 113736,
    "sha256": "sha256:e25c7d9a4e098bd9195883f590bf182f6f36d93a4db0249e8155c1a69eae36e4",
-   "textSha256": "sha256:685f5a340899fcd2b0a197b3b3421a65e7a1b6d9d518797d0f7d7a9fac894722",
+   "textSha256": "sha256:497232f78762ddb19d5a3011719c39134ed9f2caf76dadf4607c0d4c9f736be3",
    "fetchedAt": "2026-09-22T04:45:00Z",
    "versionHint": "Draft . Updated 2026-08-27",
    "status": "official-draft",
@@ -298,7 +299,7 @@
    "httpStatus": 200,
    "bytes": 31852,
    "sha256": "sha256:5ce0169c825b0c5db4e862de8f46ccb2e89be56a89766b3c1e41e2295046819a",
-   "textSha256": "sha256:b3e9d6a634a3b8586cb6491be3a8a1e32c31a2d1b55dd6a54eb09e361e2db462",
+   "textSha256": "sha256:25763364baa2365e3e6a7a20728d076207c8950d9716cdf55e7c94d8821d687c",
    "fetchedAt": "2026-09-22T04:45:00Z",
    "versionHint": "Draft . Updated 2026-08-27",
    "status": "official-draft",
@@ -310,7 +311,7 @@
    "httpStatus": 200,
    "bytes": 28539,
    "sha256": "sha256:4e91172556851841486f8deb16d65243413ed0aa475be0ab737af1316faba02b",
-   "textSha256": "sha256:b7c232a5381c58e00550206c7ba9c797f245ac63c99f295ebe18cecec3f6a796",
+   "textSha256": "sha256:adfe1c227810260fd280cf07b11e5cc313cd64147b1a82cf0919695b7417debb",
    "fetchedAt": "2026-09-22T04:45:00Z",
    "versionHint": "Draft . Updated 2026-08-27",
    "status": "official-draft",
