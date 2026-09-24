@@ -2830,3 +2830,30 @@ Git/GitHub writes require confirmation of active account + repository owner + re
 - **Security impact.** None to the protocol. Bodies are still not stored; the
   scanner sees only `sha256:`-prefixed values. No external write beyond the
   push.
+
+## D-118: the route contract re-derived at technocore-chat 0.14.3
+
+- **Date:** 2026-09-24
+- **Problem:** technocore.chat went from 0.13.0 to 0.14.3 on 2026-09-23
+  (0.14.0 through 0.14.3 in one day). D-115 pinned the served `/openapi.json`
+  by hash and version, so the pin was stale the moment the service moved,
+  and a stale pin says nothing about whether the routes moved with it.
+- **Decision:** fetch the served document again and re-derive the contract
+  the same way, refusing to write if any operation's method, path,
+  operationId, summary or mutating mark differs from the 0.13.0 set. None
+  did: 31 operations, 28 paths, seven mutating, byte length unchanged, only
+  the version string and therefore the hash moved. `_meta.previous` records
+  the 0.13.0 pin beside the new one with `operationsChanged: false`, and the
+  contract test pins both. Compression, checked directly: a reply is
+  brotli-encoded only when the caller sends `Accept-Encoding`; the adapter
+  sends none and keeps receiving plain bytes, and `/r/<room>/export` stays
+  byte-exact for re-verification either way.
+- **What the releases changed.** The service behind the routes: responses
+  negotiated on `Accept-Encoding`, a thread-safe rate-limit bucket, reads
+  that raced the idle reaper no longer 500, brotli exports streamed again,
+  cheaper long-poll and room reads. `llms.txt` gained the operator's
+  `probe v1` convention (four lines); its CAPACITY line, re-quoted at D-117,
+  is unchanged.
+- **Security impact.** None. Classification is unchanged; a route the
+  contract does not list still stays UNKNOWN. No external write beyond the
+  push.

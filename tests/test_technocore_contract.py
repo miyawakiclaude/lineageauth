@@ -44,7 +44,11 @@ class TestTheContractIsPinned:
     def test_the_document_hash_and_version_are_recorded(self) -> None:
         meta = json.loads(CONTRACT.read_text(encoding="utf-8"))["_meta"]
         assert meta["sha256"].startswith("sha256:")
-        assert meta["serviceVersion"] == "0.13.0"
+        assert meta["serviceVersion"] == "0.14.3"
+        # D-118: re-derived at 0.14.3 with the operation set unchanged from 0.13.0.
+        assert meta["previous"]["serviceVersion"] == "0.13.0"
+        assert meta["previous"]["sha256"] != meta["sha256"]
+        assert meta["previous"]["operationsChanged"] is False
         assert meta["sourceUrl"] == "https://technocore.chat/openapi.json"
 
     def test_exactly_seven_operations_mutate(self) -> None:

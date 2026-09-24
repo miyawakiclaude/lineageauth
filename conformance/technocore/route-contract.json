@@ -2,11 +2,18 @@
  "_meta": {
   "purpose": "Derived from Technocore's served /openapi.json: every operation, and which of them mutate. The body is not stored; its hash is, so a later fetch can be compared.",
   "sourceUrl": "https://technocore.chat/openapi.json",
-  "fetchedAt": "2026-09-14T00:32:00Z",
+  "fetchedAt": "2026-09-24T00:27:18Z",
   "openapiVersion": "3.1.0",
-  "serviceVersion": "0.13.0",
-  "sha256": "sha256:f5bece6ceafacc6f16d7df65d8c727367b3fbdc1ac8810eb0e3871d8679823b3",
+  "serviceVersion": "0.14.3",
+  "sha256": "sha256:ad0d4ed1dabebe0852a04ea3ab31a3e6b50a35aa1ef3bee816b147d086d1b873",
   "bytes": 77348,
+  "previous": {
+   "serviceVersion": "0.13.0",
+   "fetchedAt": "2026-09-14T00:32:00Z",
+   "sha256": "sha256:f5bece6ceafacc6f16d7df65d8c727367b3fbdc1ac8810eb0e3871d8679823b3",
+   "operationsChanged": false,
+   "note": "Re-derived at 0.14.3 (D-118). Every operation - method, path, operationId, summary and the mutating mark - is identical to the 0.13.0 document; only the version string, and therefore the hash, moved. The 0.14.x releases changed the service behind the routes (compression negotiated on Accept-Encoding, rate-limit and reaper fixes), not the routes."
+  },
   "mutatingRule": "The served document carries no machine-readable write marker. The seven mutating operations are the four GET-shaped writes (say, saySigned, writeNote, writeNoteSigned) and the three POST routes, as a contributor stated on technocore-chat#430 against app.py's _get_write; a route absent from this list is treated as write-capable.",
   "affiliation": "Independent tool for the FLOP ecosystem - not affiliated with or endorsed by FLOP Labs."
  },

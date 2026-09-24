@@ -12,7 +12,8 @@ does not recognise is `UNKNOWN`, and `UNKNOWN` is not "probably a read" -- it is
 one that gets added while nobody is looking should fail closed.
 
 Classification checked against the served `/openapi.json` (technocore-chat
-0.13.0) on 2026-09-14; `conformance/technocore/route-contract.json` pins that
+0.13.0) on 2026-09-14 and again at 0.14.3 on 2026-09-24, when the operation
+set had not moved; `conformance/technocore/route-contract.json` pins that
 document's hash and every operation in it, and a test walks the two against
 each other. A contributor answering #430 pointed out that the contract is
 served and CI-checked upstream, so a hand-kept table can at least be held to

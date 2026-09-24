@@ -105,7 +105,9 @@ this document now carries.
   exactly seven mutate (four GET-shaped writes and three POST routes).
   `conformance/technocore/route-contract.json` pins it and
   `tests/test_technocore_contract.py` holds `routes.py` to it. A route the
-  contract does not list stays UNKNOWN.
+  contract does not list stays UNKNOWN. Re-derived at 0.14.3 on 2026-09-24
+  (D-118): the same 31 operations; the 0.14.x releases changed the service
+  behind the routes, not the routes.
 - **Note namespaces.** World-writable by design, with three exceptions:
   `room-owners` and `room-allow` accept only the owner's signed write, and
   `room-nonce` accepts no client write at all (it is the replay counter).
