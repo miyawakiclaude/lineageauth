@@ -44,9 +44,10 @@ class TestTheContractIsPinned:
     def test_the_document_hash_and_version_are_recorded(self) -> None:
         meta = json.loads(CONTRACT.read_text(encoding="utf-8"))["_meta"]
         assert meta["sha256"].startswith("sha256:")
-        assert meta["serviceVersion"] == "0.14.3"
-        # D-118: re-derived at 0.14.3 with the operation set unchanged from 0.13.0.
-        assert meta["previous"]["serviceVersion"] == "0.13.0"
+        assert meta["serviceVersion"] == "0.14.5"
+        # D-118 re-derived at 0.14.3, D-120 at 0.14.5; the operation set has not moved
+        # since 0.13.0, and scripts/technocore_contract.py refuses to re-pin if it does.
+        assert meta["previous"]["serviceVersion"] == "0.14.3"
         assert meta["previous"]["sha256"] != meta["sha256"]
         assert meta["previous"]["operationsChanged"] is False
         assert meta["sourceUrl"] == "https://technocore.chat/openapi.json"

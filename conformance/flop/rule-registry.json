@@ -1,7 +1,7 @@
 {
  "_meta": {
   "purpose": "Every FLOP economic rule this tool relies on, with the official text it came from. Nothing here is a business rule the code may assume; the code reads this file.",
-  "generatedAt": "2026-09-22T04:44:59Z",
+  "generatedAt": "2026-09-28T00:48:21Z",
   "statusVocabulary": [
    "official-final",
    "official-draft",
@@ -11,13 +11,14 @@
   "unknownStatement": "UNKNOWN_FROM_OFFICIAL_SPEC",
   "note": "A rule whose recorded hash no longer matches the current snapshot of its source is stale. A stale rule is reported as RULE UPDATED and is never silently treated as current.",
   "affiliation": "Independent tool for the FLOP ecosystem - not affiliated with or endorsed by FLOP Labs.",
-  "previousGeneratedAt": "2026-09-14T00:39:16Z",
-  "revisionNote": "Re-verified 2026-09-22 against the fourth snapshot: every quotation was checked to be a substring of the fetched body it cites. Every flop.finance body is text-identical to the third snapshot (byte hashes moved on the HTML pages through build chrome only; text-normalised comparison confirmed no wording changed). Technocore's llms.txt changed one line: capacity 250000 -> 300000 rooms and per-room history 20.9 -> 17.4 KiB, so technocore-capacity is re-quoted; the 30 other rules are unchanged.",
+  "previousGeneratedAt": "2026-09-22T04:44:59Z",
+  "revisionNote": "Re-verified 2026-09-28 against the fifth snapshot, the first taken by scripts/flop_sources.py: every quotation was checked to be a substring of the fetched body it cites. Every flop.finance body is text-identical to the fourth snapshot (byte hashes moved through build chrome only). Technocore's llms.txt changed one line again: notes in total 5242880 -> 16777216 (rooms 300000 unchanged), so technocore-capacity is re-quoted; the 30 other rules are unchanged. The served service moved 0.14.3 -> 0.14.5.",
   "snapshotHistory": [
    "2026-09-03T04:25:46Z",
    "2026-09-08T03:40:53Z",
    "2026-09-14T00:39:16Z",
-   "2026-09-22T04:44:59Z"
+   "2026-09-22T04:44:59Z",
+   "2026-09-28T00:48:21Z"
   ]
  },
  "rules": [
@@ -32,8 +33,8 @@
     "sourceUrl": "https://flop.finance/teaser/",
     "sourceVersion": "0.1 (draft)",
     "sourceDate": "2026-08-26",
-    "fetchedAt": "2026-09-22T04:44:59Z",
-    "hash": "sha256:ab7a3789f678593a39e6e88e5dbec606523c98e1d79bb9d8a6132384558b9dc5"
+    "fetchedAt": "2026-09-28T00:48:22Z",
+    "hash": "sha256:297774863cc619afc6c65b2c90d497e52c5157786e0bbbd530cc802ab79c899c"
    }
   },
   {
@@ -47,8 +48,8 @@
     "sourceUrl": "https://flop.finance/teaser/",
     "sourceVersion": "0.1 (draft)",
     "sourceDate": "2026-08-26",
-    "fetchedAt": "2026-09-22T04:44:59Z",
-    "hash": "sha256:ab7a3789f678593a39e6e88e5dbec606523c98e1d79bb9d8a6132384558b9dc5"
+    "fetchedAt": "2026-09-28T00:48:22Z",
+    "hash": "sha256:297774863cc619afc6c65b2c90d497e52c5157786e0bbbd530cc802ab79c899c"
    }
   },
   {
@@ -63,8 +64,8 @@
     "sourceUrl": "https://flop.finance/teaser/",
     "sourceVersion": "0.1 (draft)",
     "sourceDate": "2026-08-26",
-    "fetchedAt": "2026-09-22T04:44:59Z",
-    "hash": "sha256:ab7a3789f678593a39e6e88e5dbec606523c98e1d79bb9d8a6132384558b9dc5"
+    "fetchedAt": "2026-09-28T00:48:22Z",
+    "hash": "sha256:297774863cc619afc6c65b2c90d497e52c5157786e0bbbd530cc802ab79c899c"
    }
   },
   {
@@ -79,8 +80,8 @@
     "sourceUrl": "https://flop.finance/teaser/",
     "sourceVersion": "0.1 (draft)",
     "sourceDate": "2026-08-26",
-    "fetchedAt": "2026-09-22T04:44:59Z",
-    "hash": "sha256:ab7a3789f678593a39e6e88e5dbec606523c98e1d79bb9d8a6132384558b9dc5"
+    "fetchedAt": "2026-09-28T00:48:22Z",
+    "hash": "sha256:297774863cc619afc6c65b2c90d497e52c5157786e0bbbd530cc802ab79c899c"
    }
   },
   {
@@ -95,8 +96,8 @@
     "sourceUrl": "https://flop.finance/intro/yellowpaper/",
     "sourceVersion": "0.5.0 (draft)",
     "sourceDate": "2026-09-05",
-    "fetchedAt": "2026-09-22T04:45:00Z",
-    "hash": "sha256:0c7b2c0414de8671168b94c92fb3235c75a9d112983309b590346580cbc45b8f"
+    "fetchedAt": "2026-09-28T00:48:23Z",
+    "hash": "sha256:009855a2981da231181df75105a2899de8dd427fe478c8cfb9b83f7c7e3cddcd"
    }
   },
   {
@@ -111,8 +112,8 @@
     "sourceUrl": "https://flop.finance/intro/yellowpaper/",
     "sourceVersion": "0.5.0 (draft)",
     "sourceDate": "2026-09-05",
-    "fetchedAt": "2026-09-22T04:45:00Z",
-    "hash": "sha256:0c7b2c0414de8671168b94c92fb3235c75a9d112983309b590346580cbc45b8f"
+    "fetchedAt": "2026-09-28T00:48:23Z",
+    "hash": "sha256:009855a2981da231181df75105a2899de8dd427fe478c8cfb9b83f7c7e3cddcd"
    }
   },
   {
@@ -127,8 +128,8 @@
     "sourceUrl": "https://flop.finance/teaser/",
     "sourceVersion": "0.1 (draft)",
     "sourceDate": "2026-08-26",
-    "fetchedAt": "2026-09-22T04:44:59Z",
-    "hash": "sha256:ab7a3789f678593a39e6e88e5dbec606523c98e1d79bb9d8a6132384558b9dc5"
+    "fetchedAt": "2026-09-28T00:48:22Z",
+    "hash": "sha256:297774863cc619afc6c65b2c90d497e52c5157786e0bbbd530cc802ab79c899c"
    }
   },
   {
@@ -142,8 +143,8 @@
     "sourceUrl": "https://flop.finance/teaser/",
     "sourceVersion": "0.1 (draft)",
     "sourceDate": "2026-08-26",
-    "fetchedAt": "2026-09-22T04:44:59Z",
-    "hash": "sha256:ab7a3789f678593a39e6e88e5dbec606523c98e1d79bb9d8a6132384558b9dc5"
+    "fetchedAt": "2026-09-28T00:48:22Z",
+    "hash": "sha256:297774863cc619afc6c65b2c90d497e52c5157786e0bbbd530cc802ab79c899c"
    }
   },
   {
@@ -166,8 +167,8 @@
     "sourceUrl": "https://flop.finance/teaser/",
     "sourceVersion": "0.1 (draft)",
     "sourceDate": "2026-08-26",
-    "fetchedAt": "2026-09-22T04:44:59Z",
-    "hash": "sha256:ab7a3789f678593a39e6e88e5dbec606523c98e1d79bb9d8a6132384558b9dc5"
+    "fetchedAt": "2026-09-28T00:48:22Z",
+    "hash": "sha256:297774863cc619afc6c65b2c90d497e52c5157786e0bbbd530cc802ab79c899c"
    }
   },
   {
@@ -182,8 +183,8 @@
     "sourceUrl": "https://flop.finance/intro/agent/",
     "sourceVersion": "Draft whitepaper",
     "sourceDate": "2026-08-27",
-    "fetchedAt": "2026-09-22T04:45:00Z",
-    "hash": "sha256:9320b9e952ba43741c78964fbe46f2ff6d2a1212bd516d8235e52ac04b499d33"
+    "fetchedAt": "2026-09-28T00:48:23Z",
+    "hash": "sha256:0b6b1da0bf605ced74939850d9d7582813321c5b5bd884240fadabf0c5a113c2"
    }
   },
   {
@@ -197,8 +198,8 @@
     "sourceUrl": "https://flop.finance/teaser/",
     "sourceVersion": "0.1 (draft)",
     "sourceDate": "2026-08-26",
-    "fetchedAt": "2026-09-22T04:44:59Z",
-    "hash": "sha256:ab7a3789f678593a39e6e88e5dbec606523c98e1d79bb9d8a6132384558b9dc5"
+    "fetchedAt": "2026-09-28T00:48:22Z",
+    "hash": "sha256:297774863cc619afc6c65b2c90d497e52c5157786e0bbbd530cc802ab79c899c"
    }
   },
   {
@@ -213,8 +214,8 @@
     "sourceUrl": "https://flop.finance/intro/yellowpaper/",
     "sourceVersion": "0.5.0 (draft)",
     "sourceDate": "2026-09-05",
-    "fetchedAt": "2026-09-22T04:45:00Z",
-    "hash": "sha256:0c7b2c0414de8671168b94c92fb3235c75a9d112983309b590346580cbc45b8f"
+    "fetchedAt": "2026-09-28T00:48:23Z",
+    "hash": "sha256:009855a2981da231181df75105a2899de8dd427fe478c8cfb9b83f7c7e3cddcd"
    }
   },
   {
@@ -228,8 +229,8 @@
     "sourceUrl": "https://flop.finance/teaser/",
     "sourceVersion": "0.1 (draft)",
     "sourceDate": "2026-08-26",
-    "fetchedAt": "2026-09-22T04:44:59Z",
-    "hash": "sha256:ab7a3789f678593a39e6e88e5dbec606523c98e1d79bb9d8a6132384558b9dc5"
+    "fetchedAt": "2026-09-28T00:48:22Z",
+    "hash": "sha256:297774863cc619afc6c65b2c90d497e52c5157786e0bbbd530cc802ab79c899c"
    }
   },
   {
@@ -244,8 +245,8 @@
     "sourceUrl": "https://flop.finance/intro/yellowpaper/",
     "sourceVersion": "0.5.0 (draft)",
     "sourceDate": "2026-09-05",
-    "fetchedAt": "2026-09-22T04:45:00Z",
-    "hash": "sha256:0c7b2c0414de8671168b94c92fb3235c75a9d112983309b590346580cbc45b8f"
+    "fetchedAt": "2026-09-28T00:48:23Z",
+    "hash": "sha256:009855a2981da231181df75105a2899de8dd427fe478c8cfb9b83f7c7e3cddcd"
    }
   },
   {
@@ -260,8 +261,8 @@
     "sourceUrl": "https://flop.finance/intro/yellowpaper/",
     "sourceVersion": "0.5.0 (draft)",
     "sourceDate": "2026-09-05",
-    "fetchedAt": "2026-09-22T04:45:00Z",
-    "hash": "sha256:0c7b2c0414de8671168b94c92fb3235c75a9d112983309b590346580cbc45b8f"
+    "fetchedAt": "2026-09-28T00:48:23Z",
+    "hash": "sha256:009855a2981da231181df75105a2899de8dd427fe478c8cfb9b83f7c7e3cddcd"
    }
   },
   {
@@ -275,8 +276,8 @@
     "sourceUrl": "https://flop.finance/intro/yellowpaper/",
     "sourceVersion": "0.5.0 (draft)",
     "sourceDate": "2026-09-05",
-    "fetchedAt": "2026-09-22T04:45:00Z",
-    "hash": "sha256:0c7b2c0414de8671168b94c92fb3235c75a9d112983309b590346580cbc45b8f"
+    "fetchedAt": "2026-09-28T00:48:23Z",
+    "hash": "sha256:009855a2981da231181df75105a2899de8dd427fe478c8cfb9b83f7c7e3cddcd"
    }
   },
   {
@@ -291,8 +292,8 @@
     "sourceUrl": "https://flop.finance/intro/yellowpaper/",
     "sourceVersion": "0.5.0 (draft)",
     "sourceDate": "2026-09-05",
-    "fetchedAt": "2026-09-22T04:45:00Z",
-    "hash": "sha256:0c7b2c0414de8671168b94c92fb3235c75a9d112983309b590346580cbc45b8f"
+    "fetchedAt": "2026-09-28T00:48:23Z",
+    "hash": "sha256:009855a2981da231181df75105a2899de8dd427fe478c8cfb9b83f7c7e3cddcd"
    }
   },
   {
@@ -307,8 +308,8 @@
     "sourceUrl": "https://flop.finance/intro/yellowpaper/",
     "sourceVersion": "0.5.0 (draft)",
     "sourceDate": "2026-09-05",
-    "fetchedAt": "2026-09-22T04:45:00Z",
-    "hash": "sha256:0c7b2c0414de8671168b94c92fb3235c75a9d112983309b590346580cbc45b8f"
+    "fetchedAt": "2026-09-28T00:48:23Z",
+    "hash": "sha256:009855a2981da231181df75105a2899de8dd427fe478c8cfb9b83f7c7e3cddcd"
    }
   },
   {
@@ -322,8 +323,8 @@
     "sourceUrl": "https://flop.finance/teaser/",
     "sourceVersion": "0.1 (draft)",
     "sourceDate": "2026-08-26",
-    "fetchedAt": "2026-09-22T04:44:59Z",
-    "hash": "sha256:ab7a3789f678593a39e6e88e5dbec606523c98e1d79bb9d8a6132384558b9dc5"
+    "fetchedAt": "2026-09-28T00:48:22Z",
+    "hash": "sha256:297774863cc619afc6c65b2c90d497e52c5157786e0bbbd530cc802ab79c899c"
    }
   },
   {
@@ -338,8 +339,8 @@
     "sourceUrl": "https://flop.finance/teaser/",
     "sourceVersion": "0.1 (draft)",
     "sourceDate": "2026-08-26",
-    "fetchedAt": "2026-09-22T04:44:59Z",
-    "hash": "sha256:ab7a3789f678593a39e6e88e5dbec606523c98e1d79bb9d8a6132384558b9dc5"
+    "fetchedAt": "2026-09-28T00:48:22Z",
+    "hash": "sha256:297774863cc619afc6c65b2c90d497e52c5157786e0bbbd530cc802ab79c899c"
    }
   },
   {
@@ -354,8 +355,8 @@
     "sourceUrl": "https://flop.finance/intro/yellowpaper/",
     "sourceVersion": "0.5.0 (draft)",
     "sourceDate": "2026-09-05",
-    "fetchedAt": "2026-09-22T04:45:00Z",
-    "hash": "sha256:0c7b2c0414de8671168b94c92fb3235c75a9d112983309b590346580cbc45b8f"
+    "fetchedAt": "2026-09-28T00:48:23Z",
+    "hash": "sha256:009855a2981da231181df75105a2899de8dd427fe478c8cfb9b83f7c7e3cddcd"
    }
   },
   {
@@ -368,26 +369,26 @@
    "source": {
     "sourceId": "technocore-llms",
     "sourceUrl": "https://technocore.chat/llms.txt",
-    "sourceVersion": "served 2026-09-22",
-    "sourceDate": "2026-09-22",
-    "fetchedAt": "2026-09-22T04:44:59Z",
-    "hash": "sha256:40e0bebabcc105a2931805b68e200f1d5fc212e32ca14501ac4d85d105a2bb54"
+    "sourceVersion": "served 2026-09-28",
+    "sourceDate": "2026-09-28",
+    "fetchedAt": "2026-09-28T00:48:22Z",
+    "hash": "sha256:ae3a86c884c1932a8efe181942a050fd5b5bbbc0093fcaa70a9574bed1ee21d6"
    }
   },
   {
    "id": "technocore-capacity",
-   "statement": "CAPACITY: at most 300000 rooms, 5242880 notes in total and 300000 per",
+   "statement": "CAPACITY: at most 300000 rooms, 16777216 notes in total and 300000 per",
    "statementIsQuotation": true,
    "status": "official-draft",
    "effectiveNetworkPhase": "any",
-   "consequence": "Changed at every snapshot so far (163840, 250000, 300000 rooms) while the per-room history shrank (32 KiB, 20.9 KiB, 17.4 KiB): these are operator settings, read from /config, not protocol. The census percentages in this tool's data are relative to the capacity at the time of each census, not to this figure.",
+   "consequence": "Changed at every snapshot so far (163840, 250000, 300000 rooms; 5242880 then 16777216 notes in total) while the per-room history shrank (32 KiB, 20.9 KiB, 17.4 KiB): these are operator settings, read from /config, not protocol. The census percentages in this tool's data are relative to the capacity at the time of each census, not to this figure.",
    "source": {
     "sourceId": "technocore-llms",
     "sourceUrl": "https://technocore.chat/llms.txt",
-    "sourceVersion": "served 2026-09-22",
-    "sourceDate": "2026-09-22",
-    "fetchedAt": "2026-09-22T04:44:59Z",
-    "hash": "sha256:40e0bebabcc105a2931805b68e200f1d5fc212e32ca14501ac4d85d105a2bb54"
+    "sourceVersion": "served 2026-09-28",
+    "sourceDate": "2026-09-28",
+    "fetchedAt": "2026-09-28T00:48:22Z",
+    "hash": "sha256:ae3a86c884c1932a8efe181942a050fd5b5bbbc0093fcaa70a9574bed1ee21d6"
    }
   },
   {
@@ -403,7 +404,7 @@
     "sourceUrl": "https://github.com/flop-labs/tclk/blob/v0.1.0/SPEC.md",
     "sourceVersion": "v0.1.0",
     "sourceDate": "2026-09-03",
-    "fetchedAt": "2026-09-22T04:44:59Z",
+    "fetchedAt": "2026-09-28T00:48:21Z",
     "hash": null
    }
   },
@@ -425,8 +426,8 @@
     "sourceUrl": "https://flop.finance/intro/yellowpaper/",
     "sourceVersion": "0.5.0 (draft)",
     "sourceDate": "2026-09-05",
-    "fetchedAt": "2026-09-22T04:45:00Z",
-    "hash": "sha256:0c7b2c0414de8671168b94c92fb3235c75a9d112983309b590346580cbc45b8f"
+    "fetchedAt": "2026-09-28T00:48:23Z",
+    "hash": "sha256:009855a2981da231181df75105a2899de8dd427fe478c8cfb9b83f7c7e3cddcd"
    }
   },
   {
@@ -447,8 +448,8 @@
     "sourceUrl": "https://flop.finance/intro/yellowpaper/",
     "sourceVersion": "0.5.0 (draft)",
     "sourceDate": "2026-09-05",
-    "fetchedAt": "2026-09-22T04:45:00Z",
-    "hash": "sha256:0c7b2c0414de8671168b94c92fb3235c75a9d112983309b590346580cbc45b8f"
+    "fetchedAt": "2026-09-28T00:48:23Z",
+    "hash": "sha256:009855a2981da231181df75105a2899de8dd427fe478c8cfb9b83f7c7e3cddcd"
    }
   },
   {
@@ -469,8 +470,8 @@
     "sourceUrl": "https://flop.finance/intro/yellowpaper/",
     "sourceVersion": "0.5.0 (draft)",
     "sourceDate": "2026-09-05",
-    "fetchedAt": "2026-09-22T04:45:00Z",
-    "hash": "sha256:0c7b2c0414de8671168b94c92fb3235c75a9d112983309b590346580cbc45b8f"
+    "fetchedAt": "2026-09-28T00:48:23Z",
+    "hash": "sha256:009855a2981da231181df75105a2899de8dd427fe478c8cfb9b83f7c7e3cddcd"
    }
   },
   {
@@ -490,8 +491,8 @@
     "sourceUrl": "https://flop.finance/intro/yellowpaper/",
     "sourceVersion": "0.5.0 (draft)",
     "sourceDate": "2026-09-05",
-    "fetchedAt": "2026-09-22T04:45:00Z",
-    "hash": "sha256:0c7b2c0414de8671168b94c92fb3235c75a9d112983309b590346580cbc45b8f"
+    "fetchedAt": "2026-09-28T00:48:23Z",
+    "hash": "sha256:009855a2981da231181df75105a2899de8dd427fe478c8cfb9b83f7c7e3cddcd"
    }
   },
   {
@@ -511,8 +512,8 @@
     "sourceUrl": "https://flop.finance/intro/yellowpaper/",
     "sourceVersion": "0.5.0 (draft)",
     "sourceDate": "2026-09-05",
-    "fetchedAt": "2026-09-22T04:45:00Z",
-    "hash": "sha256:0c7b2c0414de8671168b94c92fb3235c75a9d112983309b590346580cbc45b8f"
+    "fetchedAt": "2026-09-28T00:48:23Z",
+    "hash": "sha256:009855a2981da231181df75105a2899de8dd427fe478c8cfb9b83f7c7e3cddcd"
    }
   },
   {
@@ -533,8 +534,8 @@
     "sourceUrl": "https://flop.finance/intro/yellowpaper/",
     "sourceVersion": "0.5.0 (draft)",
     "sourceDate": "2026-09-05",
-    "fetchedAt": "2026-09-22T04:45:00Z",
-    "hash": "sha256:0c7b2c0414de8671168b94c92fb3235c75a9d112983309b590346580cbc45b8f"
+    "fetchedAt": "2026-09-28T00:48:23Z",
+    "hash": "sha256:009855a2981da231181df75105a2899de8dd427fe478c8cfb9b83f7c7e3cddcd"
    }
   },
   {
@@ -554,8 +555,8 @@
     "sourceUrl": "https://flop.finance/intro/yellowpaper/",
     "sourceVersion": "0.5.0 (draft)",
     "sourceDate": "2026-09-05",
-    "fetchedAt": "2026-09-22T04:45:00Z",
-    "hash": "sha256:0c7b2c0414de8671168b94c92fb3235c75a9d112983309b590346580cbc45b8f"
+    "fetchedAt": "2026-09-28T00:48:23Z",
+    "hash": "sha256:009855a2981da231181df75105a2899de8dd427fe478c8cfb9b83f7c7e3cddcd"
    }
   }
  ]

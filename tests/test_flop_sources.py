@@ -128,7 +128,7 @@ class TestLookalikesAreLouderThanUnknowns:
 class TestTheRecordedSnapshot:
     def test_it_loads_and_records_when_it_was_taken(self) -> None:
         snapshot = load_snapshot()
-        assert snapshot.fetched_at == "2026-09-22T04:44:59Z"
+        assert snapshot.fetched_at == "2026-09-28T00:48:21Z"
         assert len(snapshot.snapshots) >= 15
 
     def test_the_wording_is_hashed_beside_the_bytes(self) -> None:

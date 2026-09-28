@@ -50,20 +50,19 @@ part of every `ExecutionPlan`, and an approval granted under one rule set is
 A rule whose `hash` is `null` cannot be checked and is reported as
 `UNVERIFIABLE` freshness — one such rule exists, below.
 
-## The rules, at snapshot 2026-09-22T04:44:59Z
+## The rules, at snapshot 2026-09-28T00:48:21Z
 
-The fourth snapshot. Between 2026-09-14 and 2026-09-22 no flop.finance page
-changed its wording: the HTML pages' byte hashes moved through build chrome
-alone, which a text-normalised comparison of each body against the third
-snapshot confirmed and `_meta.history` now records beside the byte hash as
-`textSha256` (the Yellow Paper included). Technocore's
-`llms.txt` changed one line, its capacity, because the operator raised
-`max_rooms` to 300000 and the per-room history shrank to 17.4 KiB; the
-served service version is still 0.13.0, so this is a setting, not a release.
-Every rule below was re-verified mechanically: its quotation is a substring
-of the body its source hash names, or it is marked derived or unknown. The
-previous snapshot's hashes are kept in `official-sources.json` under
-`_meta.history`.
+The fifth snapshot, and the first taken by `scripts/flop_sources.py` (D-119)
+rather than by a script outside the repository. Between 2026-09-22 and
+2026-09-28 no flop.finance page changed its wording: every HTML page's byte
+hash moved through build chrome and its `textSha256` did not, and the Yellow
+Paper's text is unchanged although its GitHub mirror re-synced the 0.5.0 draft
+on 2026-09-24. Technocore's `llms.txt` changed one line again: notes in total
+5,242,880 to 16,777,216, rooms unchanged at 300,000, with the served service
+at 0.14.5. Every rule below was re-verified mechanically: its quotation is a
+substring of the body its source hash names, or it is marked derived or
+unknown. The previous snapshot's hashes are kept in `official-sources.json`
+under `_meta.history`.
 
 <!-- flop-rules-table:begin -->
 | id | status | phase | source | what it records |
@@ -91,7 +90,7 @@ previous snapshot's hashes are kept in `official-sources.json` under
 | `flop-yellow-paper-status` | official-draft | any | `flop-finance-yellowpaper` | Draft - the normative specification of the protocol. Sections marked planned are not yet implemented. |
 | `technocore-native-delegation` | official-draft | any | `technocore-llms` | DELEGATION: a key can say another key acts for it, so an agent holds its own key
 instead of being handed yo... |
-| `technocore-capacity` | official-draft | any | `technocore-llms` | CAPACITY: at most 300000 rooms, 5242880 notes in total and 300000 per |
+| `technocore-capacity` | official-draft | any | `technocore-llms` | CAPACITY: at most 300000 rooms, 16777216 notes in total and 300000 per |
 | `technocore-not-a-settlement-system` | official-draft, **derived** | any | `flop-labs-github-org` | Technocore is a coordination layer, not a settlement system: parties meet and agree in a room, and value mo... |
 | `flop-testnet-endpoint` | unknown | testnet | `flop-finance-yellowpaper` | `UNKNOWN_FROM_OFFICIAL_SPEC` |
 | `flop-faucet-procedure` | unknown | testnet | `flop-finance-yellowpaper` | `UNKNOWN_FROM_OFFICIAL_SPEC` |
@@ -116,12 +115,12 @@ The `formula` for `flop-agent-unlock-ratio`:
 ```
 
 What changed for a reader of the previous table: only `technocore-capacity`,
-which now quotes 300000 rooms. It has moved at every snapshot (163840, 250000,
-300000) and is an operator setting read from `/config`, not a protocol rule;
-its `consequence` says so. Every other rule, including the genesis figures
-that moved last time, verifies against the same wording as before. This is
-the quiet case the mechanism is for: a reader of the registry can tell a
-snapshot that found nothing from one that was never taken.
+which now quotes 16,777,216 notes in total. It has moved at every snapshot and
+is an operator setting read from `/config`, not a protocol rule; its
+`consequence` says so. Every other rule verifies against the same wording as
+before. The script found this: `check` exited non-zero on the missing
+quotation, the rule was re-quoted by hand, and `snapshot` re-stamped the other
+30 rules to the new hashes without touching their text.
 
 ## Absence is recorded, not filled in
 

@@ -2900,3 +2900,59 @@ Git/GitHub writes require confirmation of active account + repository owner + re
   the guard test holds. The script fetches only URLs the source classifier
   calls official, over HTTPS, and sends nothing but the request. Bodies are
   kept outside version control. No external write beyond the push.
+
+## D-120: fifth official-source snapshot, taken by the script; the contract at 0.14.5
+
+- **Date:** 2026-09-28
+- **Problem:** the daily `check` exited non-zero: Technocore's `llms.txt` had
+  changed its CAPACITY line again (notes in total 5,242,880 to 16,777,216,
+  rooms unchanged at 300,000) and the served service had moved from 0.14.3
+  to 0.14.5, so the registry's `technocore-capacity` quotation no longer
+  occurred in its source and D-118's contract pin was stale.
+- **Decision:** the fifth snapshot, the first taken by
+  `scripts/flop_sources.py snapshot` (D-119): the rule was re-quoted by
+  hand, the script verified all 23 quotations against the fresh bodies,
+  re-stamped the 30 unchanged rules to the new hashes, regenerated the
+  table, and recorded that every flop.finance body is text-identical to the
+  fourth snapshot (the Yellow Paper's text included, although its mirror
+  re-synced the 0.5.0 draft on 2026-09-24). The route contract is re-derived
+  at 0.14.5 by a new `scripts/technocore_contract.py`, which rebuilds the
+  operation table from the served document and refuses to write if any
+  operation's method, path, operationId, summary or mutating mark differs
+  from the pinned set; none did, for the third time since 0.13.0.
+- **What the listing gained.** A sixth flop-labs repository,
+  `technocore-close-call-challenge`: a one-bet trading contest for agents
+  (any `did:key`, identity unchecked, prizes after mainnet), live since
+  2026-09-25T12:00Z. Recorded in the organisation entry's version hint.
+  This project takes no part and posts nothing; participation is a decision
+  for a person, not for a snapshot.
+- **Security impact.** None. Both scripts fetch only URLs the source
+  classifier calls official, over HTTPS. No external write beyond the push.
+
+## D-121: the Yellow Paper corpus at 3c97bbc8; `wrong_path_orientation` now decidable
+
+- **Date:** 2026-09-28
+- **Problem:** flop-labs/yellowpaper#44, which D-116 confirmed from this
+  project's independent implementation, was closed on 2026-09-24 by the
+  maintainer: the 0.5.0 draft was re-synced (`3c97bbc8`) and
+  `evidence/wire-format-v1.json` regenerated so the case flips a sibling
+  that is not the duplicated odd node. This project's copy was the older
+  corpus, and its test pinned a discrepancy that no longer exists.
+- **Decision:** the corpus copied verbatim at `3c97bbc8`, provenance
+  updated with the previous pin kept beside it. Run against the regenerated
+  corpus before any change, `flop/wire.py` reproduced every positive vector
+  byte for byte; the only failures were the provenance pin and the test that
+  pinned the old discrepancy. That test now asserts the opposite, and
+  checks both halves: the flipped item is not the leaf's duplicate, and the
+  recomputed root differs from the committed one, so `verify_turn_proof`
+  refuses with `LeafNotInRoot` exactly as the corpus expects.
+- **What the regenerated corpus added.** A `fcc4_transcript_with_ack` block
+  (an agent acknowledgement over the transcript: an 84-byte preimage, a
+  64-byte signature) and a negative case `invalid_agent_ack_signature`. The
+  published Appendix F text this project was written from does not state the
+  ack layout, and the signature is one this project cannot check; both are
+  tested for shape and stated as not reproduced. When the text catches up,
+  the preimage is the next thing to write from it.
+- **Security impact.** None. Nothing signs or sends; the corpus is test
+  data and the module still recomputes bytes only. No external write beyond
+  the push.

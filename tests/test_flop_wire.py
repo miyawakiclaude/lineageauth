@@ -305,15 +305,17 @@ class TestNegativeCases:
             wire.verified_work_from_turns(turns)
         assert wire.verified_work_from_turns(turns[:1]) == turns[0].turn.g_n
 
-    def test_wrong_path_orientation_cannot_be_told_from_the_root(self, corpus: dict) -> None:  # type: ignore[type-arg]
-        """The corpus expects `reject LeafNotInRoot`; F.3's own rule cannot deliver it.
+    def test_wrong_path_orientation_is_leaf_not_in_root(self, corpus: dict) -> None:  # type: ignore[type-arg]
+        """The corpus's flipped sibling is now one F.3 can tell apart (D-121).
 
-        The flipped item is the leaf's own duplicate (the odd last node of a
-        three-leaf tree), so `blake2_256(left || right)` gives the same node either
-        way round and the recomputed root equals the canonical root. Rejecting this
-        vector needs a rule Appendix F does not state. flop-labs/yellowpaper#44
-        reports the same thing; this test keeps the discrepancy visible rather
-        than papering over it with an orientation rule of this project's own.
+        The corpus this project first met (yellowpaper@cb3cbf97) flipped the leaf's
+        own duplicate, the odd last node of a three-leaf tree, so `blake2_256(left
+        || right)` gave the same node either way round and the case could not be
+        refused under F.3's stated rule; flop-labs/yellowpaper#44 reported it and
+        this test pinned it. The 3c97bbc8 sync regenerated the corpus to flip a
+        sibling that is not the duplicate, and the vector now refuses exactly as
+        the corpus expects. The test checks both halves: which item moved, and
+        that the recomputed root no longer equals the committed one.
         """
         cc = corpus["compute_channel_v1"]
         data = hx(self.case(corpus, "wrong_path_orientation")["bytes_hex"])
@@ -322,13 +324,19 @@ class TestNegativeCases:
         canonical = [
             (hx(p["sibling_hex"]), p["sibling_is_left"]) for p in cc["merkle"]["path_for_index_2"]
         ]
-        assert turn.merkle_path[0][0] == canonical[0][0]
-        assert turn.merkle_path[0][1] is not canonical[0][1]
+        assert [item[0] for item in turn.merkle_path] == [item[0] for item in canonical]
+        flipped = [i for i, item in enumerate(turn.merkle_path) if item[1] is not canonical[i][1]]
+        assert len(flipped) == 1
         channel_id = hx(cc["leaf_inputs"]["channel_id_hex"])
         leaf = wire.transcript_leaf(turn.leaf_version, channel_id, turn.turn)
-        assert turn.merkle_path[0][0] == leaf, "the flipped sibling is the leaf's own duplicate"
-        assert wire.root_from_path(leaf, turn.merkle_path).hex() == cc["merkle"]["root_hex"]
-        wire.verify_turn_proof(turn, channel_id=channel_id, final_root=hx(cc["merkle"]["root_hex"]))
+        assert turn.merkle_path[flipped[0]][0] != leaf, (
+            "the flipped sibling must not be the duplicate"
+        )
+        assert wire.root_from_path(leaf, turn.merkle_path).hex() != cc["merkle"]["root_hex"]
+        with pytest.raises(WireError, match="LeafNotInRoot"):
+            wire.verify_turn_proof(
+                turn, channel_id=channel_id, final_root=hx(cc["merkle"]["root_hex"])
+            )
 
     def test_a_genuinely_wrong_orientation_is_leaf_not_in_root(self, corpus: dict) -> None:  # type: ignore[type-arg]
         """Flip the orientation of a sibling that is not a self-duplicate: refused."""
@@ -394,3 +402,27 @@ class TestDataRef:
         )
         assert encoded.hex() == d["scale_bytes_hex"]
         assert len(encoded) == 34
+
+
+class TestTheRegeneratedCorpus:
+    """What the 3c97bbc8 sync added beyond the orientation fix (D-121)."""
+
+    def test_the_agent_ack_block_is_checked_for_shape_only(self, corpus: dict) -> None:  # type: ignore[type-arg]
+        """`fcc4_transcript_with_ack` is new. Its blob is a valid FCC4 container this
+        project decodes; its 84-byte ack preimage and 64-byte agent signature follow a
+        layout the published Appendix F text does not state, so neither is recomputed
+        here. Stated, not verified."""
+        block = corpus["compute_channel_v1"]["fcc4_transcript_with_ack"]
+        assert block["expected"] == "accept"
+        channel_id, turns = wire.decode_transcript_blob(hx(block["blob_hex"]))
+        assert len(channel_id) == 32 and turns
+        assert len(hx(block["ack_preimage_hex"])) == 84
+        assert len(hx(block["agent_signature_hex"])) == 64
+        assert len(hx(block["agent_public_key_hex"])) == 32
+
+    def test_the_new_negative_case_names_a_signature_this_project_cannot_check(
+        self,
+        corpus: dict,  # type: ignore[type-arg]
+    ) -> None:
+        case = next(c for c in corpus["negative_cases"] if c["id"] == "invalid_agent_ack_signature")
+        assert case["expected"].startswith("reject")

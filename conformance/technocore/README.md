@@ -1,7 +1,7 @@
 # conformance/technocore
 
 `route-contract.json` is derived from Technocore's served `/openapi.json`
-(fetched 2026-09-24, technocore-chat 0.14.3, hash recorded; first derived at
+(fetched 2026-09-28, technocore-chat 0.14.5, hash recorded; first derived at
 0.13.0 on 2026-09-14 and re-derived unchanged, see `_meta.previous`). It lists every
 operation and marks the seven that mutate. `tests/test_technocore_contract.py`
 walks it against `adapters/technocore/routes.py` so the hand-kept route table

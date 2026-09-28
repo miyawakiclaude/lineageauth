@@ -41,19 +41,27 @@ Every positive vector in the corpus, byte for byte:
   validator signature are sr25519 under the Substrate signing context. This
   project carries no sr25519 implementation and adds none for this; the three
   vectors are checked for shape (64 bytes) and stated as not verified.
-- **`wrong_path_orientation`.** The corpus expects `reject LeafNotInRoot` for a
-  `VerifiedTurn` whose first path item has its `sibling_is_left` flipped. That
-  item is the leaf's own duplicate — the odd last node of the corpus's
-  three-leaf tree — so `blake2_256(left || right)` yields the same node either
-  way round and the recomputed root equals the canonical root. Under F.3's
-  stated rule the vector is indistinguishable from the positive one; rejecting
-  it needs a rule the appendix does not state. `flop-labs/yellowpaper#44`
-  reports the same. The test pins the fact instead of inventing an orientation
-  rule, and a second test shows a genuinely wrong orientation (a non-duplicate
-  sibling) is refused.
+- **`wrong_path_orientation`, resolved upstream.** The corpus this project
+  first met (`cb3cbf97`) expected `reject LeafNotInRoot` for a `VerifiedTurn`
+  whose flipped path item was the leaf's own duplicate — the odd last node of
+  a three-leaf tree — so `blake2_256(left || right)` yielded the same node
+  either way round and the vector could not be refused under F.3's stated
+  rule. `flop-labs/yellowpaper#44` reported it; this project confirmed it from
+  an independent implementation and pinned the fact in a test rather than
+  inventing an orientation rule (D-116). The 2026-09-24 sync (`3c97bbc8`)
+  regenerated the corpus so the case flips a sibling that is not the
+  duplicate, and #44 was closed. The corpus here is that regenerated one
+  (D-121); the vector now refuses as expected, and the test checks both that
+  the flipped item is not the duplicate and that the recomputed root differs.
 - **`wrong_genesis_network` / `wrong_session`.** The corpus gives the mutated
   hashes without the mutated inputs, so only "differs from the canonical id"
   can be checked.
+- **The agent acknowledgement (`fcc4_transcript_with_ack`).** New in the
+  regenerated corpus: an 84-byte ack preimage and a 64-byte agent signature
+  over an FCC4 blob, plus a negative case `invalid_agent_ack_signature`. The
+  blob decodes here as any FCC4 container does; the preimage layout is not in
+  the published Appendix F text and the signature is sr25519, so both are
+  checked for shape and stated as not reproduced (D-121).
 
 ## What the module is not
 

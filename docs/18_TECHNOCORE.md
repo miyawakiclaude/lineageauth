@@ -106,8 +106,10 @@ this document now carries.
   `conformance/technocore/route-contract.json` pins it and
   `tests/test_technocore_contract.py` holds `routes.py` to it. A route the
   contract does not list stays UNKNOWN. Re-derived at 0.14.3 on 2026-09-24
-  (D-118): the same 31 operations; the 0.14.x releases changed the service
-  behind the routes, not the routes.
+  (D-118) and at 0.14.5 on 2026-09-28 (D-120, by
+  `scripts/technocore_contract.py`, which refuses to re-pin over a moved
+  route): the same 31 operations each time; the 0.14.x releases changed the
+  service behind the routes, not the routes.
 - **Note namespaces.** World-writable by design, with three exceptions:
   `room-owners` and `room-allow` accept only the owner's signed write, and
   `room-nonce` accepts no client write at all (it is the replay counter).
