@@ -11,9 +11,11 @@ arguing about its own subject rather than about scaffolding.
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
+from pathlib import Path
 
 from lineageauth import jsonio
 from lineageauth.actions import ActionRequest
@@ -28,7 +30,7 @@ from lineageauth.bundle import EventBundle
 from lineageauth.crypto import LocalSigner
 from lineageauth.envelope import Envelope
 from lineageauth.flop.model import SourceClass
-from lineageauth.flop.rules import FlopRuleRegistry
+from lineageauth.flop.rules import RULE_REGISTRY_FILE, UNLOCK_RULE_ID, FlopRuleRegistry
 from lineageauth.flop.sources import SourceSnapshotSet, load_snapshot
 from lineageauth.flop.testnet.approve import ApprovedTestnetAction, approve
 from lineageauth.flop.testnet.client import RestrictedClient
@@ -149,6 +151,27 @@ def snapshot() -> SourceSnapshotSet:
 
 def rules() -> FlopRuleRegistry:
     return FlopRuleRegistry.load()
+
+
+def registry_with_formula(
+    tmp_path: Path, *, spent: int, unlocked: int | None = None
+) -> FlopRuleRegistry:
+    """A one-rule registry whose unlock rule carries a formula.
+
+    The shipped registry has none since D-122, so the mechanism is tested here.
+    Callers should pick figures that are neither the dropped 3 nor the default 1,
+    so a constant in the code could not pass for data.
+    """
+    shipped = json.loads(RULE_REGISTRY_FILE.read_text(encoding="utf-8"))
+    rule = next(r for r in shipped["rules"] if r["id"] == UNLOCK_RULE_ID)
+    formula: dict[str, object] = {"kind": "unlock-ratio", "spentPerUnlocked": spent}
+    if unlocked is not None:
+        formula["unlockedPerRatio"] = unlocked
+    path = tmp_path / "registry.json"
+    path.write_text(
+        json.dumps({"_meta": {}, "rules": [dict(rule, formula=formula)]}), encoding="utf-8"
+    )
+    return FlopRuleRegistry.load(path)
 
 
 def simulation_registry() -> FlopEndpointRegistry:

@@ -2,8 +2,10 @@
 
 FLOP's only published economics are in a draft that says of itself that its
 figures are provisional. A tool built on that has two obligations. The first is
-never to hard-code any of it -- the 3-to-1 unlock ratio is a `formula` object in
-`conformance/flop/rule-registry.json`, and `unlock_ratio` reads it. The second
+never to hard-code any of it -- an unlock ratio, when the official text sets one,
+is a `formula` object in `conformance/flop/rule-registry.json`, and
+`unlock_ratio` reads it. The 3-to-1 figure was carried that way until the teaser
+dropped it on 2026-09-30; today no rule carries a formula (D-122). The second
 is to notice when the draft moves: every rule records the hash of its source
 document as it was when the rule was written down, and `freshness` compares that
 against the current snapshot. A mismatch is `RULE UPDATED`, and a stale rule is
@@ -101,6 +103,25 @@ def _source_from(entry: Mapping[str, Any], *, rule_id: str) -> RuleSource:
     )
 
 
+def _check_formula(formula: object, *, rule_id: str) -> None:
+    """Refuse a formula the code cannot apply.
+
+    Without this a typo (a zero, a string, a list) would load, `unlock_ratio`
+    would return None, and a screen would report the registry's mistake as the
+    official text setting no ratio.
+    """
+    if not isinstance(formula, Mapping):
+        raise MalformedEventError(f"rule {rule_id}: formula must be an object or absent")
+    if formula.get("kind") != "unlock-ratio":
+        raise MalformedEventError(f"rule {rule_id}: formula kind must be 'unlock-ratio'")
+    for key, required in (("spentPerUnlocked", True), ("unlockedPerRatio", False)):
+        value = formula.get(key)
+        if value is None and not required:
+            continue
+        if isinstance(value, bool) or not isinstance(value, int) or value <= 0:
+            raise MalformedEventError(f"rule {rule_id}: formula {key} must be a positive integer")
+
+
 def _rule_from(entry: Mapping[str, Any]) -> EconomicRule:
     rule_id = entry.get("id")
     statement = entry.get("statement")
@@ -138,6 +159,8 @@ def _rule_from(entry: Mapping[str, Any]) -> EconomicRule:
         raise MalformedEventError(
             f"rule {rule_id}: a derived statement may not also claim to be a quotation"
         )
+    if formula is not None:
+        _check_formula(formula, rule_id=rule_id)
 
     return EconomicRule(
         rule_id=rule_id,

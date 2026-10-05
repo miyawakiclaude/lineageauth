@@ -11,8 +11,9 @@ Four rules shape every module here.
 
 *Nothing about FLOP is hard-coded.* Every economic rule is a row in
 `conformance/flop/rule-registry.json` carrying the official sentence it came
-from, the version and date of the document, and that document's hash. The 3-to-1
-unlock ratio is data. When the draft changes, the code does not.
+from, the version and date of the document, and that document's hash. An unlock
+ratio is data: the 3-to-1 figure was a registry row until the teaser dropped it on
+2026-09-30, and removing it changed no number in the code (D-122).
 
 *Official is an origin, never a word.* `sources.classify_source` looks at a URL
 and nothing else. A room called "official", a nickname, a topic, a note

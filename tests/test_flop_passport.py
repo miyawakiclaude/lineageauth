@@ -118,6 +118,17 @@ class TestSectionsSayWhyTheyAreEmpty:
             assert sections[name].status is FeatureStatus.NOT_YET_AVAILABLE, name
             assert sections[name].reason, name
 
+    def test_the_mainnet_unlock_section_matches_the_registry(self) -> None:
+        """D-122: no unlock ratio is registered, so the passport must not say one is."""
+        from lineageauth.flop.rules import FlopRuleRegistry, unlock_ratio
+
+        assert unlock_ratio(FlopRuleRegistry.load()) is None
+        sections = {section.section_id: section for section in build().sections}
+        reason = sections["mainnetUnlock"].reason
+        assert "sets no unlock ratio" in reason
+        assert "not yet set" in reason
+        assert "registered" not in reason
+
     def test_the_inference_section_explains_rather_than_showing_a_zero(self) -> None:
         sections = {section.section_id: section for section in build().sections}
         reason = sections["inference"].reason

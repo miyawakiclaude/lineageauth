@@ -9,6 +9,7 @@ fixture would pass while the real file drifted.
 
 from __future__ import annotations
 
+import json
 import pathlib
 from dataclasses import replace
 
@@ -17,6 +18,7 @@ import pytest
 from lineageauth.errors import MalformedEventError
 from lineageauth.flop.model import UNKNOWN_FROM_OFFICIAL_SPEC, RuleStatus
 from lineageauth.flop.rules import (
+    RULE_REGISTRY_FILE,
     UNLOCK_RULE_ID,
     FlopRuleRegistry,
     Freshness,
@@ -25,6 +27,7 @@ from lineageauth.flop.rules import (
     unlocked_from_spend,
 )
 from lineageauth.flop.sources import RULE_UPDATED_LABEL, load_snapshot
+from tests.flop_testnet_fixtures import registry_with_formula
 
 
 @pytest.fixture
@@ -119,8 +122,16 @@ class TestUnknownIsRecordedRatherThanFilledIn:
 
 
 class TestTheUnlockRatioIsData:
-    def test_it_comes_out_of_the_registry(self, registry: FlopRuleRegistry) -> None:
-        assert unlock_ratio(registry) == 3
+    def test_the_dropped_ratio_is_not_in_the_registry(self, registry: FlopRuleRegistry) -> None:
+        """The teaser and the agent page dropped the 3:1 ratio on 2026-09-30 (D-122).
+        The rule stays, quoting the new text, and carries no formula, so nothing is
+        computed."""
+        rule = registry.get(UNLOCK_RULE_ID)
+        assert rule is not None
+        assert rule.formula is None
+        assert "not yet set" in rule.statement
+        assert unlock_ratio(registry) is None
+        assert unlocked_from_spend(registry, 9) is None
 
     def test_the_number_three_is_not_written_in_the_module(self) -> None:
         """Read the source: the ratio must not be a literal in Python."""
@@ -133,10 +144,45 @@ class TestTheUnlockRatioIsData:
         assert "// 3" not in text
         assert "spend // 3" not in text
 
-    def test_the_formula_applies_to_an_observed_spend(self, registry: FlopRuleRegistry) -> None:
-        assert unlocked_from_spend(registry, 9) == 3
-        assert unlocked_from_spend(registry, 8) == 2
-        assert unlocked_from_spend(registry, 0) == 0
+    def test_a_registered_formula_still_applies_to_an_observed_spend(
+        self, tmp_path: pathlib.Path
+    ) -> None:
+        """The mechanism survives the change: a formula in the data is applied, and no
+        number in the code is. 5 and 2 are neither the dropped 3 nor the default 1, so
+        both fields have to be read for this to pass."""
+        synthetic = registry_with_formula(tmp_path, spent=5, unlocked=2)
+        assert unlock_ratio(synthetic) == 5
+        assert unlocked_from_spend(synthetic, 10) == 4
+        assert unlocked_from_spend(synthetic, 9) == 2
+        assert unlocked_from_spend(synthetic, 4) == 0
+        assert unlocked_from_spend(synthetic, -5) is None
+
+    @pytest.mark.parametrize(
+        "formula",
+        [
+            {"kind": "unlock-ratio", "spentPerUnlocked": 0},
+            {"kind": "unlock-ratio", "spentPerUnlocked": -3},
+            {"kind": "unlock-ratio", "spentPerUnlocked": True},
+            {"kind": "unlock-ratio", "spentPerUnlocked": "5"},
+            {"kind": "unlock-ratio", "spentPerUnlocked": 5, "unlockedPerRatio": 0},
+            {"kind": "something-else", "spentPerUnlocked": 5},
+            [5, 2],
+            "5:2",
+        ],
+    )
+    def test_a_malformed_formula_is_refused_rather_than_read_as_no_ratio(
+        self, tmp_path: pathlib.Path, formula: object
+    ) -> None:
+        """A typo in the registry must not reach a screen as 'the official text sets
+        no ratio'."""
+        shipped = json.loads(RULE_REGISTRY_FILE.read_text(encoding="utf-8"))
+        rule = next(r for r in shipped["rules"] if r["id"] == UNLOCK_RULE_ID)
+        path = tmp_path / "registry.json"
+        path.write_text(
+            json.dumps({"_meta": {}, "rules": [dict(rule, formula=formula)]}), encoding="utf-8"
+        )
+        with pytest.raises(MalformedEventError, match="formula"):
+            FlopRuleRegistry.load(path)
 
     def test_a_registry_without_the_rule_returns_none_rather_than_a_guess(self) -> None:
         empty = FlopRuleRegistry(rules=())

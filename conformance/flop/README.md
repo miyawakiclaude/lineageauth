@@ -15,9 +15,11 @@ diff in this directory rather than an edit spread across the code.
 
 ## The rules these files exist to enforce
 
-**No rule is hard-coded.** The 3-to-1 unlock ratio is a `formula` object in
-`rule-registry.json`, not a `3` in a Python file. A provisional figure in a draft
-should be changeable by editing the record of the draft.
+**No rule is hard-coded.** The agent airdrop's 3-to-1 unlock ratio was a
+`formula` object in `rule-registry.json`, never a `3` in a Python file. When the
+teaser and the agent page dropped it on 2026-09-30, removing it took an edit to
+the record of the draft and no number in the code; what the code changed was how
+the mainnet adapter and the passport word the no-ratio case (D-122).
 
 **A rule knows how old it is.** Each rule carries the `sha256` of the source
 document as it was when the rule was written down. `rules.py` compares that hash

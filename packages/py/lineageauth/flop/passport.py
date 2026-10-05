@@ -73,9 +73,9 @@ _FUTURE_SECTIONS: tuple[tuple[str, str], ...] = (
     ),
     (
         "mainnetUnlock",
-        "Mainnet is planned for Q1 2027 in a draft whose figures are provisional. The unlock "
-        "ratio is registered as data and is not applied to anything, because there is no "
-        "observed spend to apply it to.",
+        "Mainnet is planned for Q1 2027 in a draft whose figures are provisional. Since "
+        "2026-09-30 the official text sets no unlock ratio: a locked agent airdrop can be "
+        "spent only on compute, and when it becomes liquid is not yet set (D-122).",
     ),
 )
 

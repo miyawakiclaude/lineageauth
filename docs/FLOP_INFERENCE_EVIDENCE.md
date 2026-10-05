@@ -106,8 +106,17 @@ allows; it can only show what was checked.
 ## Mainnet unlock
 
 `flop.testnet.mainnet.NotYetAvailable` is the only `MainnetUnlockAdapter`.
-It reads the 3-to-1 ratio through `rules.unlock_ratio` from the registry
+It reads the unlock ratio through `rules.unlock_ratio` from the registry
 (`docs/FLOP_RULE_REGISTRY.md`) and answers `not-yet-available` for every
-question. Its observation types have no field that could hold an allocation.
+question. Since 2026-09-30 the teaser and the agent page state no ratio (they
+used to say 3-to-1; a locked agent balance can now only buy compute), and the
+Yellow Paper still calls 3:1 a proposal and leaves whether spend-to-unlock ships
+open in E.38, so the registry carries no formula and the adapter reports none.
+Separately, the draft Yellow Paper's R8.4 says agent scoring derives from
+settled compute-channel spend (its caps and aggregation are still open in
+E.38). That is not what this document's receipts record: a receipt records the
+spend a response states about itself, unverified, and this tool cannot observe
+or verify settled on-chain channel spend. Its observation types have no field
+that could hold an allocation.
 Nothing in this document, the receipt or the passport is a claim about any
 allocation to anyone.

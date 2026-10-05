@@ -116,9 +116,11 @@ class TestSourcesAndRules:
         by_id = {rule["id"]: rule for rule in body["rules"]}
         unlock = by_id["flop-agent-unlock-ratio"]
         assert unlock["status"] == "official-draft"
-        assert unlock["formula"]["spentPerUnlocked"] == 3
+        # D-122: the teaser dropped the 3:1 ratio on 2026-09-30; the rule carries no formula.
+        assert unlock.get("formula") is None
+        assert "not yet set" in unlock["statement"]
         assert unlock["source"]["sourceVersion"] == "0.1 (draft)"
-        assert unlock["source"]["sourceDate"] == "2026-08-26"
+        assert unlock["source"]["sourceDate"] == "2026-09-30"
         assert unlock["freshness"]["freshness"] == "current"
 
     def test_unknown_rules_are_served_as_unknown(self, client: TestClient) -> None:

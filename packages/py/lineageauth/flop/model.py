@@ -416,9 +416,10 @@ class RuleSource:
 class EconomicRule:
     """One published FLOP rule, with the sentence it came from.
 
-    `formula` carries any arithmetic as data. The 3-to-1 unlock ratio lives
-    there rather than in Python, because it is a provisional figure in a draft
-    and the code should not have to change when the draft does.
+    `formula` carries any arithmetic as data. An unlock ratio lives there rather
+    than in Python, because it is a provisional figure in a draft and the code
+    should not have to change when the draft does. The 3-to-1 figure lived there
+    until the teaser dropped it on 2026-09-30; today no rule carries one (D-122).
     """
 
     rule_id: str

@@ -1,11 +1,14 @@
 """The mainnet unlock interface, built now and answering "not yet" to everything.
 
 Directive 17 asks for the interface without the execution, and directive 18 for
-the rule to be data. Both matter for one reason: the published draft says three
-$FLOP spent on inference unlocks one airdropped $FLOP, and that figure sits in a
-document whose own front matter calls its figures provisional. Writing `3` into
-Python would make a draft into a constant, and the day it changes the code would
-disagree with the source while looking authoritative.
+the rule to be data. Both matter for one reason: the published draft said three
+$FLOP spent on inference unlocks one airdropped $FLOP, in a document whose own
+front matter calls its figures provisional. Writing `3` into Python would have
+made a draft into a constant. On 2026-09-30 the teaser and the agent page
+dropped the figure (a locked agent balance can now only buy compute, the release
+schedule is not set, and the Yellow Paper leaves spend-to-unlock open in E.38;
+D-122). Because the ratio was data, no number in this file had to change; what
+did change is how the adapter words the case where no ratio is registered.
 
 So the ratio is read from `conformance/flop/rule-registry.json` via
 `rules.unlock_ratio`, and when the rule is missing or carries no formula the
@@ -48,10 +51,6 @@ class UnlockRuleObservation:
     source_url: str | None
     source_version: str | None
     detail: str
-
-    def unlocked_from(self, spend: int) -> int | None:
-        """Apply the registered formula, or return None when there is none."""
-        return None if self.ratio is None else (spend // self.ratio)
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -135,6 +134,22 @@ class NotYetAvailableMainnetAdapter:
     registry: FlopRuleRegistry
     network_phase: NetworkPhase = NetworkPhase.PRE_TESTNET
 
+    def _why_no_ratio(self) -> str | None:
+        """Why no ratio can be applied, or None when the registry carries one."""
+        rule = self.registry.get(UNLOCK_RULE_ID)
+        if rule is None:
+            return f"{UNLOCK_RULE_ID} is not in the rule registry; {UNKNOWN_FROM_OFFICIAL_SPEC}"
+        if unlock_ratio(self.registry) is not None:
+            return None
+        if rule.formula is None:
+            # The rule is registered but the official text sets no ratio: it says a
+            # locked agent balance can only buy compute and the release schedule is
+            # open. Say that, rather than implying a provisional number exists.
+            return "the official text sets no unlock ratio and leaves the release schedule open"
+        # A formula the loader would refuse, reached by building a registry in code.
+        # The registry's mistake is not the official text's silence.
+        return "the registered formula cannot be applied"
+
     def discover_rule(self) -> UnlockRuleObservation:
         rule = self.registry.get(UNLOCK_RULE_ID)
         ratio = unlock_ratio(self.registry)
@@ -150,6 +165,14 @@ class NotYetAvailableMainnetAdapter:
                     f"{UNLOCK_RULE_ID} is not in the rule registry; {UNKNOWN_FROM_OFFICIAL_SPEC}"
                 ),
             )
+        reason = self._why_no_ratio()
+        if reason is not None:
+            detail = f"{reason}; nothing is computed"
+        else:
+            detail = (
+                "the ratio is read from the rule registry and is provisional; "
+                "no mainnet exists to apply it to"
+            )
         return UnlockRuleObservation(
             rule_id=rule.rule_id,
             status=FeatureStatus.NOT_YET_AVAILABLE,
@@ -157,10 +180,7 @@ class NotYetAvailableMainnetAdapter:
             statement=rule.statement,
             source_url=rule.source.source_url,
             source_version=rule.source.source_version,
-            detail=(
-                "the ratio is read from the rule registry and is provisional; "
-                "no mainnet exists to apply it to"
-            ),
+            detail=detail,
         )
 
     def allocation(self, subject_did: str) -> AllocationObservation:
@@ -185,15 +205,23 @@ class NotYetAvailableMainnetAdapter:
                     "testnet exists to spend on"
                 ),
             )
+        unlocked = unlocked_from_spend(self.registry, observed_spend)
+        reason = self._why_no_ratio()
+        if reason is not None:
+            detail = f"{reason}; nothing is computed from the observed spend"
+        elif unlocked is None:
+            detail = "a negative spend is not an observation; nothing is computed"
+        else:
+            detail = (
+                "computed from the registered provisional formula against observed spend; "
+                "the mainnet does not exist and nothing has been unlocked"
+            )
         return UnlockObservation(
             subject_did=subject_did,
             status=FeatureStatus.NOT_YET_AVAILABLE,
             observed_spend=observed_spend,
-            unlocked=unlocked_from_spend(self.registry, observed_spend),
-            detail=(
-                "computed from the registered provisional formula against observed spend; "
-                "the mainnet does not exist and nothing has been unlocked"
-            ),
+            unlocked=unlocked,
+            detail=detail,
         )
 
     def to_dict(self, subject_did: str, *, observed_spend: int | None = None) -> dict[str, Any]:

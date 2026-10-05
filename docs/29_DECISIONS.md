@@ -2956,3 +2956,58 @@ Git/GitHub writes require confirmation of active account + repository owner + re
 - **Security impact.** None. Nothing signs or sends; the corpus is test
   data and the module still recomputes bytes only. No external write beyond
   the push.
+
+## D-122: sixth official-source snapshot; the teaser drops the agent unlock ratio
+
+- **Date:** 2026-10-05
+- **Problem:** `scripts/flop_sources.py check` reported five quotations no
+  longer in their sources. flop.finance revised the teaser and every
+  `/intro/` page on 2026-09-30, and the Yellow Paper's printed date moved
+  from 2026-09-05 to 2026-09-24 with about a third more text. The change that
+  matters to this tool: the agent airdrop's 3:1 spend-to-unlock ratio, which
+  the registry carried as the only `formula` and which the mainnet adapter
+  applied, is no longer stated by the teaser or the agent page. The teaser now
+  says a locked balance can be spent only on compute and the schedule on which
+  it becomes liquid is not yet set. The Yellow Paper still calls 3:1 a
+  proposal: E.38 leaves the Agent grant horizon and whether spend-to-unlock
+  ships to be ratified, noting that the proposed requirement exceeds projected
+  inference demand.
+- **Decision:** the sixth snapshot, taken by the D-119 script.
+  `flop-agent-unlock-ratio` keeps its id (code and screens look it up by id)
+  but quotes the new sentence and carries no formula, so `rules.unlock_ratio`
+  returns None and the adapter reports no ratio; its detail now says the
+  official text sets none, rather than calling a missing number provisional,
+  and so does the passport's `mainnetUnlock` reason.
+  `flop-agent-unlock-ratio-intro`, `flop-airdrop-vesting-unspecified`,
+  `flop-teaser-unratified-figures` (the 4.4bn genesis pool, now ratified by
+  D-0440) and `flop-agent-wallet-caps` ("epoch-reset" dropped upstream) are
+  re-quoted. `flop-agent-scoring-settled-spend` is new: R8.4 says agent
+  scoring derives from settled compute-channel spend and that a faucet grant,
+  a held balance, a job count or active days create nothing by themselves.
+  All 24 quotations were verified against the fetched bodies; the other 26
+  rules keep their quotations. Four of them needed a new `consequence`
+  because the new Yellow Paper answers what they said was missing:
+  `flop-airdrop-claim-path` is narrowed to the Agent grant's release horizon
+  (R8.8 now specifies `claim_vested`, R8.6 the grant tiers, R8.7 the Miner
+  unlock schedule), `flop-faucet-procedure` (R8.4 mentions a faucet grant),
+  `flop-network-identifier` (`SS58Prefix = 42` on every network; networks are
+  told apart by genesis hash or chain id, neither published) and
+  `flop-genesis-supply-parameter` (D-0440, which superseded D-0438's pool).
+  The loader now refuses a malformed `formula`, so a registry typo cannot be
+  shown as the official text setting no ratio.
+- **What the change shows.** It is the case D-108 built the registry for: a
+  provisional figure in a draft changed, and because it was data no number
+  had to be hunted for in code. The registry edit came with test updates and
+  a change to how the mainnet adapter and the passport word the no-ratio case.
+  The tests keep the mechanism alive with a synthetic one-rule registry that
+  carries a 5:2 formula, figures the code could not supply by itself.
+- **What it means for the user.** In the draft, agent scoring derives from
+  settled compute-channel spend and claiming the faucet alone creates no
+  allocation right; the teaser says the agent airdrop is based largely on
+  inference spend along with various prizes, and the conversion score's caps
+  and aggregation are still open (E.38). When a locked agent allocation
+  becomes liquid is not decided. This tool's receipts record the spend a
+  response states about itself, unverified; it cannot observe or verify
+  settled on-chain channel spend.
+- **Security impact.** None. No signing or sending path changed. No external
+  write beyond the push.

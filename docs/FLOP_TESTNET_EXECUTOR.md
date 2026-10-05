@@ -36,7 +36,7 @@ transport is consulted. Only the simulation — whose destination is
 | `receipts.py` | `FlopTestnetExecutionReceipt`, `receipt_from_response`, `verificationState` |
 | `evidence.py` | receipt → two `artifact.register` drafts + one `attestation.issue` draft, predicate unregistered (`docs/FLOP_INFERENCE_EVIDENCE.md`) |
 | `audit.py` | append-only JSONL, each line committing to the previous; secrets dropped, not masked |
-| `mainnet.py` | `MainnetUnlockAdapter` protocol; `NotYetAvailable` reads the 3:1 ratio from the rule registry |
+| `mainnet.py` | `MainnetUnlockAdapter` protocol; `NotYetAvailable` reads the unlock ratio from the rule registry (none since the teaser dropped 3:1 on 2026-09-30, D-122) |
 | `signer.py` | `Signer` protocol; `NoSigner` only; no parameter anywhere takes a seed, key, keyfile or passphrase |
 | `ports.py` | every seam (`TestnetTransport`, `AuditSink`, `Clock`, `TransportRequest`) so the executor imports no implementation |
 

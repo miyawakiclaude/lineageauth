@@ -15,7 +15,7 @@ import pytest
 from lineageauth.flop.model import TestnetFailure, TestnetRefusedError
 from lineageauth.flop.testnet.mainnet import NotYetAvailableMainnetAdapter
 from lineageauth.flop.testnet.signer import NoSigner
-from tests.flop_testnet_fixtures import AGENT, rules
+from tests.flop_testnet_fixtures import AGENT, registry_with_formula, rules
 
 FLOP_PACKAGE = Path("packages/py/lineageauth/flop")
 
@@ -112,9 +112,14 @@ class TestNoParameterCouldHoldASecret:
 
 class TestMainnetAdapter:
     def test_the_ratio_is_read_from_the_registry_and_not_written_in_python(self) -> None:
+        """D-122: the teaser and the agent page dropped the 3:1 ratio, so the registered
+        rule has no formula and the adapter reports no ratio, with a detail that says why."""
         adapter = NotYetAvailableMainnetAdapter(registry=rules())
         observation = adapter.discover_rule()
-        assert observation.ratio == 3
+        assert observation.ratio is None
+        assert observation.status.value == "not-yet-available"
+        assert "sets no unlock ratio" in observation.detail
+        assert observation.statement is not None and "not yet set" in observation.statement
         source = (FLOP_PACKAGE / "testnet" / "mainnet.py").read_text(encoding="utf-8")
         assert "spentPerUnlocked" not in source
         assert "= 3" not in source
@@ -136,11 +141,52 @@ class TestMainnetAdapter:
         assert body["allocation"]["status"] == "not-yet-available"
         assert body["unlock"]["observedSpend"] is None
 
-    def test_an_observed_spend_uses_the_registered_formula(self) -> None:
+    @pytest.mark.parametrize("spend", [10, -5])
+    def test_an_observed_spend_unlocks_nothing_without_a_formula(self, spend: int) -> None:
+        """The detail must not claim a computation that did not happen."""
         adapter = NotYetAvailableMainnetAdapter(registry=rules())
-        state = adapter.unlock_state(AGENT.did, observed_spend=10)
-        assert state.unlocked == 3
+        state = adapter.unlock_state(AGENT.did, observed_spend=spend)
+        assert state.unlocked is None
         assert state.status.value == "not-yet-available"
+        assert "sets no unlock ratio" in state.detail
+        assert "computed from the registered" not in state.detail
+
+    def test_an_observed_spend_uses_a_registered_formula(self, tmp_path: Path) -> None:
+        """The mechanism is kept: a formula in the data is applied by the adapter. 5 and
+        2 are neither the dropped 3 nor the default 1."""
+        adapter = NotYetAvailableMainnetAdapter(
+            registry=registry_with_formula(tmp_path, spent=5, unlocked=2)
+        )
+        observation = adapter.discover_rule()
+        assert observation.ratio == 5
+        assert "read from the rule registry and is provisional" in observation.detail
+        state = adapter.unlock_state(AGENT.did, observed_spend=10)
+        assert state.unlocked == 4
+        assert "computed from the registered provisional formula" in state.detail
+        negative = adapter.unlock_state(AGENT.did, observed_spend=-5)
+        assert negative.unlocked is None
+        assert "negative spend" in negative.detail
+
+    def test_an_unappliable_formula_is_not_reported_as_the_official_texts_silence(
+        self,
+    ) -> None:
+        """A registry built in code can bypass the loader's formula check; the adapter
+        still must not blame the official text for the registry's mistake."""
+        from dataclasses import replace
+
+        from lineageauth.flop.rules import UNLOCK_RULE_ID, FlopRuleRegistry
+
+        shipped = rules().get(UNLOCK_RULE_ID)
+        assert shipped is not None
+        broken = replace(shipped, formula={"kind": "unlock-ratio", "spentPerUnlocked": 0})
+        adapter = NotYetAvailableMainnetAdapter(registry=FlopRuleRegistry(rules=(broken,)))
+        observation = adapter.discover_rule()
+        assert observation.ratio is None
+        assert "cannot be applied" in observation.detail
+        assert "official text" not in observation.detail
+        state = adapter.unlock_state(AGENT.did, observed_spend=10)
+        assert state.unlocked is None
+        assert "cannot be applied" in state.detail
 
     def test_the_registry_missing_the_rule_reports_not_observed(self) -> None:
         from lineageauth.flop.rules import FlopRuleRegistry
@@ -149,4 +195,6 @@ class TestMainnetAdapter:
         observation = adapter.discover_rule()
         assert observation.ratio is None
         assert observation.status.value == "not-observed"
-        assert observation.unlocked_from(10) is None
+        state = adapter.unlock_state(AGENT.did, observed_spend=10)
+        assert state.unlocked is None
+        assert "not in the rule registry" in state.detail
