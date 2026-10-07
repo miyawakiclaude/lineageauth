@@ -40,7 +40,13 @@ from lineageauth.flop.model import (
     SourceClass,
 )
 from lineageauth.flop.recommend import recommend
-from lineageauth.flop.rules import FlopRuleRegistry
+from lineageauth.flop.rules import (
+    UNLOCK_RULE_ID,
+    FlopRuleRegistry,
+    unlock_ratio,
+    unlock_ratio_gap,
+    unlocked_per_ratio,
+)
 from lineageauth.flop.sources import SourceSnapshotSet
 from lineageauth.flop.wash import detect_wash_signals
 from lineageauth.passport import build_passport
@@ -71,13 +77,54 @@ _FUTURE_SECTIONS: tuple[tuple[str, str], ...] = (
         "miner",
         "Miner participation requires a running network. None is available.",
     ),
-    (
-        "mainnetUnlock",
-        "Mainnet is planned for Q1 2027 in a draft whose figures are provisional. Since "
-        "2026-09-30 the official text sets no unlock ratio: a locked agent airdrop can be "
-        "spent only on compute, and when it becomes liquid is not yet set (D-122).",
-    ),
 )
+
+_MAINNET_PLAN = "Mainnet is planned for Q1 2027 in a draft whose figures are provisional."
+
+
+_GENESIS_RULE_ID = "flop-agent-grant-no-end-block"
+"""The registered rule that says nothing of an Agent grant unlocks at its start block."""
+
+
+def _mainnet_unlock_reason(
+    registry: FlopRuleRegistry | None, snapshot: SourceSnapshotSet | None = None
+) -> str:
+    """Why the mainnet-unlock section is empty.
+
+    The rule ids and the figures are read from the registry; the remaining wording
+    is fixed text. The figure is never written here: D-122 had to rewrite a
+    hard-coded sentence when the teaser withdrew the ratio, and D-123 when the
+    airdrop page restored it. "Nothing liquid at genesis" is said only while the
+    registry carries the rule that states it, and no figure is shown from a rule
+    whose source has moved since it was recorded, or that cannot be checked.
+    """
+    if registry is None:
+        return f"{_MAINNET_PLAN} No rule registry was supplied, so no unlock rule is shown."
+    gap = unlock_ratio_gap(registry)
+    rule = registry.get(UNLOCK_RULE_ID)
+    ratio = unlock_ratio(registry)
+    if gap is not None or rule is None or ratio is None:
+        return f"{_MAINNET_PLAN} No unlock rule is shown: {gap}."
+    standing = {e.rule_id: e for e in registry.freshness(snapshot)} if snapshot is not None else {}
+    unlock_standing = standing.get(UNLOCK_RULE_ID)
+    if unlock_standing is not None and not unlock_standing.may_be_treated_as_current:
+        return (
+            f"{_MAINNET_PLAN} The registered unlock rule ({rule.rule_id}) is not shown: "
+            f"{unlock_standing.detail}."
+        )
+    genesis_standing = standing.get(_GENESIS_RULE_ID)
+    genesis = (
+        f", with nothing liquid at genesis ({_GENESIS_RULE_ID})"
+        if registry.get(_GENESIS_RULE_ID) is not None
+        and (genesis_standing is None or genesis_standing.may_be_treated_as_current)
+        else ""
+    )
+    return (
+        f"{_MAINNET_PLAN} The draft rule in the registry ({rule.rule_id}) unlocks "
+        f"{unlocked_per_ratio(registry)} $FLOP of a locked agent airdrop for every {ratio} "
+        f"$FLOP of the locked balance spent in settled sessions{genesis}. There is no mainnet "
+        "to observe it on."
+    )
 
 
 def _identity_section(
@@ -221,6 +268,13 @@ def build_flop_passport(
     ]
     for section_id, reason in _FUTURE_SECTIONS:
         sections.append(PassportSection(section_id=section_id, status=_NOT_YET, reason=reason))
+    sections.append(
+        PassportSection(
+            section_id="mainnetUnlock",
+            status=_NOT_YET,
+            reason=_mainnet_unlock_reason(registry, snapshot),
+        )
+    )
 
     warnings = list(collection.warnings)
     if snapshot is not None and registry is not None:

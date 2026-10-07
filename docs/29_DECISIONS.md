@@ -3011,3 +3011,79 @@ Git/GitHub writes require confirmation of active account + repository owner + re
   settled on-chain channel spend.
 - **Security impact.** None. No signing or sending path changed. No external
   write beyond the push.
+
+## D-123: seventh official-source snapshot; testnet and airdrop pages, and 3:1 back
+
+- **Date:** 2026-10-07
+- **Problem:** two days after D-122, `check` reported one broken quotation
+  (the Yellow Paper's E.38 list) and wording changes on nine pages. The cause:
+  on 2026-10-05 flop.finance published `/testnet/`, `/airdrop/` and
+  `/whitepaper/` and reworked its navigation. The airdrop page states the agent
+  unlock as 3:1 in settled sessions with no end date, and the Yellow Paper now
+  makes the same rule normative ("one FLOP of principal for each three FLOP of
+  its locked part", no end block), reversing the situation D-122 recorded; the
+  teaser and the agent intro page still say the schedule is not set. Of the
+  nine pages whose wording moved, all but one changed only navigation and the
+  footer date; `/intro/revenue/` now also states "every 3 FLOP spent unlocks
+  1" (D-0522), as does the whitepaper's glossary. The testnet page says, for
+  the first time on a public page, that an agent needs a DID and a wallet (the
+  whitepaper of the same date says so too), and sets a minimum-activity floor
+  for every role. Its "what counts" (compute purchased in settled sessions) and
+  its faucet restate R8.4 (`flop-agent-scoring-settled-spend`, D-122) and the
+  teaser. Its four fairness rules are one participant one score, independent
+  demand only, fraud forfeits (subject to appeal; R8.4 already zeroed a
+  fraud-flagged account) and security disclosure (exploiting a vulnerability
+  forfeits eligibility).
+- **Decision:** the seventh snapshot. `scripts/flop_sources.py snapshot` gains
+  `--add ID=URL` and `--status ID=STATUS`, so a new official page enters the
+  snapshot as "added" (history says so) with a status a person states; a new
+  source without a stated status is refused. The four new sources are the
+  three pages and `flop.finance/llms.txt`, the site's own index. In the
+  registry: `flop-agent-unlock-ratio` quotes the airdrop page and carries the
+  3:1 formula again; the teaser's lagging sentence becomes
+  `flop-teaser-agent-release-unset` so the disagreement is visible; the Yellow
+  Paper's rule is recorded as `flop-agent-unlock-yellowpaper` and
+  `flop-agent-grant-no-end-block`; `flop-airdrop-claim-path` becomes a
+  quotation of R8.8 (six unknowns remain); ten rules from the testnet and
+  airdrop pages are new (`flop-security-disclosure` added in review). All 38
+  quotations verified against the fetched bodies. Teaser rules keep the date
+  of the teaser's version panel, 2026-09-30, as earlier snapshots kept the
+  panel's date over the footer's. New statements are stored with ASCII dashes
+  and arrows, as the registry already did, so the CLI output stays ASCII. The
+  formula's note says that flooring whole FLOP is this tool's simplification
+  (the Yellow Paper floors base units of 10^-18 FLOP) and that the floor(3P/4)
+  spend cap is not modelled.
+- **Code.** The passport's mainnet-unlock sentence is now built from the
+  registry (rule id and figures read from the formula) instead of a sentence
+  D-122 had hard-coded, which this change would otherwise have made false. It
+  says that only spend of the locked balance counts, says "nothing liquid at
+  genesis" only while `flop-agent-grant-no-end-block` is registered and
+  current, and shows no figure from a rule that is stale or cannot be checked
+  against the snapshot it is given. `rules.unlock_ratio_gap` and `rules.unlocked_per_ratio`
+  are shared by the passport and the mainnet adapter, so a missing rule, a
+  missing formula and an unappliable formula are worded the same way in both,
+  none of them as a claim about the official text, and the figure a screen
+  shows is the one the computation uses. `scripts/flop_sources.py` refuses a
+  repeated id in any flag, an added URL that is already a source, and a
+  missing or invalid `--status` or an override naming no source before it
+  fetches anything, and turns a library refusal into one line.
+- **What it means for the user.** In the draft (the testnet and airdrop pages,
+  both marked Draft and updated 2026-10-05, and a Yellow Paper that is not
+  final), for
+  the agent airdrop: settled purchases of compute on the testnet are what
+  count; claiming the faucet and holding tokens earn nothing; wallets under
+  common control are scored as one participant, so splitting activity across
+  them earns no additional allocation; paying a miner one controls and moving
+  value between one's own wallets are not credited as demand; an account
+  flagged for manufactured activity forfeits its allocation, subject to appeal
+  within the review window; exploiting a vulnerability forfeits eligibility.
+  The testnet is the only route to the three cohort airdrops; the ecosystem
+  reserve may make discretionary allocations, announced before the snapshot.
+  An agent allocation is entirely locked at genesis and unlocks one FLOP for
+  every three FLOP of the locked balance spent in settled sessions, with no end
+  date; what becomes of principal that is never unlocked is still open (E.38).
+- **Security impact.** None. No signing or sending path changed. The new
+  pages were read only; the miner, validator and KOL application links on the
+  front page lead to Google Forms and were not submitted. No external write
+  beyond the push.
+

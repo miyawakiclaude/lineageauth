@@ -128,15 +128,16 @@ class TestLookalikesAreLouderThanUnknowns:
 class TestTheRecordedSnapshot:
     def test_it_loads_and_records_when_it_was_taken(self) -> None:
         snapshot = load_snapshot()
-        assert snapshot.fetched_at == "2026-10-05T02:04:55Z"
+        assert snapshot.fetched_at == "2026-10-07T01:07:50Z"
         assert len(snapshot.snapshots) >= 15
 
     def test_the_wording_is_hashed_beside_the_bytes(self) -> None:
         """A page rebuilt without a word changing moves its byte hash and not its text
         hash (D-117). Every fetched body carries both, every history entry says which
-        moved. At the sixth snapshot (D-122) the flop.finance revision of 2026-09-30
-        changed the wording of the teaser, the Yellow Paper and every /intro/ page,
-        while the front page, the brand page and all Technocore documents did not."""
+        moved. At the seventh snapshot (D-123) the 2026-10-05 navigation change moved the
+        wording of the front page, the teaser, the Yellow Paper and every /intro/ page,
+        while the brand page and all Technocore documents did not, and four new pages
+        were added."""
         document = json.loads(OFFICIAL_SOURCES_FILE.read_text(encoding="utf-8"))
         for entry in document["sources"]:
             if entry["sha256"] is not None:
@@ -147,11 +148,20 @@ class TestTheRecordedSnapshot:
         assert verdicts <= {"unchanged", "changed", "not-compared"}
         assert history["flop-finance-yellowpaper"]["change"] == "hash-changed"
         assert history["flop-finance-yellowpaper"]["text"] == "changed"
-        assert history["flop-finance-home"]["change"] == "hash-changed"
-        assert history["flop-finance-home"]["text"] == "unchanged"
+        assert history["flop-finance-brand"]["text"] == "unchanged"
+        added = sorted(item["id"] for item in history.values() if item["change"] == "added")
+        assert added == sorted(
+            [
+                "flop-finance-testnet",
+                "flop-finance-airdrop",
+                "flop-finance-whitepaper",
+                "flop-finance-llms",
+            ]
+        )
         changed = sorted(item["id"] for item in history.values() if item["text"] == "changed")
         assert changed == sorted(
             [
+                "flop-finance-home",
                 "flop-finance-teaser",
                 "flop-finance-yellowpaper",
                 "flop-finance-intro",
@@ -184,10 +194,12 @@ class TestTheRecordedSnapshot:
         assert teaser is not None
         assert teaser.status == "official-draft"
         assert teaser.version_hint is not None
-        assert "2026-09-30" in teaser.version_hint
+        # The version panel's date, not the site footer's: on 2026-10-05 only the
+        # navigation and the footer moved (D-123).
+        assert "Updated 2026-09-30 (version panel" in teaser.version_hint
 
     def test_what_is_missing_is_recorded_as_missing(self) -> None:
-        """Seven unanswered questions, listed so a screen can show them."""
+        """Six unanswered questions since D-123, listed so a screen can show them."""
         ids = {entry["id"] for entry in load_snapshot().not_observed}
         assert {"testnet-endpoint", "faucet-procedure", "inference-api"} <= ids
 

@@ -94,7 +94,7 @@ From executor directive §35, the activation session is complete only when:
 
 ## What must still be unknown until then
 
-The seven `unknown` rules in `docs/FLOP_RULE_REGISTRY.md`. Until each is
+The six `unknown` rules in `docs/FLOP_RULE_REGISTRY.md`. Until each is
 answered by an official source with a hash on record, the corresponding
 checklist item cannot be checked honestly, and the phase cannot move. A
 community post that answers one of them moves nothing: `classify_source`

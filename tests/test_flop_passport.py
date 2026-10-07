@@ -17,6 +17,8 @@ import json
 import re
 from datetime import UTC, datetime, timedelta
 
+import pytest
+
 from lineageauth.builders import (
     build_artifact_receipt,
     build_artifact_register,
@@ -41,7 +43,7 @@ from lineageauth.flop.model import (
     forbidden_vocabulary_in,
 )
 from lineageauth.flop.passport import build_flop_passport
-from lineageauth.flop.rules import FlopRuleRegistry
+from lineageauth.flop.rules import RULE_REGISTRY_FILE, FlopRuleRegistry
 from lineageauth.flop.sources import load_snapshot
 from tests.testkeys import AGENT_1, OUTSIDER, ROOT_A, unsafe_signer
 
@@ -119,15 +121,113 @@ class TestSectionsSayWhyTheyAreEmpty:
             assert sections[name].reason, name
 
     def test_the_mainnet_unlock_section_matches_the_registry(self) -> None:
-        """D-122: no unlock ratio is registered, so the passport must not say one is."""
+        """D-123: the shipped registry carries the airdrop page's 3:1 rule, and the
+        passport says what the registry says, figure included."""
         from lineageauth.flop.rules import FlopRuleRegistry, unlock_ratio
 
-        assert unlock_ratio(FlopRuleRegistry.load()) is None
-        sections = {section.section_id: section for section in build().sections}
+        registry = FlopRuleRegistry.load()
+        assert unlock_ratio(registry) == 3
+        sections = {s.section_id: s for s in build(registry=registry).sections}
         reason = sections["mainnetUnlock"].reason
-        assert "sets no unlock ratio" in reason
-        assert "not yet set" in reason
-        assert "registered" not in reason
+        # Only spend of the locked balance counts (airdrop page, Yellow Paper R8.7).
+        assert "for every 3 $FLOP of the locked balance spent in settled sessions" in reason
+        assert "flop-agent-unlock-ratio" in reason
+        assert "nothing liquid at genesis (flop-agent-grant-no-end-block)" in reason
+
+    def test_the_mainnet_unlock_figure_is_read_not_written(self, tmp_path) -> None:
+        """5 and 2 come only from the data; a constant in the code could not produce them.
+        The one-rule registry has no genesis rule, so nothing is said about genesis."""
+        from tests.flop_testnet_fixtures import registry_with_formula
+
+        registry = registry_with_formula(tmp_path, spent=5, unlocked=2)
+        reason = {s.section_id: s for s in build(registry=registry).sections}[
+            "mainnetUnlock"
+        ].reason
+        assert "unlocks 2 $FLOP" in reason
+        assert "for every 5 $FLOP of the locked balance spent" in reason
+        assert "genesis" not in reason
+
+    def test_without_a_formula_the_passport_says_what_the_registry_records(self, tmp_path) -> None:
+        """No formula is the registry's record, not proof that no official page states a
+        ratio, so the passport does not speak for the official text."""
+        from tests.flop_testnet_fixtures import registry_without_formula
+
+        sections = {
+            s.section_id: s for s in build(registry=registry_without_formula(tmp_path)).sections
+        }
+        reason = sections["mainnetUnlock"].reason
+        assert "carries no unlock formula" in reason
+        assert "official text" not in reason
+        assert "for every" not in reason
+
+    def test_a_registry_without_the_rule_is_not_the_official_texts_silence(self) -> None:
+        reason = {s.section_id: s for s in build(registry=FlopRuleRegistry(rules=())).sections}[
+            "mainnetUnlock"
+        ].reason
+        assert "not in the rule registry" in reason
+        assert "UNKNOWN_FROM_OFFICIAL_SPEC" in reason
+        assert "official text" not in reason
+        assert "for every" not in reason
+
+    def test_an_unappliable_formula_is_reported_as_the_registrys_mistake(self) -> None:
+        """A registry built in code bypasses the loader's check; same words as the
+        mainnet adapter, which reads the same judgement."""
+        from dataclasses import replace
+
+        from lineageauth.flop.rules import UNLOCK_RULE_ID
+
+        shipped = FlopRuleRegistry.load().get(UNLOCK_RULE_ID)
+        assert shipped is not None
+        broken = replace(shipped, formula={"kind": "unlock-ratio", "spentPerUnlocked": 0})
+        reason = {
+            s.section_id: s for s in build(registry=FlopRuleRegistry(rules=(broken,))).sections
+        }["mainnetUnlock"].reason
+        assert "cannot be applied" in reason
+        assert "official text" not in reason
+        assert "for every" not in reason
+
+    @pytest.mark.parametrize("per", ["null", "absent", 0, "two", True])
+    def test_the_unlocked_figure_is_the_one_the_computation_uses(self, tmp_path, per) -> None:
+        """Whatever unlockedPerRatio holds, the passport shows the figure that
+        unlocked_from_spend applies: never 'None', '0' or 'two' beside a computation
+        that used 1. null loads (the field is optional); the rest are built in code."""
+        from dataclasses import replace
+
+        from lineageauth.flop.rules import UNLOCK_RULE_ID, unlocked_from_spend
+        from tests.flop_testnet_fixtures import registry_with_formula
+
+        if per == "null":
+            shipped = json.loads(RULE_REGISTRY_FILE.read_text(encoding="utf-8"))
+            rule = next(r for r in shipped["rules"] if r["id"] == UNLOCK_RULE_ID)
+            formula = {"kind": "unlock-ratio", "spentPerUnlocked": 4, "unlockedPerRatio": None}
+            path = tmp_path / "registry-null.json"
+            path.write_text(
+                json.dumps({"_meta": {}, "rules": [dict(rule, formula=formula)]}),
+                encoding="utf-8",
+            )
+            registry = FlopRuleRegistry.load(path)
+        elif per == "absent":
+            registry = registry_with_formula(tmp_path, spent=4)
+        else:
+            base = registry_with_formula(tmp_path, spent=4).get(UNLOCK_RULE_ID)
+            assert base is not None
+            built = replace(
+                base,
+                formula={"kind": "unlock-ratio", "spentPerUnlocked": 4, "unlockedPerRatio": per},
+            )
+            registry = FlopRuleRegistry(rules=(built,))
+        assert unlocked_from_spend(registry, 8) == 2
+        reason = {s.section_id: s for s in build(registry=registry).sections}[
+            "mainnetUnlock"
+        ].reason
+        assert "unlocks 1 $FLOP" in reason
+        assert "for every 4 $FLOP" in reason
+        for wrong in ("None", "unlocks 0", "two", "True"):
+            assert wrong not in reason
+
+    def test_without_a_registry_no_rule_is_claimed(self) -> None:
+        sections = {s.section_id: s for s in build().sections}
+        assert "No rule registry was supplied" in sections["mainnetUnlock"].reason
 
     def test_the_inference_section_explains_rather_than_showing_a_zero(self) -> None:
         sections = {section.section_id: section for section in build().sections}
@@ -252,6 +352,55 @@ class TestStaleRulesSurfaceAsWarnings:
         )
         passport = build(registry=FlopRuleRegistry.load(), snapshot=moved)
         assert any("RULE UPDATED" in warning for warning in passport.warnings)
+
+    def test_a_stale_unlock_rule_shows_no_figure(self) -> None:
+        """The section text carries figures since D-123, so it must honour freshness
+        itself: a moved airdrop page (say, now 4:1) must not leave 'for every 3' on
+        the passport as though it were current. It names the rule and says why."""
+        from dataclasses import replace
+
+        snapshot = load_snapshot()
+        moved = replace(
+            snapshot,
+            snapshots=tuple(
+                replace(entry, sha256="sha256:" + "ef" * 32)
+                if entry.source_id == "flop-finance-airdrop"
+                else entry
+                for entry in snapshot.snapshots
+            ),
+        )
+        passport = build(registry=FlopRuleRegistry.load(), snapshot=moved)
+        reason = {s.section_id: s for s in passport.sections}["mainnetUnlock"].reason
+        assert "RULE UPDATED" in reason
+        assert "flop-agent-unlock-ratio" in reason
+        assert "for every" not in reason
+
+    def test_a_current_unlock_rule_shows_its_figure_with_a_snapshot(self) -> None:
+        passport = build(registry=FlopRuleRegistry.load(), snapshot=load_snapshot())
+        reason = {s.section_id: s for s in passport.sections}["mainnetUnlock"].reason
+        assert "for every 3 $FLOP of the locked balance" in reason
+        assert "RULE UPDATED" not in reason
+        assert "nothing liquid at genesis" in reason
+
+    def test_a_stale_genesis_rule_drops_the_genesis_clause(self) -> None:
+        """'Nothing liquid at genesis' comes from the Yellow Paper's rule; if that page
+        moved, the clause goes, while the airdrop page's figure stays."""
+        from dataclasses import replace
+
+        snapshot = load_snapshot()
+        moved = replace(
+            snapshot,
+            snapshots=tuple(
+                replace(entry, sha256="sha256:" + "ef" * 32)
+                if entry.source_id == "flop-finance-yellowpaper"
+                else entry
+                for entry in snapshot.snapshots
+            ),
+        )
+        passport = build(registry=FlopRuleRegistry.load(), snapshot=moved)
+        reason = {s.section_id: s for s in passport.sections}["mainnetUnlock"].reason
+        assert "for every 3 $FLOP of the locked balance" in reason
+        assert "genesis" not in reason
 
     def test_the_current_snapshot_produces_no_stale_warning(self) -> None:
         passport = build(registry=FlopRuleRegistry.load(), snapshot=load_snapshot())

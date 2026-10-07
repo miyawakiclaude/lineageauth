@@ -5,7 +5,8 @@ figures are provisional. A tool built on that has two obligations. The first is
 never to hard-code any of it -- an unlock ratio, when the official text sets one,
 is a `formula` object in `conformance/flop/rule-registry.json`, and
 `unlock_ratio` reads it. The 3-to-1 figure was carried that way until the teaser
-dropped it on 2026-09-30; today no rule carries a formula (D-122). The second
+dropped it on 2026-09-30 (D-122), and is carried that way again since the airdrop
+page and the Yellow Paper stated it on 2026-10-05 (D-123). The second
 is to notice when the draft moves: every rule records the hash of its source
 document as it was when the rule was written down, and `freshness` compares that
 against the current snapshot. A mismatch is `RULE UPDATED`, and a stale rule is
@@ -314,24 +315,57 @@ def unlock_ratio(registry: FlopRuleRegistry) -> int | None:
     return value
 
 
+def unlocked_per_ratio(registry: FlopRuleRegistry) -> int:
+    """How much one completed ratio of spend unlocks: the formula's `unlockedPerRatio`.
+
+    1 when it is absent, null or not a positive integer -- the loader lets an
+    optional null through, and a registry built in code is not checked at all. Every
+    caller that shows or applies the figure reads it here, so a screen and a
+    computation can never disagree about the same formula.
+    """
+    rule = registry.get(UNLOCK_RULE_ID)
+    if rule is None or rule.formula is None:
+        return 1
+    candidate = rule.formula.get("unlockedPerRatio")
+    if isinstance(candidate, int) and not isinstance(candidate, bool) and candidate > 0:
+        return candidate
+    return 1
+
+
+def unlock_ratio_gap(registry: FlopRuleRegistry) -> str | None:
+    """Why no unlock ratio can be applied, or None when the registry carries one.
+
+    Three different situations, said differently: the rule is missing from the
+    registry, the rule carries no formula, or the formula cannot be applied. None of
+    them is a statement about the official text; the registry's mistake is not the
+    official text's silence, and a missing formula is what the registry records,
+    not proof that no official page states a ratio.
+    """
+    rule = registry.get(UNLOCK_RULE_ID)
+    if rule is None:
+        return f"{UNLOCK_RULE_ID} is not in the rule registry; {UNKNOWN_FROM_OFFICIAL_SPEC}"
+    if unlock_ratio(registry) is not None:
+        return None
+    if rule.formula is None:
+        return f"{UNLOCK_RULE_ID} carries no unlock formula, so the registry records no ratio"
+    # A formula the loader would refuse, reached by building a registry in code.
+    return "the registered formula cannot be applied"
+
+
 def unlocked_from_spend(registry: FlopRuleRegistry, spend: int) -> int | None:
     """Apply the registered unlock formula to an observed spend.
 
     Observed. There is no testnet, so nothing calls this with a real number yet,
     and the signature takes an integer of $FLOP actually spent rather than an
     estimate -- `docs/FLOP_DATA_MODEL` and the directive both say never to
-    calculate spend from a guess.
+    calculate spend from a guess. The floor is taken in whatever unit the spend
+    is given in: the Yellow Paper floors in base units of 10^-18 FLOP, so whole
+    FLOP rounds down further than it does (the formula's note says so).
     """
     ratio = unlock_ratio(registry)
     if ratio is None or spend < 0:
         return None
-    rule = registry.get(UNLOCK_RULE_ID)
-    per_ratio = 1
-    if rule is not None and rule.formula is not None:
-        candidate = rule.formula.get("unlockedPerRatio")
-        if isinstance(candidate, int) and not isinstance(candidate, bool) and candidate > 0:
-            per_ratio = candidate
-    return (spend // ratio) * per_ratio
+    return (spend // ratio) * unlocked_per_ratio(registry)
 
 
 def rules_for_phase(registry: FlopRuleRegistry, phases: Iterable[str]) -> tuple[EconomicRule, ...]:
@@ -348,5 +382,7 @@ __all__ = [
     "RuleFreshness",
     "rules_for_phase",
     "unlock_ratio",
+    "unlock_ratio_gap",
     "unlocked_from_spend",
+    "unlocked_per_ratio",
 ]

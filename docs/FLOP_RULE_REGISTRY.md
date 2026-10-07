@@ -11,16 +11,15 @@ The teaser's own front matter says its figures are provisional and may change.
 ## Why a file
 
 A provisional figure in a draft should be changeable by editing the record of
-the draft, and that is what happened. The agent airdrop's 3-to-1 unlock ratio
-was a `formula` object, never a `3` in a Python file; on 2026-09-30 the teaser
-and the agent page dropped it, and removing it took an edit to this registry and
-no number in the code (D-122). The rule now quotes the new text and carries no
-formula, so `rules.unlock_ratio` returns nothing and `flop.testnet.mainnet`
-answers "not yet available" rather than guessing; what the code changed was how
-the adapter and the passport word that case (`docs/FLOP_TESTNET_EXECUTOR.md`,
-mainnet adapter). The
-loader refuses a malformed formula, so a typo here cannot pass for the official
-text setting no ratio.
+the draft, and in two weeks it changed twice. The agent airdrop's 3-to-1 unlock
+ratio was a `formula` object, never a `3` in a Python file. On 2026-09-30 the
+teaser and the agent page dropped it and the formula came out of the registry
+(D-122); on 2026-10-05 the new airdrop page stated it again and the Yellow Paper
+made it a normative Agent grant rule, so the formula went back in, quoting the
+airdrop page (D-123). Neither change needed a number edited in code.
+`flop.testnet.mainnet` and the passport read the ratio through
+`rules.unlock_ratio` and say "not yet available" when no formula is registered
+(`docs/FLOP_TESTNET_EXECUTOR.md`, mainnet adapter).
 
 ## Record shape
 
@@ -56,25 +55,27 @@ part of every `ExecutionPlan`, and an approval granted under one rule set is
 A rule whose `hash` is `null` cannot be checked and is reported as
 `UNVERIFIABLE` freshness — one such rule exists, below.
 
-## The rules, at snapshot 2026-10-05T02:04:55Z
+## The rules, at snapshot 2026-10-07T01:07:50Z
 
-The sixth snapshot. flop.finance revised its pages on 2026-09-30: the teaser
-and every `/intro/` page print the new date, and the Yellow Paper's printed
-date moved to 2026-09-24 with about a third more text. For the agent airdrop
-the change is substantive: the teaser and the agent page no longer state the
-3-to-1 spend-to-unlock ratio, a locked agent balance can now be spent only on
-compute, and the release schedule is not set. The Yellow Paper still calls 3:1
-a proposal: E.38 leaves the Agent grant horizon and whether spend-to-unlock
-ships to be ratified, noting that the proposed requirement exceeds projected
-inference demand. Separately, the Yellow Paper's new R8.4 says agent scoring
-derives from settled compute-channel spend (the conversion score's caps and
-aggregation are open in E.38), and its new R8.6-R8.8 define grant landing, the
-Miner and Validator unlock schedules and the claim call (`claim_vested`); the
-Validator release order and the Agent grant's release horizon stay open. The
-front page, the brand page and every Technocore document kept their wording. Every rule below was re-verified
-mechanically: its quotation is a substring of the body its source hash names,
-or it is marked derived or unknown. The previous snapshot's hashes are kept in
-`official-sources.json` under `_meta.history`.
+The seventh snapshot. On 2026-10-05 flop.finance published three new pages,
+`/testnet/`, `/airdrop/` and `/whitepaper/`, and reworked its navigation, which
+moved the wording of the front page, the teaser and every `/intro/` page. For
+all of them but one that was the navigation and the footer date: the teaser's
+version panel still reads 2026-09-30, and its rules keep that date. The
+exception is `/intro/revenue/`, which now states the agent unlock as "every 3
+FLOP spent unlocks 1" (D-0522) in its pool projection; the whitepaper's
+glossary gives the same figure. The new pages are now watched, with
+`flop.finance/llms.txt`, the site's own index of its protocol documents. The
+airdrop page gives the agent unlock as 3:1 in settled sessions with no end
+date, and the Yellow Paper makes the same rule normative (its printed header
+still says 2026-09-24 and its footer 2026-10-05; the body was revised). The
+teaser and the agent intro page still say the schedule is not set. The testnet
+page says what an agent needs and what counts, including a minimum-activity
+floor for every role, and sets out four fairness rules: one participant one
+score, independent demand only, fraud forfeits and security disclosure. Every rule
+below was re-verified mechanically: its quotation is a substring of the body
+its source hash names, or it is marked derived or unknown. The previous
+snapshot's hashes are kept in `official-sources.json` under `_meta.history`.
 
 <!-- flop-rules-table:begin -->
 | id | status | phase | source | what it records |
@@ -88,10 +89,23 @@ or it is marked derived or unknown. The previous snapshot's hashes are kept in
 | `flop-agent-airdrop-allocation` | official-draft | genesis | `flop-finance-teaser` | Agents up to 1,200,000,000 (6.6%) Compute consumed through inference requests |
 | `flop-agent-airdrop-basis` | official-draft | testnet | `flop-finance-teaser` | Agents - claim a test-token faucet and spend it on inference. Their airdrop is based largely on what they s... |
 | `flop-agent-scoring-settled-spend` | official-draft | genesis | `flop-finance-yellowpaper` | A faucet grant, sponsored bond, or transferred balance MUST NOT by itself create an allocation right; held... |
-| `flop-agent-unlock-ratio` | official-draft | mainnet | `flop-finance-teaser` | It arrives locked, and a locked balance can be spent only on compute; the schedule on which it becomes liqu... |
+| `flop-testnet-sole-route` | official-draft | testnet | `flop-finance-testnet` | The Flop Testnet is the pre-launch operating period of the network and the sole route to the genesis airdrop. |
+| `flop-agent-participation` | official-draft | testnet | `flop-finance-testnet` | Agent A decentralised identifier (DID) and a wallet, with access to the test-token faucet Purchase inferenc... |
+| `flop-agent-what-counts` | official-draft | testnet | `flop-finance-testnet` | Agents - compute purchased in settled sessions. Holding test tokens earns nothing. |
+| `flop-agent-allocation-pro-rata` | official-draft | genesis | `flop-finance-airdrop` | Agents - supply demand. The allocation is shared pro rata to compute purchased in settled sessions. A fauce... |
+| `flop-minimum-activity-floor` | official-draft | testnet | `flop-finance-testnet` | Minimum activity - each role has a floor below which no allocation is earned, so dormant accounts do not di... |
+| `flop-one-participant-one-score` | official-draft | testnet | `flop-finance-testnet` | One participant, one score - wallets under common control are scored as a single participant; dividing acti... |
+| `flop-independent-demand-only` | official-draft | testnet | `flop-finance-testnet` | Independent demand only - spend routed to a miner under common control, or circulated between wallets under... |
+| `flop-fraud-forfeits` | official-draft | testnet | `flop-finance-testnet` | Fraud forfeits - an account flagged for manufactured activity forfeits its allocation, subject to appeal wi... |
+| `flop-security-disclosure` | official-draft | testnet | `flop-finance-testnet` | Security disclosure - vulnerabilities reported responsibly during the testnet are rewarded from the ecosyst... |
+| `flop-testnet-snapshot-height` | official-draft | genesis | `flop-finance-testnet` | The record is frozen at a published, finalized block height. Activity after that height is not credited, an... |
+| `flop-agent-unlock-ratio` | official-draft | mainnet | `flop-finance-airdrop` | Spendable only on inference. Every 3 $FLOP of the locked balance spent in settled sessions unlocks 1 $FLOP,... |
 | `flop-agent-unlock-ratio-intro` | official-draft | mainnet | `flop-finance-intro-agent` | Locked agent airdrop can be spent only on compute: opening or topping up inference sessions. When it become... |
+| `flop-teaser-agent-release-unset` | official-draft | mainnet | `flop-finance-teaser` | It arrives locked, and a locked balance can be spent only on compute; the schedule on which it becomes liqu... |
+| `flop-agent-unlock-yellowpaper` | official-draft | mainnet | `flop-finance-yellowpaper` | It MUST unlock only against spend credit: one FLOP of principal for each three FLOP of its locked part (R8.... |
+| `flop-agent-grant-no-end-block` | official-draft | mainnet | `flop-finance-yellowpaper` | An Agent grant MUST NOT unlock any principal at its start block, and it has no end block. |
 | `flop-testnet-settlement` | official-draft | genesis | `flop-finance-teaser` | At the end of the testnet, results are settled into the genesis block. The bulk of the pool is expected to... |
-| `flop-airdrop-vesting-unspecified` | official-draft | genesis | `flop-finance-yellowpaper` | The conversion score, validator activity basis, Validator release order, agent release horizon, and reserve... |
+| `flop-airdrop-vesting-unspecified` | official-draft | genesis | `flop-finance-yellowpaper` | The conversion score, validator activity basis, Validator release order, and reserve disposition remain ope... |
 | `flop-account-features` | official-draft | mainnet | `flop-finance-teaser` | The Flop Network account-based system allows agents to do the following: Token transfers Multisig Proxy / a... |
 | `flop-agent-wallet-caps` | official-draft | mainnet | `flop-finance-yellowpaper` | pallet_session_keys + pallet_agent_wallet let an owner pre-authorize a delegate agent with a lifetime cap,... |
 | `flop-session-key-lifetime` | official-draft | mainnet | `flop-finance-yellowpaper` | The session-key lifetime MUST be <= 864,000 blocks ( SessionKeysMaxDuration ). |
@@ -111,66 +125,85 @@ instead of being handed yo... |
 | `flop-inference-pricing` | unknown | testnet | `flop-finance-yellowpaper` | `UNKNOWN_FROM_OFFICIAL_SPEC` |
 | `flop-network-identifier` | unknown | testnet | `flop-finance-yellowpaper` | `UNKNOWN_FROM_OFFICIAL_SPEC` |
 | `flop-auth-signing-scheme` | unknown | testnet | `flop-finance-yellowpaper` | `UNKNOWN_FROM_OFFICIAL_SPEC` |
-| `flop-airdrop-claim-path` | unknown | genesis | `flop-finance-yellowpaper` | `UNKNOWN_FROM_OFFICIAL_SPEC` |
+| `flop-airdrop-claim-path` | official-draft | mainnet | `flop-finance-yellowpaper` | claim_vested MUST use the finalized head to calculate the unlocked amount, subtract the amount already clai... |
 <!-- flop-rules-table:end -->
 
-No rule carries a `formula` at this snapshot. Until 2026-09-30,
-`flop-agent-unlock-ratio` carried `{"kind": "unlock-ratio", "spentPerUnlocked":
-3, "unlockedPerRatio": 1}`; the teaser and the agent page dropped the ratio,
-no current text sets one, and the formula went with it.
+The `formula` for `flop-agent-unlock-ratio`, restored at this snapshot:
+
+```json
+{
+  "kind": "unlock-ratio",
+  "cohort": "agents",
+  "spentPerUnlocked": 3,
+  "unlockedPerRatio": 1,
+  "unit": "FLOP",
+  "expression": "unlocked = floor(lockedSpendInSettledSessions / spentPerUnlocked) * unlockedPerRatio"
+}
+```
 
 What changed for a reader of the previous table:
 
-- `flop-agent-unlock-ratio` and `flop-agent-unlock-ratio-intro` no longer quote
-  a 3:1 unlock. A locked agent balance can be spent only on compute, and when it
-  becomes liquid is not set.
-- `flop-airdrop-vesting-unspecified` now quotes the Yellow Paper's list of what
-  remains open in E.38, the agent release horizon among it.
-- `flop-teaser-unratified-figures` quotes the banner's new wording: the 4.4bn
-  genesis pool, ratified by D-0440 (the figure itself has been 4.4bn since the
-  third snapshot).
-- `flop-agent-wallet-caps` lost the words "(epoch-reset)" in the source.
-- `flop-agent-scoring-settled-spend` is new: the Yellow Paper's R8.4 says agent
-  scoring derives from settled compute-channel spend, and that a faucet grant
-  alone creates no allocation right. It is a scoring rule of the draft, not an
-  unlock rule, and the teaser still says the airdrop is based largely on
-  inference spend along with various prizes.
+- `flop-agent-unlock-ratio` quotes the airdrop page's unlock terms and carries
+  the formula again. The teaser's sentence that the schedule is not set is now
+  its own rule, `flop-teaser-agent-release-unset`, and
+  `flop-agent-unlock-ratio-intro` keeps the agent page's matching sentence:
+  official pages disagree, and the registry shows it instead of choosing
+  silently. The airdrop page says it follows the Yellow Paper, which is the
+  definitive specification.
+- `flop-agent-unlock-yellowpaper` and `flop-agent-grant-no-end-block` are new:
+  the Yellow Paper's normative form of the rule. Only the payable of a settled,
+  finalized session counts, once its dispute window has passed and every fraud
+  dispute raised in it has resolved with none upheld; nothing unlocks at the
+  start block, and there is no end block. The rule is in the specification but
+  not in the runtime: the Yellow Paper's status matrix marks R8.7 and R8.8
+  PARTIAL, with no Agent spend credit or spend cap implemented.
+- `flop-airdrop-vesting-unspecified` quotes the one-sentence summary at the end
+  of section 8.2, which no longer lists the agent release horizon: that there is
+  no end block is decided. What is not decided is E.38's own longer list, which
+  now leaves open the disposition of Miner and Agent principal that never
+  unlocks, whether a fraud verdict upheld after the dispute window reverses
+  spend credit (E.44), and the residual risk of an agent unlocking by paying a
+  miner it controls (no runtime common-control rule, E.49).
+- `flop-airdrop-claim-path` is a quotation of R8.8 (`claim_vested`) instead of
+  an unknown, so six questions remain unanswered.
+- New from the testnet and airdrop pages: `flop-testnet-sole-route`,
+  `flop-agent-participation` (a DID, a wallet and the faucet),
+  `flop-agent-what-counts` and `flop-agent-allocation-pro-rata` (compute
+  purchased in settled sessions; holding or a faucet grant earns nothing),
+  `flop-minimum-activity-floor`, `flop-one-participant-one-score`,
+  `flop-independent-demand-only`, `flop-fraud-forfeits`,
+  `flop-security-disclosure` and `flop-testnet-snapshot-height`.
 
-The other 26 rules verify against the same wording as before. `check` found all
-five broken quotations; they were re-quoted by hand, and `snapshot` re-stamped
-every verified rule to the new hashes. Four of the 26 kept their quotation but
-needed a new `consequence`, because the new Yellow Paper answers what they said
-was missing:
-
-- `flop-airdrop-claim-path` is narrowed to the Agent grant's release horizon:
-  R8.8 now specifies the claim call (`claim_vested`), R8.6 the grant tiers and
-  R8.7 the Miner unlock schedule.
-- `flop-faucet-procedure`: the Yellow Paper now mentions a faucet once, in R8.4;
-  the procedure, amount and cooldown are still unpublished.
-- `flop-network-identifier`: `SS58Prefix = 42` on every FLOP network (R6.5a,
-  R9.8); networks are told apart by genesis hash or chain id, neither published.
-- `flop-genesis-supply-parameter`: ratified by D-0440, which superseded D-0438's
-  pool.
+`check` reported the one broken quotation (E.38). All 38 quotations were
+verified against the fetched bodies (37 by `snapshot`, which also recorded the
+four new sources as added; `flop-security-disclosure`, added in review, against
+the same testnet body and hash).
 
 ## Absence is recorded, not filled in
 
-The seven `unknown` rules are entries so a screen can show them as unanswered.
+The six `unknown` rules are entries so a screen can show them as unanswered
+(the claim path left the list at the seventh snapshot, when R8.8 specified it).
 A missing entry would look like a question nobody asked. Each carries a
 `consequence`: no endpoint may be executable; faucet exists only as simulation;
-spend is never estimated from a guess; simulation uses `.invalid`; no signer is
-implemented; every economic rule stays draft.
+spend is never estimated from a guess; quotes are simulated and labelled as
+such; simulation uses `.invalid`; no signer is implemented.
 
 ## The one derived rule
 
 The directive's sentence "Technocore is a coordination layer, not a settlement
-system" does not appear in any `flop.finance` document. The nearest statement is
-in `flop-labs/tclk` `SPEC.md` (rooms coordinate; money is on a rail). It is
+system" does not appear verbatim in any `flop.finance` document. Since the
+seventh snapshot the nearest official text is fetched and hashed: the
+whitepaper's section 11 says Technocore "records what was agreed, by whom and
+when; it settles nothing and holds no keys", and its section 10 that Technocore
+operates alongside the protocol rather than within it. The entry was first read
+from `flop-labs/tclk` `SPEC.md` (rooms coordinate; money is on a rail). It is
 registered as `official-draft` with `derivation: "derived"`, `hash: null`,
 source `flop-labs-github-org`, and `statementIsQuotation: false`. The tclk
 `SPEC.md` body was not fetched in the session that wrote the registry; the
 entry records a reading of a document this project already ported
-(`docs/TCLK_INTEGRATION.md`), not a quotation. Freshness for this rule is
-`UNVERIFIABLE`, and the Sources screen shows it that way.
+(`docs/TCLK_INTEGRATION.md`), not a quotation, and its `derivationNote` names
+the whitepaper's sentences. Freshness for this rule is `UNVERIFIABLE`, and the
+Sources screen shows it that way.
 
 This is the judgement the recon brief asked for. It was flagged for review in
 the stage-1 report and is recorded here so the reviewer can find it.
@@ -206,6 +239,6 @@ rule whose quotation it can find); set `statementIsQuotation` honestly; put
 arithmetic in `formula`. Do not write the figure into code.
 `tests/test_flop_rules.py` checks that every hashed rule matches the shipped
 snapshot, that a missing source is reported rather than ignored, that nothing
-claims to be final while the Yellow Paper is unpublished, that a derived
+claims to be final while the Yellow Paper is a draft, that a derived
 statement may not claim to be a quotation, and that the number three is not
 written in the module that applies the unlock ratio.

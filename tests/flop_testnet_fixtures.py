@@ -158,7 +158,7 @@ def registry_with_formula(
 ) -> FlopRuleRegistry:
     """A one-rule registry whose unlock rule carries a formula.
 
-    The shipped registry has none since D-122, so the mechanism is tested here.
+    The shipped registry carries 3:1 (D-123); these tests use other figures.
     Callers should pick figures that are neither the dropped 3 nor the default 1,
     so a constant in the code could not pass for data.
     """
@@ -171,6 +171,17 @@ def registry_with_formula(
     path.write_text(
         json.dumps({"_meta": {}, "rules": [dict(rule, formula=formula)]}), encoding="utf-8"
     )
+    return FlopRuleRegistry.load(path)
+
+
+def registry_without_formula(tmp_path: Path) -> FlopRuleRegistry:
+    """A one-rule registry whose unlock rule carries no formula, for the no-ratio path
+    (the shipped registry has carried the 3:1 formula again since D-123)."""
+    shipped = json.loads(RULE_REGISTRY_FILE.read_text(encoding="utf-8"))
+    rule = next(r for r in shipped["rules"] if r["id"] == UNLOCK_RULE_ID)
+    rule = {k: v for k, v in rule.items() if k != "formula"}
+    path = tmp_path / "registry-no-formula.json"
+    path.write_text(json.dumps({"_meta": {}, "rules": [rule]}), encoding="utf-8")
     return FlopRuleRegistry.load(path)
 
 

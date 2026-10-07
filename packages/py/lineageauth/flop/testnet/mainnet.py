@@ -5,10 +5,9 @@ the rule to be data. Both matter for one reason: the published draft said three
 $FLOP spent on inference unlocks one airdropped $FLOP, in a document whose own
 front matter calls its figures provisional. Writing `3` into Python would have
 made a draft into a constant. On 2026-09-30 the teaser and the agent page
-dropped the figure (a locked agent balance can now only buy compute, the release
-schedule is not set, and the Yellow Paper leaves spend-to-unlock open in E.38;
-D-122). Because the ratio was data, no number in this file had to change; what
-did change is how the adapter words the case where no ratio is registered.
+dropped the figure and the registry's formula went with it (D-122); on
+2026-10-05 the airdrop page and the Yellow Paper stated it again and it came back
+(D-123). Because the ratio was data, no number in this file changed either time.
 
 So the ratio is read from `conformance/flop/rule-registry.json` via
 `rules.unlock_ratio`, and when the rule is missing or carries no formula the
@@ -31,6 +30,7 @@ from lineageauth.flop.rules import (
     UNLOCK_RULE_ID,
     FlopRuleRegistry,
     unlock_ratio,
+    unlock_ratio_gap,
     unlocked_from_spend,
 )
 
@@ -135,20 +135,12 @@ class NotYetAvailableMainnetAdapter:
     network_phase: NetworkPhase = NetworkPhase.PRE_TESTNET
 
     def _why_no_ratio(self) -> str | None:
-        """Why no ratio can be applied, or None when the registry carries one."""
-        rule = self.registry.get(UNLOCK_RULE_ID)
-        if rule is None:
-            return f"{UNLOCK_RULE_ID} is not in the rule registry; {UNKNOWN_FROM_OFFICIAL_SPEC}"
-        if unlock_ratio(self.registry) is not None:
-            return None
-        if rule.formula is None:
-            # The rule is registered but the official text sets no ratio: it says a
-            # locked agent balance can only buy compute and the release schedule is
-            # open. Say that, rather than implying a provisional number exists.
-            return "the official text sets no unlock ratio and leaves the release schedule open"
-        # A formula the loader would refuse, reached by building a registry in code.
-        # The registry's mistake is not the official text's silence.
-        return "the registered formula cannot be applied"
+        """Why no ratio can be applied, or None when the registry carries one.
+
+        The same judgement the passport makes (`rules.unlock_ratio_gap`), so the two
+        never word one registry differently.
+        """
+        return unlock_ratio_gap(self.registry)
 
     def discover_rule(self) -> UnlockRuleObservation:
         rule = self.registry.get(UNLOCK_RULE_ID)

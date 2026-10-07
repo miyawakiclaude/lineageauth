@@ -35,6 +35,10 @@ from typing import Any
 
 from lineageauth.errors import MalformedEventError
 
+SOURCE_STATUSES = ("official-draft", "official-reference", "official-final")
+"""What a snapshot may say a source is. The source classifier decides whether it is
+official at all; this says what kind of official document it is."""
+
 TEXT_DOCUMENT_SUFFIXES = (".md", ".txt", ".json")
 """Bodies served as text: hashed as they are, never stripped of tags."""
 
@@ -216,25 +220,37 @@ def build_sources_document(
     fetched_at: str,
     version_hints: Mapping[str, str] | None = None,
     notes: Mapping[str, str] | None = None,
+    statuses: Mapping[str, str] | None = None,
     listing_status: int | None = None,
 ) -> dict[str, Any]:
     """The next `official-sources.json`, from the previous one and fresh bodies.
 
     Every source keeps its `status`, `versionHint` and `note` from the previous
-    document unless `version_hints` / `notes` override it by id: those fields
-    are a person's reading of the page and this function does not read pages.
-    A previous source without a body (the organisation listing, which records no
-    hash) is carried forward with `listing_status` as its HTTP status. A body
-    for an id the previous document does not know is added with an empty note.
+    document unless `version_hints` / `notes` / `statuses` override it by id:
+    those fields are a person's reading of the page and this function does not
+    read pages. A previous source without a body (the organisation listing,
+    which records no hash) is carried forward with `listing_status` as its HTTP
+    status. A body for an id the previous document does not know is added (its
+    history line says so) with the status given in `statuses`, which a new
+    source must have: whether a page is a draft is not something to default.
     """
     old_by_id = _entries_by_id(previous)
     hints = dict(version_hints or {})
     new_notes = dict(notes or {})
+    new_statuses = dict(statuses or {})
     fetched_by_id = {item.source_id: item for item in fetched}
-    unknown = sorted(set(hints) - set(old_by_id) - set(fetched_by_id))
-    unknown += sorted(set(new_notes) - set(old_by_id) - set(fetched_by_id))
+    known = set(old_by_id) | set(fetched_by_id)
+    unknown = sorted(set(hints) - known)
+    unknown += sorted(set(new_notes) - known)
+    unknown += sorted(set(new_statuses) - known)
     if unknown:
         raise MalformedEventError(f"overrides name sources that do not exist: {unknown}")
+    bad = sorted(f"{k}={v}" for k, v in new_statuses.items() if v not in SOURCE_STATUSES)
+    if bad:
+        raise MalformedEventError(f"a source status must be one of {SOURCE_STATUSES}: {bad}")
+    unstated = sorted(i for i in fetched_by_id if i not in old_by_id and i not in new_statuses)
+    if unstated:
+        raise MalformedEventError(f"a new source needs a stated status: {unstated}")
 
     sources: list[dict[str, Any]] = []
     history: list[dict[str, Any]] = []
@@ -270,6 +286,8 @@ def build_sources_document(
             entry["versionHint"] = hints[source_id]
         if source_id in new_notes:
             entry["note"] = new_notes[source_id]
+        if source_id in new_statuses:
+            entry["status"] = new_statuses[source_id]
         sources.append(entry)
         history.append(
             history_entry(source_id, before, new_hash=new_hash, new_text_hash=new_text).to_dict()

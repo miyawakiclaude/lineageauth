@@ -112,14 +112,13 @@ class TestNoParameterCouldHoldASecret:
 
 class TestMainnetAdapter:
     def test_the_ratio_is_read_from_the_registry_and_not_written_in_python(self) -> None:
-        """D-122: the teaser and the agent page dropped the 3:1 ratio, so the registered
-        rule has no formula and the adapter reports no ratio, with a detail that says why."""
+        """D-123: the airdrop page and the Yellow Paper give 3:1 again; the registry
+        carries it and the adapter reads it."""
         adapter = NotYetAvailableMainnetAdapter(registry=rules())
         observation = adapter.discover_rule()
-        assert observation.ratio is None
+        assert observation.ratio == 3
         assert observation.status.value == "not-yet-available"
-        assert "sets no unlock ratio" in observation.detail
-        assert observation.statement is not None and "not yet set" in observation.statement
+        assert observation.source_url == "https://flop.finance/airdrop/"
         source = (FLOP_PACKAGE / "testnet" / "mainnet.py").read_text(encoding="utf-8")
         assert "spentPerUnlocked" not in source
         assert "= 3" not in source
@@ -142,13 +141,20 @@ class TestMainnetAdapter:
         assert body["unlock"]["observedSpend"] is None
 
     @pytest.mark.parametrize("spend", [10, -5])
-    def test_an_observed_spend_unlocks_nothing_without_a_formula(self, spend: int) -> None:
+    def test_an_observed_spend_unlocks_nothing_without_a_formula(
+        self, spend: int, tmp_path: Path
+    ) -> None:
         """The detail must not claim a computation that did not happen."""
-        adapter = NotYetAvailableMainnetAdapter(registry=rules())
+        from tests.flop_testnet_fixtures import registry_without_formula
+
+        adapter = NotYetAvailableMainnetAdapter(registry=registry_without_formula(tmp_path))
         state = adapter.unlock_state(AGENT.did, observed_spend=spend)
         assert state.unlocked is None
         assert state.status.value == "not-yet-available"
-        assert "sets no unlock ratio" in state.detail
+        # What the registry records, not a claim about every official page: the Yellow
+        # Paper's own 3:1 sentence could still be registered under another id.
+        assert "carries no unlock formula" in state.detail
+        assert "official text" not in state.detail
         assert "computed from the registered" not in state.detail
 
     def test_an_observed_spend_uses_a_registered_formula(self, tmp_path: Path) -> None:

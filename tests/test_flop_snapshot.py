@@ -221,6 +221,7 @@ class TestHistory:
             fetched_at="2026-09-22T00:00:00Z",
             listing_status=200,
             version_hints={"t": "v0.2"},
+            statuses={"new": "official-reference"},
         )
         by_id = {e["id"]: e for e in doc["sources"]}
         assert by_id["t"]["versionHint"] == "v0.2"
@@ -353,3 +354,43 @@ class TestTheDocsTable:
         for rule in registry["rules"]:
             source = by_id[rule["source"]["sourceId"]]
             assert rule["source"]["hash"] == source["sha256"], rule["id"]
+
+
+class TestAddingSources:
+    """D-123: new official pages enter the snapshot as 'added', with a stated status."""
+
+    def test_a_new_source_is_added_with_its_stated_status(self) -> None:
+        body = FetchedBody("new-page", "https://flop.finance/new/", 200, b"<p>n</p>", "t1")
+        doc = build_sources_document(
+            _previous(), [body], fetched_at="t0", statuses={"new-page": "official-draft"}
+        )
+        entry = {e["id"]: e for e in doc["sources"]}["new-page"]
+        assert entry["status"] == "official-draft"
+        history = {h["id"]: h for h in doc["_meta"]["history"]}
+        assert history["new-page"]["change"] == "added"
+        assert history["new-page"]["text"] == "not-compared"
+
+    def test_a_new_source_without_a_status_is_refused(self) -> None:
+        body = FetchedBody("new-page", "https://flop.finance/new/", 200, b"<p>n</p>", "t1")
+        with pytest.raises(MalformedEventError, match="stated status"):
+            build_sources_document(_previous(), [body], fetched_at="t0")
+
+    def test_an_unknown_status_value_is_refused(self) -> None:
+        body = FetchedBody("t", "https://flop.finance/teaser/", 200, PAGE_V1, "t1")
+        with pytest.raises(MalformedEventError, match="status must be one of"):
+            build_sources_document(_previous(), [body], fetched_at="t0", statuses={"t": "final"})
+
+    def test_a_status_for_a_source_that_does_not_exist_is_refused(self) -> None:
+        with pytest.raises(MalformedEventError, match="do not exist"):
+            build_sources_document(
+                _previous(), [], fetched_at="t0", statuses={"nope": "official-draft"}
+            )
+
+    def test_an_existing_source_keeps_its_status_unless_overridden(self) -> None:
+        body = FetchedBody("t", "https://flop.finance/teaser/", 200, PAGE_V1, "t1")
+        kept = build_sources_document(_previous(), [body], fetched_at="t0")
+        assert {e["id"]: e for e in kept["sources"]}["t"]["status"] == "official-draft"
+        changed = build_sources_document(
+            _previous(), [body], fetched_at="t0", statuses={"t": "official-reference"}
+        )
+        assert {e["id"]: e for e in changed["sources"]}["t"]["status"] == "official-reference"

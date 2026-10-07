@@ -19,7 +19,9 @@ given, in which case that rule keeps its old hash and shows as RULE UPDATED at
 runtime until someone re-quotes it. The prose around the table, the version
 hints and the notes are a person's reading of the pages: pass them with
 `--hint id=text`, `--source-note id=text`, `--rule-source id=version|date`, and
-say what the snapshot found in `--note`.
+say what the snapshot found in `--note`. A new official page is added with
+`--add id=url` and needs `--status id=status`. Each id may be given once per
+flag, and every id, status and added URL is checked before anything is fetched.
 
 This is the only place in the FLOP layer that opens a network connection. It
 reads public pages over HTTPS and sends nothing but the request.
@@ -29,6 +31,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 import urllib.error
 import urllib.request
@@ -39,8 +42,10 @@ from urllib.parse import urlsplit
 REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO / "packages" / "py"))
 
+from lineageauth.errors import MalformedEventError  # noqa: E402
 from lineageauth.flop.rules import RULE_REGISTRY_FILE  # noqa: E402
 from lineageauth.flop.snapshot import (  # noqa: E402
+    SOURCE_STATUSES,
     FetchedBody,
     QuotationCheck,
     build_sources_document,
@@ -76,15 +81,86 @@ def fetch(url: str) -> tuple[int, bytes]:
         return int(error.code), b""
 
 
-def fetch_all(document: dict[str, object]) -> tuple[list[FetchedBody], dict[str, int], list[str]]:
-    """Every source with a recorded hash is fetched; the listing gets a status only."""
+NEW_SOURCE_ID = re.compile(r"[a-z0-9][a-z0-9-]{0,63}")
+
+
+def _same_page(url: str) -> str:
+    """A URL reduced to what names the page: host case and a trailing slash do not."""
+    parts = urlsplit(url)
+    return f"{parts.scheme}://{parts.netloc.lower()}{parts.path.rstrip('/') or '/'}"
+
+
+def parse_additions(values: list[str], document: dict[str, object]) -> list[dict[str, str]]:
+    """`--add ID=URL` entries, refused unless the id is new, the URL is official HTTPS,
+    and the page is not already a source under another id (or added twice)."""
+    sources = document.get("sources")
+    entries = [e for e in sources if isinstance(e, dict)] if isinstance(sources, list) else []
+    existing = {str(e["id"]) for e in entries}
+    pages = {_same_page(str(e["url"])): str(e["id"]) for e in entries if e.get("url")}
+    added: list[dict[str, str]] = []
+    for source_id, url in parse_pairs(values, flag="--add").items():
+        if not NEW_SOURCE_ID.fullmatch(source_id):
+            raise SystemExit(f"--add: {source_id!r} is not a valid source id")
+        if source_id in existing:
+            raise SystemExit(f"--add: {source_id!r} is already a source")
+        if urlsplit(url).scheme != "https" or classify_source(url).source_class.value != "official":
+            raise SystemExit(f"--add: {url!r} is not an official HTTPS source")
+        page = _same_page(url)
+        if page in pages:
+            raise SystemExit(f"--add: {url!r} is already recorded as {pages[page]!r}")
+        pages[page] = source_id
+        added.append({"id": source_id, "url": url, "sha256": "new"})
+    return added
+
+
+def check_overrides(
+    document: dict[str, object],
+    additions: list[dict[str, str]],
+    *,
+    statuses: dict[str, str],
+    hints: dict[str, str],
+    notes: dict[str, str],
+    rule_sources: dict[str, str],
+) -> None:
+    """Refuse, before anything is fetched, what `build_sources_document` would refuse
+    after twenty fetches: an added source without a status, a status outside the
+    vocabulary, or an override naming a source that neither exists nor is added."""
+    sources = document.get("sources")
+    known = (
+        {str(e["id"]) for e in sources if isinstance(e, dict)}
+        if isinstance(sources, list)
+        else set()
+    )
+    added = {a["id"] for a in additions}
+    unstated = sorted(added - set(statuses))
+    if unstated:
+        raise SystemExit(f"--add needs --status for each new source: {unstated}")
+    bad = sorted(f"{k}={v}" for k, v in statuses.items() if v not in SOURCE_STATUSES)
+    if bad:
+        raise SystemExit(f"--status must be one of {', '.join(SOURCE_STATUSES)}: {bad}")
+    for flag, overrides in (
+        ("--status", statuses),
+        ("--hint", hints),
+        ("--source-note", notes),
+        ("--rule-source", rule_sources),
+    ):
+        unknown = sorted(set(overrides) - known - added)
+        if unknown:
+            raise SystemExit(f"{flag} names sources that do not exist: {unknown}")
+
+
+def fetch_all(
+    document: dict[str, object], additions: list[dict[str, str]] | None = None
+) -> tuple[list[FetchedBody], dict[str, int], list[str]]:
+    """Every source with a recorded hash is fetched, plus any `--add` sources; the
+    listing gets a status only."""
     bodies: list[FetchedBody] = []
     statuses: dict[str, int] = {}
     failures: list[str] = []
     sources = document.get("sources")
     if not isinstance(sources, list):
         raise SystemExit("official-sources.json needs a sources array")
-    for entry in sources:
+    for entry in [*sources, *(additions or [])]:
         if not isinstance(entry, dict):
             continue
         source_id, url = str(entry["id"]), str(entry["url"])
@@ -148,12 +224,17 @@ def report_checks(checks: tuple[QuotationCheck, ...]) -> list[QuotationCheck]:
     return failed
 
 
-def parse_pairs(values: list[str], *, separator: str = "=") -> dict[str, str]:
+def parse_pairs(values: list[str], *, separator: str = "=", flag: str = "") -> dict[str, str]:
+    """`id=text` pairs. The same id twice is refused: a dict would keep the last one
+    silently, and which of two hints or statuses was meant is not ours to guess."""
+    prefix = f"{flag}: " if flag else ""
     out: dict[str, str] = {}
     for value in values:
         key, sep, rest = value.partition(separator)
         if not sep or not key:
-            raise SystemExit(f"expected id{separator}text, got {value!r}")
+            raise SystemExit(f"{prefix}expected id{separator}text, got {value!r}")
+        if key in out:
+            raise SystemExit(f"{prefix}{key!r} is given more than once")
         out[key] = rest
     return out
 
@@ -180,10 +261,31 @@ def command_check(args: argparse.Namespace) -> int:
 
 
 def command_snapshot(args: argparse.Namespace) -> int:
+    try:
+        return _snapshot(args)
+    except MalformedEventError as error:
+        # Anything the checks before the fetch did not catch still ends in one line.
+        raise SystemExit(f"snapshot refused: {error}") from None
+
+
+def _snapshot(args: argparse.Namespace) -> int:
     previous = read_json(OFFICIAL_SOURCES_FILE)
     registry = read_json(RULE_REGISTRY_FILE)
     instant = now_instant()
-    bodies, statuses, failures = fetch_all(previous)
+    additions = parse_additions(args.add, previous)
+    version_hints = parse_pairs(args.hint, flag="--hint")
+    notes = parse_pairs(args.source_note, flag="--source-note")
+    source_statuses = parse_pairs(args.status, flag="--status")
+    rule_source_pairs = parse_pairs(args.rule_source, flag="--rule-source")
+    check_overrides(
+        previous,
+        additions,
+        statuses=source_statuses,
+        hints=version_hints,
+        notes=notes,
+        rule_sources=rule_source_pairs,
+    )
+    bodies, statuses, failures = fetch_all(previous, additions)
     if failures:
         for failure in failures:
             print(f"  FETCH FAILED  {failure}")
@@ -204,13 +306,14 @@ def command_snapshot(args: argparse.Namespace) -> int:
         previous,
         bodies,
         fetched_at=instant,
-        version_hints=parse_pairs(args.hint),
-        notes=parse_pairs(args.source_note),
+        version_hints=version_hints,
+        notes=notes,
+        statuses=source_statuses,
         listing_status=listing_status,
     )
     rule_sources = {
         source_id: (version, date)
-        for source_id, pair in parse_pairs(args.rule_source).items()
+        for source_id, pair in rule_source_pairs.items()
         for version, _, date in [pair.partition("|")]
     }
     new_registry = restamp_registry(
@@ -267,6 +370,20 @@ def main(argv: list[str] | None = None) -> int:
         default=[],
         metavar="ID=VERSION|DATE",
         help="sourceVersion and sourceDate for every rule citing that source",
+    )
+    snap.add_argument(
+        "--add",
+        action="append",
+        default=[],
+        metavar="ID=URL",
+        help="a new official source to fetch and record as added (needs --status)",
+    )
+    snap.add_argument(
+        "--status",
+        action="append",
+        default=[],
+        metavar="ID=STATUS",
+        help="official-draft, official-reference or official-final",
     )
     snap.add_argument(
         "--allow-stale", action="store_true", help="write even if a quotation is missing"

@@ -239,7 +239,7 @@ ratio, changed to a border-only treatment and pinned by a test.
 | Faucet (live) | not available — no official procedure | `INTERFACE_ONLY`; button disabled with reason |
 | Broker demand contribution | not available | `NOT_YET_AVAILABLE` |
 | Creator attribution | not available | `NOT_YET_AVAILABLE` |
-| Mainnet unlock (3:1 when written; the teaser dropped the ratio on 2026-09-30, D-122) | not available — no ratio is set, network does not exist | `NotYetAvailable` adapter reading the ratio from the registry (none registered since D-122) |
+| Mainnet unlock (3:1 when written; the teaser dropped the ratio on 2026-09-30, D-122; the airdrop page and the Yellow Paper restored it on 2026-10-05, D-123) | not available — network does not exist | `NotYetAvailable` adapter reading the ratio from the registry (3:1 from the airdrop page since D-123; none in D-122) |
 | Official pricing / quote | not available | `officialPricingAvailable: false`; quote labelled simulation |
 
 ## Remaining risks

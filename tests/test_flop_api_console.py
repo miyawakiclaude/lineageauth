@@ -89,7 +89,7 @@ class TestStatus:
 
     def test_it_reports_the_unanswered_questions_as_a_count(self, client: TestClient) -> None:
         body = client.get(f"{FLOP_PREFIX}/status").json()
-        assert body["unknownRuleCount"] >= 7
+        assert body["unknownRuleCount"] == 6
         assert body["staleRuleCount"] == 0
 
     def test_the_notices_are_on_every_response(self, client: TestClient) -> None:
@@ -116,11 +116,11 @@ class TestSourcesAndRules:
         by_id = {rule["id"]: rule for rule in body["rules"]}
         unlock = by_id["flop-agent-unlock-ratio"]
         assert unlock["status"] == "official-draft"
-        # D-122: the teaser dropped the 3:1 ratio on 2026-09-30; the rule carries no formula.
-        assert unlock.get("formula") is None
-        assert "not yet set" in unlock["statement"]
-        assert unlock["source"]["sourceVersion"] == "0.1 (draft)"
-        assert unlock["source"]["sourceDate"] == "2026-09-30"
+        # D-123: the airdrop page's 3:1 rule, carried as a formula again.
+        assert unlock["formula"]["spentPerUnlocked"] == 3
+        assert unlock["source"]["sourceUrl"] == "https://flop.finance/airdrop/"
+        assert unlock["source"]["sourceVersion"] == "Draft"
+        assert unlock["source"]["sourceDate"] == "2026-10-05"
         assert unlock["freshness"]["freshness"] == "current"
 
     def test_unknown_rules_are_served_as_unknown(self, client: TestClient) -> None:

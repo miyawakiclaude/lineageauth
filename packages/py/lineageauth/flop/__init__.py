@@ -1,7 +1,7 @@
 """FLOP Activity Console: an application layer, never a protocol change.
 
 The FLOP network does not exist yet. Its teaser is a draft, its Yellow Paper is
-unpublished, and no testnet endpoint has been announced. This package is what an
+a draft that is not final, and no testnet endpoint has been announced. This package is what an
 agent can honestly build against that: a record of what it has actually done, a
 statement of which FLOP rules are officially published today, a scanner for the
 untrusted text it meets on the way, and an explicit refusal to turn any of it
@@ -13,7 +13,8 @@ Four rules shape every module here.
 `conformance/flop/rule-registry.json` carrying the official sentence it came
 from, the version and date of the document, and that document's hash. An unlock
 ratio is data: the 3-to-1 figure was a registry row until the teaser dropped it on
-2026-09-30, and removing it changed no number in the code (D-122).
+2026-09-30 (D-122) and is one again since the airdrop page and the Yellow Paper
+stated it on 2026-10-05 (D-123); neither change touched a number in the code.
 
 *Official is an origin, never a word.* `sources.classify_source` looks at a URL
 and nothing else. A room called "official", a nickname, a topic, a note

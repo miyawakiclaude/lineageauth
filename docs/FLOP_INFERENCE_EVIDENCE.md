@@ -108,10 +108,11 @@ allows; it can only show what was checked.
 `flop.testnet.mainnet.NotYetAvailable` is the only `MainnetUnlockAdapter`.
 It reads the unlock ratio through `rules.unlock_ratio` from the registry
 (`docs/FLOP_RULE_REGISTRY.md`) and answers `not-yet-available` for every
-question. Since 2026-09-30 the teaser and the agent page state no ratio (they
-used to say 3-to-1; a locked agent balance can now only buy compute), and the
-Yellow Paper still calls 3:1 a proposal and leaves whether spend-to-unlock ships
-open in E.38, so the registry carries no formula and the adapter reports none.
+question. Since the seventh snapshot (D-123) the registry carries 3:1 again,
+quoted from the airdrop page and backed by the Yellow Paper's normative Agent
+grant rule: a locked agent balance unlocks one FLOP for every three it spends in
+settled sessions, with no end date. The teaser and the agent page still say the
+schedule is not set, and the registry records that disagreement.
 Separately, the draft Yellow Paper's R8.4 says agent scoring derives from
 settled compute-channel spend (its caps and aggregation are still open in
 E.38). That is not what this document's receipts record: a receipt records the

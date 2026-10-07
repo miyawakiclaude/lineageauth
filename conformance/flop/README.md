@@ -15,21 +15,22 @@ diff in this directory rather than an edit spread across the code.
 
 ## The rules these files exist to enforce
 
-**No rule is hard-coded.** The agent airdrop's 3-to-1 unlock ratio was a
-`formula` object in `rule-registry.json`, never a `3` in a Python file. When the
-teaser and the agent page dropped it on 2026-09-30, removing it took an edit to
-the record of the draft and no number in the code; what the code changed was how
-the mainnet adapter and the passport word the no-ratio case (D-122).
+**No rule is hard-coded.** The agent airdrop's 3-to-1 unlock ratio is a
+`formula` object in `rule-registry.json`, never a `3` in a Python file. It left
+the registry when the teaser dropped it (D-122) and came back when the airdrop
+page and the Yellow Paper stated it (D-123); neither change touched a number in
+the code.
 
 **A rule knows how old it is.** Each rule carries the `sha256` of the source
 document as it was when the rule was written down. `rules.py` compares that hash
 against the current snapshot; a mismatch is reported as `RULE UPDATED` and the
 stale rule is never quietly served as current.
 
-**Absence is recorded, not filled in.** Seven things the official sources do not
+**Absence is recorded, not filled in.** Six things the official sources do not
 say — the testnet endpoint, the faucet procedure, the inference API, its pricing,
-the network identifier, the signing scheme, the Yellow Paper — are registered
-with the statement `UNKNOWN_FROM_OFFICIAL_SPEC` and the status `unknown`. They
+the network identifier and how an agent authenticates to the testnet — are
+registered with the statement `UNKNOWN_FROM_OFFICIAL_SPEC` and the status
+`unknown`. They
 are entries so that a screen can show them as unanswered; a missing entry would
 look like a question nobody asked.
 

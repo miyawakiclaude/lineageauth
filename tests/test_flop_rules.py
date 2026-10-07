@@ -62,30 +62,58 @@ class TestEveryRuleCarriesItsSource:
     def test_the_technocore_coordination_claim_is_registered_as_derived(
         self, registry: FlopRuleRegistry
     ) -> None:
-        """It appears in the directive and in no official FLOP document.
+        """It appears in the directive and verbatim in no official FLOP document.
 
-        Registering it as a quotation would attribute a sentence to a source
-        that does not contain it.
+        The whitepaper says something close (Technocore settles nothing), and the
+        derivation note names it; registering the directive's sentence as a quotation
+        would still attribute a sentence to a source that does not contain it.
         """
         rule = registry.get("technocore-not-a-settlement-system")
         assert rule is not None
         assert rule.derivation == "derived"
         assert rule.statement_is_quotation is False
         assert rule.source.hash is None
+        assert rule.derivation_note is not None and "whitepaper" in rule.derivation_note
+
+    def test_teaser_rules_carry_the_version_panels_date(self, registry: FlopRuleRegistry) -> None:
+        """D-123: the teaser's footer moved to 2026-10-05 with the navigation; its version
+        panel, the date earlier snapshots used, still says 2026-09-30."""
+        teaser = [r for r in registry.rules if r.source.source_id == "flop-finance-teaser"]
+        assert teaser
+        assert {r.source.source_date for r in teaser} == {"2026-09-30"}
+
+    def test_all_four_testnet_fairness_rules_are_registered(
+        self, registry: FlopRuleRegistry
+    ) -> None:
+        """The testnet page lists four; the minimum-activity floor is under 'what counts'."""
+        for rule_id in (
+            "flop-one-participant-one-score",
+            "flop-independent-demand-only",
+            "flop-fraud-forfeits",
+            "flop-security-disclosure",
+        ):
+            rule = registry.get(rule_id)
+            assert rule is not None, rule_id
+            assert rule.source.source_id == "flop-finance-testnet"
+            assert rule.statement_is_quotation is True
 
 
 class TestUnknownIsRecordedRatherThanFilledIn:
-    def test_the_seven_unanswered_questions_are_present(self, registry: FlopRuleRegistry) -> None:
+    def test_the_six_unanswered_questions_are_present(self, registry: FlopRuleRegistry) -> None:
+        """Six since D-123: the Yellow Paper's R8.8 specifies the claim (claim_vested), so
+        flop-airdrop-claim-path is a quotation now, not an unknown."""
         ids = {rule.rule_id for rule in registry.unknown_rules}
-        assert {
+        assert ids == {
             "flop-testnet-endpoint",
             "flop-faucet-procedure",
             "flop-inference-api",
             "flop-inference-pricing",
             "flop-network-identifier",
             "flop-auth-signing-scheme",
-            "flop-airdrop-claim-path",
-        } <= ids
+        }
+        claim = registry.get("flop-airdrop-claim-path")
+        assert claim is not None and claim.status is RuleStatus.OFFICIAL_DRAFT
+        assert "claim_vested" in claim.statement
 
     def test_the_yellow_paper_is_now_a_draft_source_not_an_unknown(
         self, registry: FlopRuleRegistry
@@ -122,16 +150,22 @@ class TestUnknownIsRecordedRatherThanFilledIn:
 
 
 class TestTheUnlockRatioIsData:
-    def test_the_dropped_ratio_is_not_in_the_registry(self, registry: FlopRuleRegistry) -> None:
-        """The teaser and the agent page dropped the 3:1 ratio on 2026-09-30 (D-122).
-        The rule stays, quoting the new text, and carries no formula, so nothing is
-        computed."""
+    def test_the_ratio_returns_from_the_airdrop_page_as_data(
+        self, registry: FlopRuleRegistry
+    ) -> None:
+        """D-122 removed the formula when the teaser dropped 3:1; D-123 restores it from
+        the airdrop page, which the Yellow Paper's normative Agent grant rule backs. The
+        teaser's lagging sentence is kept as its own rule so the conflict stays visible."""
         rule = registry.get(UNLOCK_RULE_ID)
-        assert rule is not None
-        assert rule.formula is None
-        assert "not yet set" in rule.statement
-        assert unlock_ratio(registry) is None
-        assert unlocked_from_spend(registry, 9) is None
+        assert rule is not None and rule.formula is not None
+        assert rule.source.source_url == "https://flop.finance/airdrop/"
+        assert "Every 3 $FLOP of the locked balance" in rule.statement
+        assert unlock_ratio(registry) == 3
+        assert unlocked_from_spend(registry, 9) == 3
+        lagging = registry.get("flop-teaser-agent-release-unset")
+        assert lagging is not None and "not yet set" in lagging.statement
+        normative = registry.get("flop-agent-unlock-yellowpaper")
+        assert normative is not None and "each three FLOP" in normative.statement
 
     def test_the_number_three_is_not_written_in_the_module(self) -> None:
         """Read the source: the ratio must not be a literal in Python."""
@@ -226,7 +260,11 @@ class TestFreshness:
         stale = registry.stale_rules(moved)
         assert stale, "a changed teaser must invalidate the rules quoted from it"
         stale_ids = {entry.rule_id for entry in stale}
-        assert UNLOCK_RULE_ID in stale_ids
+        teaser_rules = {
+            r.rule_id for r in registry.rules if r.source.source_id == "flop-finance-teaser"
+        }
+        assert teaser_rules and teaser_rules <= stale_ids
+        assert "flop-teaser-agent-release-unset" in stale_ids
         for entry in stale:
             assert entry.label == RULE_UPDATED_LABEL
             assert entry.may_be_treated_as_current is False
@@ -256,7 +294,7 @@ class TestRendering:
     ) -> None:
         rendered = registry.to_dict(load_snapshot())
         assert "eligibility rule" in rendered["note"]
-        assert rendered["unknownCount"] >= 7
+        assert rendered["unknownCount"] == 6
 
     def test_rules_can_be_selected_by_phase(self, registry: FlopRuleRegistry) -> None:
         testnet = {rule.rule_id for rule in rules_for_phase(registry, ["testnet"])}
