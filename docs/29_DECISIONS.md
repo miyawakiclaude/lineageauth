@@ -3087,3 +3087,52 @@ Git/GitHub writes require confirmation of active account + repository owner + re
   front page lead to Google Forms and were not submitted. No external write
   beyond the push.
 
+## D-124: eighth official-source snapshot; security disclosure softened
+
+- **Date:** 2026-10-09
+- **Problem:** `check` reported one quotation missing, `flop-security-disclosure`,
+  and wording changes on three pages. The testnet and airdrop pages were
+  revised between 2026-10-07T02:16Z and 2026-10-09T00:07Z (the last fetch
+  with the old wording and the first with the new) while still printing
+  2026-10-05. The testnet page made two changes: it adds a condition, that a
+  vulnerability is reported privately to security@flop.finance (it named no
+  channel before), and where it said responsible reports are rewarded from
+  the ecosystem reserve it now says they "could be eligible for a reward from
+  the ecosystem reserve". The airdrop page names no channel: it no longer
+  lists security rewards among the reserve's growth programmes, adds that a
+  responsibly reported vulnerability "could also be eligible for a reward from
+  it" and that this "is not a bug bounty programme", and its allocation
+  table's reserve row now reads "possible rewards for responsibly reported
+  vulnerabilities" where it read "security rewards". The Yellow Paper
+  changed in its paid-storage, capacity-reservation and rent rules (section
+  5.4 and their rows in Appendices E, F.7, G.4 and H.3) and also elsewhere:
+  its HTLC text (10.1, 10.2, a new Appendix A row, E.48, H.5) now says the
+  shipped `htlc_burn_share_ppt` is zero and timeout resolution preserves the full
+  locked principal, that a nonzero timeout burn is a proposal (D-0523) not
+  yet ratified, and that the FLOP/native BTC, FLOP/native NEAR and
+  FLOP/NEP-141-on-NEAR pairs are target-only with no deployed chain-pair
+  completion guarantee; Appendix F adds that its corpus checks wire format
+  only, not the money path; and H.4 marks reward liquidity on issue (R9.13)
+  LIVE, the agent and staker legs still accruing in pool accounts until E.40
+  ratifies their distribution. Its section 8 (airdrop, Agent grant R8.7,
+  claim R8.8) did not change.
+- **Decision:** the eighth snapshot. `flop-security-disclosure` is re-quoted
+  and its consequence says what changed; the testnet, airdrop and Yellow Paper
+  notes and hints record the silent revisions. All 38 quotations verified;
+  the other 37 quotations verify against unchanged text, and the other 44
+  rules keep their statements and consequences. The airdrop, unlock (3:1) and
+  claim rules are untouched; no rule quotes the Yellow Paper's HTLC or R9.13
+  text, and none was added.
+- **What it means for the user.** Reporting a vulnerability is not a bug
+  bounty: a reward from the ecosystem reserve, not from the airdrop, is
+  possible, not promised, for a report sent privately to
+  security@flop.finance, and exploiting one still forfeits eligibility.
+  Nothing about how an agent earns or unlocks its airdrop moved. For the
+  `flop-htlc` rail this tool's tclk verifier knows, the Yellow Paper marks the
+  local HTLC mechanics LIVE but asserts no deployed chain-pair completion
+  guarantee: every implemented pair direction is target-only, and at the
+  shipped zero burn share timeout resolution preserves the full locked
+  principal.
+- **Security impact.** None. No code changed. No external write beyond the
+  push.
+

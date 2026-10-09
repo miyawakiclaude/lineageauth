@@ -55,9 +55,42 @@ part of every `ExecutionPlan`, and an approval granted under one rule set is
 A rule whose `hash` is `null` cannot be checked and is reported as
 `UNVERIFIABLE` freshness — one such rule exists, below.
 
-## The rules, at snapshot 2026-10-07T01:07:50Z
+## The rules, at snapshot 2026-10-09T01:55:07Z
 
-The seventh snapshot. On 2026-10-05 flop.finance published three new pages,
+The eighth snapshot. Between the seventh and this one, the testnet and airdrop
+pages changed their security-disclosure wording without a new printed date; a
+fetch at 2026-10-07T02:16Z still had the old wording and one at
+2026-10-09T00:07Z the new, which is as closely as the change can be dated. The
+testnet page made two changes: it adds a condition, that a vulnerability is
+reported privately to security@flop.finance (it named no channel before), and
+where it said responsible reports are rewarded from the ecosystem reserve it
+now says they "could be eligible for a reward from the ecosystem reserve". The
+airdrop page names no channel. It no longer lists security rewards among the
+reserve's growth programmes, adds that a responsibly reported vulnerability
+"could also be eligible for a reward from it; this is not a bug bounty
+programme", and its allocation table's reserve row now reads "possible rewards
+for responsibly reported vulnerabilities".
+
+The Yellow Paper changed in more than its paid-storage, capacity-reservation
+and rent rules (section 5.4 and their rows in Appendices E, F.7, G.4 and H.3).
+Its HTLC text now says that the shipped `htlc_burn_share_ppt` is zero and
+timeout resolution preserves the full locked principal, that a nonzero timeout
+burn is a proposal (D-0523) not yet ratified, and that the FLOP/native BTC,
+FLOP/native NEAR and FLOP/NEP-141-on-NEAR pairs are target-only, with no
+deployed chain-pair completion guarantee (sections 10.1 and 10.2, a new
+parameter row in Appendix A, E.48 and H.5). This tool's tclk verifier knows
+the `flop-htlc` rail; for it, H.5 marks the local HTLC mechanics LIVE and every
+implemented pair direction target-only, so cross-chain completion is still a
+target, not a guarantee. Appendix F adds that its corpus checks wire format
+only, not the money path, and H.4 marks reward liquidity on issue (R9.13)
+LIVE, with the agent and staker legs still accruing in pool accounts until
+E.40 ratifies their distribution. Its section 8, the airdrop, Agent grant and
+claim text, is as the seventh snapshot recorded, and every quotation from the
+Yellow Paper still verifies. Every other fetched source kept its wording; the
+`flop-labs` organisation listing is checked for its HTTP status only, so its
+wording was not compared.
+
+Most of the table comes from the seventh snapshot. On 2026-10-05 flop.finance published three new pages,
 `/testnet/`, `/airdrop/` and `/whitepaper/`, and reworked its navigation, which
 moved the wording of the front page, the teaser and every `/intro/` page. For
 all of them but one that was the navigation and the footer date: the teaser's
@@ -73,8 +106,9 @@ teaser and the agent intro page still say the schedule is not set. The testnet
 page says what an agent needs and what counts, including a minimum-activity
 floor for every role, and sets out four fairness rules: one participant one
 score, independent demand only, fraud forfeits and security disclosure. Every rule
-below was re-verified mechanically: its quotation is a substring of the body
-its source hash names, or it is marked derived or unknown. The previous
+below was re-verified mechanically: its quotation occurs in the body its source
+hash names under `quotation_key` folding (dashes and quotes folded to ASCII,
+whitespace ignored), or it is marked derived or unknown. The previous
 snapshot's hashes are kept in `official-sources.json` under `_meta.history`.
 
 <!-- flop-rules-table:begin -->
@@ -97,7 +131,7 @@ snapshot's hashes are kept in `official-sources.json` under `_meta.history`.
 | `flop-one-participant-one-score` | official-draft | testnet | `flop-finance-testnet` | One participant, one score - wallets under common control are scored as a single participant; dividing acti... |
 | `flop-independent-demand-only` | official-draft | testnet | `flop-finance-testnet` | Independent demand only - spend routed to a miner under common control, or circulated between wallets under... |
 | `flop-fraud-forfeits` | official-draft | testnet | `flop-finance-testnet` | Fraud forfeits - an account flagged for manufactured activity forfeits its allocation, subject to appeal wi... |
-| `flop-security-disclosure` | official-draft | testnet | `flop-finance-testnet` | Security disclosure - vulnerabilities reported responsibly during the testnet are rewarded from the ecosyst... |
+| `flop-security-disclosure` | official-draft | testnet | `flop-finance-testnet` | Security disclosure - vulnerabilities reported responsibly during the testnet, privately to security@flop.f... |
 | `flop-testnet-snapshot-height` | official-draft | genesis | `flop-finance-testnet` | The record is frozen at a published, finalized block height. Activity after that height is not credited, an... |
 | `flop-agent-unlock-ratio` | official-draft | mainnet | `flop-finance-airdrop` | Spendable only on inference. Every 3 $FLOP of the locked balance spent in settled sessions unlocks 1 $FLOP,... |
 | `flop-agent-unlock-ratio-intro` | official-draft | mainnet | `flop-finance-intro-agent` | Locked agent airdrop can be spent only on compute: opening or topping up inference sessions. When it become... |
@@ -128,7 +162,8 @@ instead of being handed yo... |
 | `flop-airdrop-claim-path` | official-draft | mainnet | `flop-finance-yellowpaper` | claim_vested MUST use the finalized head to calculate the unlocked amount, subtract the amount already clai... |
 <!-- flop-rules-table:end -->
 
-The `formula` for `flop-agent-unlock-ratio`, restored at this snapshot:
+The `formula` for `flop-agent-unlock-ratio`, restored at the seventh snapshot
+(D-123) and unchanged at the eighth:
 
 ```json
 {
@@ -141,7 +176,12 @@ The `formula` for `flop-agent-unlock-ratio`, restored at this snapshot:
 }
 ```
 
-What changed for a reader of the previous table:
+What changed at the eighth snapshot: only `flop-security-disclosure`, re-quoted
+with the new wording. The other 37 quotations verify against the same text as
+before, and the other 44 rules (those 37, the six unknown rules and the one
+derived rule) keep their statements and consequences.
+
+What changed at the seventh snapshot:
 
 - `flop-agent-unlock-ratio` quotes the airdrop page's unlock terms and carries
   the formula again. The teaser's sentence that the schedule is not set is now

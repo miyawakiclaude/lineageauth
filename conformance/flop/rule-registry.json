@@ -1,7 +1,7 @@
 {
  "_meta": {
   "purpose": "Every FLOP economic rule this tool relies on, with the official text it came from. Nothing here is a business rule the code may assume; the code reads this file.",
-  "generatedAt": "2026-10-07T01:07:50Z",
+  "generatedAt": "2026-10-09T01:55:07Z",
   "statusVocabulary": [
    "official-final",
    "official-draft",
@@ -11,8 +11,8 @@
   "unknownStatement": "UNKNOWN_FROM_OFFICIAL_SPEC",
   "note": "A rule whose recorded hash no longer matches the current snapshot of its source is stale. A stale rule is reported as RULE UPDATED and is never silently treated as current.",
   "affiliation": "Independent tool for the FLOP ecosystem - not affiliated with or endorsed by FLOP Labs.",
-  "previousGeneratedAt": "2026-10-05T02:04:55Z",
-  "revisionNote": "Re-verified 2026-10-07 against the seventh snapshot. flop.finance added /testnet/, /airdrop/ and /whitepaper/ on 2026-10-05 (now watched, with flop.finance/llms.txt). The airdrop page and the Yellow Paper's normative Agent grant rule give a 3:1 spend-to-unlock with no end block, so flop-agent-unlock-ratio quotes the airdrop page and carries the formula again; the teaser and agent intro still say the schedule is not set, recorded as flop-teaser-agent-release-unset and flop-agent-unlock-ratio-intro. flop-airdrop-claim-path becomes a quotation of R8.8. New: the testnet and airdrop rules on participation, what counts, pro rata allocation, the minimum activity floor, one participant one score, independent demand only, fraud forfeits, security disclosure and the snapshot height. Teaser rules carry its version panel's date, 2026-09-30; only the site footer moved to 2026-10-05, with the navigation.",
+  "previousGeneratedAt": "2026-10-07T01:07:50Z",
+  "revisionNote": "Re-verified 2026-10-09 against the eighth snapshot: every quotation was checked to occur in the fetched body it cites under quotation_key folding (dashes and quotes folded to ASCII, whitespace ignored). The testnet and airdrop pages were revised between 2026-10-07T02:16Z and 2026-10-09T00:07Z (the last fetch with the old wording and the first with the new) without a new printed date. The testnet page made two changes to its security-disclosure rule: it adds a condition, that the report is sent privately to security@flop.finance (it named no channel before), and where it said responsible reports are rewarded from the ecosystem reserve it now says they could be eligible for a reward from it; so flop-security-disclosure is re-quoted. The airdrop page no longer lists security rewards among the reserve's growth programmes, adds that a responsibly reported vulnerability could also be eligible for a reward from the reserve and that this is not a bug bounty programme, and its allocation table's reserve row now reads possible rewards for responsibly reported vulnerabilities. The Yellow Paper changed in more than paid storage. Paid storage: the paid-storage, capacity-reservation and rent rules of section 5.4 and their rows in Appendices E, F.7, G.4 and H.3. HTLC: the shipped htlc_burn_share_ppt is zero and timeout resolution preserves the full locked principal, a nonzero timeout burn is a proposal (D-0523) not yet ratified, and the FLOP/native BTC, FLOP/native NEAR and FLOP/NEP-141-on-NEAR pairs are target-only with no deployed completion guarantee (sections 10.1 and 10.2, a new htlc_burn_share_ppt = 0 ppt row in Appendix A, E.48 and H.5). Appendix F adds that its corpus checks wire format only, not the money path, and Appendix H.4 marks reward liquidity on issue (R9.13) LIVE, with the agent and staker legs still accruing in pool accounts until E.40 ratifies their distribution. Its section 8 (airdrop, Agent grant R8.7, claim R8.8) did not change. The other 37 quotations still occur unchanged in their sources; the other 44 rules keep their statements and consequences.",
   "snapshotHistory": [
    "2026-09-03T04:25:46Z",
    "2026-09-08T03:40:53Z",
@@ -20,7 +20,8 @@
    "2026-09-22T04:44:59Z",
    "2026-09-28T00:48:21Z",
    "2026-10-05T02:04:55Z",
-   "2026-10-07T01:07:50Z"
+   "2026-10-07T01:07:50Z",
+   "2026-10-09T01:55:07Z"
   ]
  },
  "rules": [
@@ -35,8 +36,8 @@
     "sourceUrl": "https://flop.finance/teaser/",
     "sourceVersion": "0.1 (draft)",
     "sourceDate": "2026-09-30",
-    "fetchedAt": "2026-10-07T01:07:50Z",
-    "hash": "sha256:72d281986fb990a121407a9fe7b0b1a759479bd315a1ddd344fcfb5a6c093dab"
+    "fetchedAt": "2026-10-09T01:55:07Z",
+    "hash": "sha256:db974e0e6edbf5a74e33314b16b1c2d0be753bbee3d884cb02e2cc20466be172"
    }
   },
   {
@@ -50,8 +51,8 @@
     "sourceUrl": "https://flop.finance/teaser/",
     "sourceVersion": "0.1 (draft)",
     "sourceDate": "2026-09-30",
-    "fetchedAt": "2026-10-07T01:07:50Z",
-    "hash": "sha256:72d281986fb990a121407a9fe7b0b1a759479bd315a1ddd344fcfb5a6c093dab"
+    "fetchedAt": "2026-10-09T01:55:07Z",
+    "hash": "sha256:db974e0e6edbf5a74e33314b16b1c2d0be753bbee3d884cb02e2cc20466be172"
    }
   },
   {
@@ -66,8 +67,8 @@
     "sourceUrl": "https://flop.finance/teaser/",
     "sourceVersion": "0.1 (draft)",
     "sourceDate": "2026-09-30",
-    "fetchedAt": "2026-10-07T01:07:50Z",
-    "hash": "sha256:72d281986fb990a121407a9fe7b0b1a759479bd315a1ddd344fcfb5a6c093dab"
+    "fetchedAt": "2026-10-09T01:55:07Z",
+    "hash": "sha256:db974e0e6edbf5a74e33314b16b1c2d0be753bbee3d884cb02e2cc20466be172"
    }
   },
   {
@@ -82,8 +83,8 @@
     "sourceUrl": "https://flop.finance/teaser/",
     "sourceVersion": "0.1 (draft)",
     "sourceDate": "2026-09-30",
-    "fetchedAt": "2026-10-07T01:07:50Z",
-    "hash": "sha256:72d281986fb990a121407a9fe7b0b1a759479bd315a1ddd344fcfb5a6c093dab"
+    "fetchedAt": "2026-10-09T01:55:07Z",
+    "hash": "sha256:db974e0e6edbf5a74e33314b16b1c2d0be753bbee3d884cb02e2cc20466be172"
    }
   },
   {
@@ -98,8 +99,8 @@
     "sourceUrl": "https://flop.finance/intro/yellowpaper/",
     "sourceVersion": "0.5.0 (draft)",
     "sourceDate": "2026-09-24",
-    "fetchedAt": "2026-10-07T01:07:51Z",
-    "hash": "sha256:6c6b0ba03f2b639c2ba6ce19d47728583844e7408cf449f99fe884ec588cf49c"
+    "fetchedAt": "2026-10-09T01:55:08Z",
+    "hash": "sha256:813e3e67031776eaaaf86de3acd03c25dde512f52bb30e2b641cef0ce63a0619"
    }
   },
   {
@@ -114,8 +115,8 @@
     "sourceUrl": "https://flop.finance/intro/yellowpaper/",
     "sourceVersion": "0.5.0 (draft)",
     "sourceDate": "2026-09-24",
-    "fetchedAt": "2026-10-07T01:07:51Z",
-    "hash": "sha256:6c6b0ba03f2b639c2ba6ce19d47728583844e7408cf449f99fe884ec588cf49c"
+    "fetchedAt": "2026-10-09T01:55:08Z",
+    "hash": "sha256:813e3e67031776eaaaf86de3acd03c25dde512f52bb30e2b641cef0ce63a0619"
    }
   },
   {
@@ -130,8 +131,8 @@
     "sourceUrl": "https://flop.finance/teaser/",
     "sourceVersion": "0.1 (draft)",
     "sourceDate": "2026-09-30",
-    "fetchedAt": "2026-10-07T01:07:50Z",
-    "hash": "sha256:72d281986fb990a121407a9fe7b0b1a759479bd315a1ddd344fcfb5a6c093dab"
+    "fetchedAt": "2026-10-09T01:55:07Z",
+    "hash": "sha256:db974e0e6edbf5a74e33314b16b1c2d0be753bbee3d884cb02e2cc20466be172"
    }
   },
   {
@@ -145,8 +146,8 @@
     "sourceUrl": "https://flop.finance/teaser/",
     "sourceVersion": "0.1 (draft)",
     "sourceDate": "2026-09-30",
-    "fetchedAt": "2026-10-07T01:07:50Z",
-    "hash": "sha256:72d281986fb990a121407a9fe7b0b1a759479bd315a1ddd344fcfb5a6c093dab"
+    "fetchedAt": "2026-10-09T01:55:07Z",
+    "hash": "sha256:db974e0e6edbf5a74e33314b16b1c2d0be753bbee3d884cb02e2cc20466be172"
    }
   },
   {
@@ -161,8 +162,8 @@
     "sourceUrl": "https://flop.finance/intro/yellowpaper/",
     "sourceVersion": "0.5.0 (draft)",
     "sourceDate": "2026-09-24",
-    "fetchedAt": "2026-10-07T01:07:51Z",
-    "hash": "sha256:6c6b0ba03f2b639c2ba6ce19d47728583844e7408cf449f99fe884ec588cf49c"
+    "fetchedAt": "2026-10-09T01:55:08Z",
+    "hash": "sha256:813e3e67031776eaaaf86de3acd03c25dde512f52bb30e2b641cef0ce63a0619"
    }
   },
   {
@@ -177,8 +178,8 @@
     "sourceUrl": "https://flop.finance/testnet/",
     "sourceVersion": "Draft",
     "sourceDate": "2026-10-05",
-    "fetchedAt": "2026-10-07T01:07:52Z",
-    "hash": "sha256:22f8529f1c06630793c418c4160e515a58997796faab6c8e6a60196adc62f7bd"
+    "fetchedAt": "2026-10-09T01:55:09Z",
+    "hash": "sha256:222438a45f27883e45a77a9fbf1602d8f39b775ba5cbbcc84b91d6ebe722e4fb"
    }
   },
   {
@@ -193,8 +194,8 @@
     "sourceUrl": "https://flop.finance/testnet/",
     "sourceVersion": "Draft",
     "sourceDate": "2026-10-05",
-    "fetchedAt": "2026-10-07T01:07:52Z",
-    "hash": "sha256:22f8529f1c06630793c418c4160e515a58997796faab6c8e6a60196adc62f7bd"
+    "fetchedAt": "2026-10-09T01:55:09Z",
+    "hash": "sha256:222438a45f27883e45a77a9fbf1602d8f39b775ba5cbbcc84b91d6ebe722e4fb"
    }
   },
   {
@@ -209,8 +210,8 @@
     "sourceUrl": "https://flop.finance/testnet/",
     "sourceVersion": "Draft",
     "sourceDate": "2026-10-05",
-    "fetchedAt": "2026-10-07T01:07:52Z",
-    "hash": "sha256:22f8529f1c06630793c418c4160e515a58997796faab6c8e6a60196adc62f7bd"
+    "fetchedAt": "2026-10-09T01:55:09Z",
+    "hash": "sha256:222438a45f27883e45a77a9fbf1602d8f39b775ba5cbbcc84b91d6ebe722e4fb"
    }
   },
   {
@@ -225,8 +226,8 @@
     "sourceUrl": "https://flop.finance/airdrop/",
     "sourceVersion": "Draft",
     "sourceDate": "2026-10-05",
-    "fetchedAt": "2026-10-07T01:07:52Z",
-    "hash": "sha256:82c8802399aa884ce7e27fa10385a1b6baf291e2d4e5b3206d255f6533bf8760"
+    "fetchedAt": "2026-10-09T01:55:09Z",
+    "hash": "sha256:892ff4c598c808ce108e31ced89868b714c74550055ac15adf57f1643c5f101c"
    }
   },
   {
@@ -241,8 +242,8 @@
     "sourceUrl": "https://flop.finance/testnet/",
     "sourceVersion": "Draft",
     "sourceDate": "2026-10-05",
-    "fetchedAt": "2026-10-07T01:07:52Z",
-    "hash": "sha256:22f8529f1c06630793c418c4160e515a58997796faab6c8e6a60196adc62f7bd"
+    "fetchedAt": "2026-10-09T01:55:09Z",
+    "hash": "sha256:222438a45f27883e45a77a9fbf1602d8f39b775ba5cbbcc84b91d6ebe722e4fb"
    }
   },
   {
@@ -257,8 +258,8 @@
     "sourceUrl": "https://flop.finance/testnet/",
     "sourceVersion": "Draft",
     "sourceDate": "2026-10-05",
-    "fetchedAt": "2026-10-07T01:07:52Z",
-    "hash": "sha256:22f8529f1c06630793c418c4160e515a58997796faab6c8e6a60196adc62f7bd"
+    "fetchedAt": "2026-10-09T01:55:09Z",
+    "hash": "sha256:222438a45f27883e45a77a9fbf1602d8f39b775ba5cbbcc84b91d6ebe722e4fb"
    }
   },
   {
@@ -273,8 +274,8 @@
     "sourceUrl": "https://flop.finance/testnet/",
     "sourceVersion": "Draft",
     "sourceDate": "2026-10-05",
-    "fetchedAt": "2026-10-07T01:07:52Z",
-    "hash": "sha256:22f8529f1c06630793c418c4160e515a58997796faab6c8e6a60196adc62f7bd"
+    "fetchedAt": "2026-10-09T01:55:09Z",
+    "hash": "sha256:222438a45f27883e45a77a9fbf1602d8f39b775ba5cbbcc84b91d6ebe722e4fb"
    }
   },
   {
@@ -289,24 +290,24 @@
     "sourceUrl": "https://flop.finance/testnet/",
     "sourceVersion": "Draft",
     "sourceDate": "2026-10-05",
-    "fetchedAt": "2026-10-07T01:07:52Z",
-    "hash": "sha256:22f8529f1c06630793c418c4160e515a58997796faab6c8e6a60196adc62f7bd"
+    "fetchedAt": "2026-10-09T01:55:09Z",
+    "hash": "sha256:222438a45f27883e45a77a9fbf1602d8f39b775ba5cbbcc84b91d6ebe722e4fb"
    }
   },
   {
    "id": "flop-security-disclosure",
-   "statement": "Security disclosure - vulnerabilities reported responsibly during the testnet are rewarded from the ecosystem reserve; exploiting a vulnerability forfeits eligibility.",
+   "statement": "Security disclosure - vulnerabilities reported responsibly during the testnet, privately to security@flop.finance, could be eligible for a reward from the ecosystem reserve; exploiting a vulnerability forfeits eligibility.",
    "statementIsQuotation": true,
    "status": "official-draft",
    "effectiveNetworkPhase": "testnet",
-   "consequence": "The fourth of the testnet page's fairness rules. Exploiting a vulnerability forfeits eligibility; a responsible report is rewarded from the ecosystem reserve, not from the airdrop. Nothing in this tool tests the network for weaknesses, and no screen presents exploiting one as a way to earn.",
+   "consequence": "The fourth of the testnet page's fairness rules. Exploiting a vulnerability forfeits eligibility. Since the eighth snapshot the page differs in two ways: it adds a condition, that the report is sent privately to security@flop.finance (it named no channel before), and where it said responsible reports are rewarded from the ecosystem reserve it now says such a report could be eligible for a reward from it - from the reserve, not from the airdrop. The airdrop page adds that this is not a bug bounty programme. Nothing in this tool tests the network for weaknesses, and no screen presents exploiting one, or reporting one, as a way to earn.",
    "source": {
     "sourceId": "flop-finance-testnet",
     "sourceUrl": "https://flop.finance/testnet/",
     "sourceVersion": "Draft",
     "sourceDate": "2026-10-05",
-    "fetchedAt": "2026-10-07T01:07:52Z",
-    "hash": "sha256:22f8529f1c06630793c418c4160e515a58997796faab6c8e6a60196adc62f7bd"
+    "fetchedAt": "2026-10-09T01:55:09Z",
+    "hash": "sha256:222438a45f27883e45a77a9fbf1602d8f39b775ba5cbbcc84b91d6ebe722e4fb"
    }
   },
   {
@@ -321,8 +322,8 @@
     "sourceUrl": "https://flop.finance/testnet/",
     "sourceVersion": "Draft",
     "sourceDate": "2026-10-05",
-    "fetchedAt": "2026-10-07T01:07:52Z",
-    "hash": "sha256:22f8529f1c06630793c418c4160e515a58997796faab6c8e6a60196adc62f7bd"
+    "fetchedAt": "2026-10-09T01:55:09Z",
+    "hash": "sha256:222438a45f27883e45a77a9fbf1602d8f39b775ba5cbbcc84b91d6ebe722e4fb"
    }
   },
   {
@@ -336,8 +337,8 @@
     "sourceUrl": "https://flop.finance/airdrop/",
     "sourceVersion": "Draft",
     "sourceDate": "2026-10-05",
-    "fetchedAt": "2026-10-07T01:07:52Z",
-    "hash": "sha256:82c8802399aa884ce7e27fa10385a1b6baf291e2d4e5b3206d255f6533bf8760"
+    "fetchedAt": "2026-10-09T01:55:09Z",
+    "hash": "sha256:892ff4c598c808ce108e31ced89868b714c74550055ac15adf57f1643c5f101c"
    },
    "consequence": "The airdrop page (2026-10-05) and the Yellow Paper's normative Agent grant rule both say a locked agent balance unlocks one FLOP for every three of it spent in settled sessions, with no end date; the revenue page and the whitepaper's glossary give the same figure. The teaser and the agent intro page still say the schedule is not set (flop-teaser-agent-release-unset, flop-agent-unlock-ratio-intro); the airdrop page says it follows the Yellow Paper, which is the definitive specification, so this rule carries the formula. Still a draft.",
    "formula": {
@@ -362,8 +363,8 @@
     "sourceUrl": "https://flop.finance/intro/agent/",
     "sourceVersion": "Draft whitepaper",
     "sourceDate": "2026-10-05",
-    "fetchedAt": "2026-10-07T01:07:51Z",
-    "hash": "sha256:cbd63c86d262aa6a84434272306433c4b26cb5b820cea5f1a05c7c6064b03e60"
+    "fetchedAt": "2026-10-09T01:55:08Z",
+    "hash": "sha256:e7ef06c29b1a01f4892df60b41a8328998049cdae15e3441c95ed2cf167a8923"
    }
   },
   {
@@ -378,8 +379,8 @@
     "sourceUrl": "https://flop.finance/teaser/",
     "sourceVersion": "0.1 (draft)",
     "sourceDate": "2026-09-30",
-    "fetchedAt": "2026-10-07T01:07:50Z",
-    "hash": "sha256:72d281986fb990a121407a9fe7b0b1a759479bd315a1ddd344fcfb5a6c093dab"
+    "fetchedAt": "2026-10-09T01:55:07Z",
+    "hash": "sha256:db974e0e6edbf5a74e33314b16b1c2d0be753bbee3d884cb02e2cc20466be172"
    }
   },
   {
@@ -394,8 +395,8 @@
     "sourceUrl": "https://flop.finance/intro/yellowpaper/",
     "sourceVersion": "0.5.0 (draft)",
     "sourceDate": "2026-09-24",
-    "fetchedAt": "2026-10-07T01:07:51Z",
-    "hash": "sha256:6c6b0ba03f2b639c2ba6ce19d47728583844e7408cf449f99fe884ec588cf49c"
+    "fetchedAt": "2026-10-09T01:55:08Z",
+    "hash": "sha256:813e3e67031776eaaaf86de3acd03c25dde512f52bb30e2b641cef0ce63a0619"
    }
   },
   {
@@ -410,8 +411,8 @@
     "sourceUrl": "https://flop.finance/intro/yellowpaper/",
     "sourceVersion": "0.5.0 (draft)",
     "sourceDate": "2026-09-24",
-    "fetchedAt": "2026-10-07T01:07:51Z",
-    "hash": "sha256:6c6b0ba03f2b639c2ba6ce19d47728583844e7408cf449f99fe884ec588cf49c"
+    "fetchedAt": "2026-10-09T01:55:08Z",
+    "hash": "sha256:813e3e67031776eaaaf86de3acd03c25dde512f52bb30e2b641cef0ce63a0619"
    }
   },
   {
@@ -425,8 +426,8 @@
     "sourceUrl": "https://flop.finance/teaser/",
     "sourceVersion": "0.1 (draft)",
     "sourceDate": "2026-09-30",
-    "fetchedAt": "2026-10-07T01:07:50Z",
-    "hash": "sha256:72d281986fb990a121407a9fe7b0b1a759479bd315a1ddd344fcfb5a6c093dab"
+    "fetchedAt": "2026-10-09T01:55:07Z",
+    "hash": "sha256:db974e0e6edbf5a74e33314b16b1c2d0be753bbee3d884cb02e2cc20466be172"
    }
   },
   {
@@ -441,8 +442,8 @@
     "sourceUrl": "https://flop.finance/intro/yellowpaper/",
     "sourceVersion": "0.5.0 (draft)",
     "sourceDate": "2026-09-24",
-    "fetchedAt": "2026-10-07T01:07:51Z",
-    "hash": "sha256:6c6b0ba03f2b639c2ba6ce19d47728583844e7408cf449f99fe884ec588cf49c"
+    "fetchedAt": "2026-10-09T01:55:08Z",
+    "hash": "sha256:813e3e67031776eaaaf86de3acd03c25dde512f52bb30e2b641cef0ce63a0619"
    }
   },
   {
@@ -456,8 +457,8 @@
     "sourceUrl": "https://flop.finance/teaser/",
     "sourceVersion": "0.1 (draft)",
     "sourceDate": "2026-09-30",
-    "fetchedAt": "2026-10-07T01:07:50Z",
-    "hash": "sha256:72d281986fb990a121407a9fe7b0b1a759479bd315a1ddd344fcfb5a6c093dab"
+    "fetchedAt": "2026-10-09T01:55:07Z",
+    "hash": "sha256:db974e0e6edbf5a74e33314b16b1c2d0be753bbee3d884cb02e2cc20466be172"
    }
   },
   {
@@ -472,8 +473,8 @@
     "sourceUrl": "https://flop.finance/intro/yellowpaper/",
     "sourceVersion": "0.5.0 (draft)",
     "sourceDate": "2026-09-24",
-    "fetchedAt": "2026-10-07T01:07:51Z",
-    "hash": "sha256:6c6b0ba03f2b639c2ba6ce19d47728583844e7408cf449f99fe884ec588cf49c"
+    "fetchedAt": "2026-10-09T01:55:08Z",
+    "hash": "sha256:813e3e67031776eaaaf86de3acd03c25dde512f52bb30e2b641cef0ce63a0619"
    }
   },
   {
@@ -488,8 +489,8 @@
     "sourceUrl": "https://flop.finance/intro/yellowpaper/",
     "sourceVersion": "0.5.0 (draft)",
     "sourceDate": "2026-09-24",
-    "fetchedAt": "2026-10-07T01:07:51Z",
-    "hash": "sha256:6c6b0ba03f2b639c2ba6ce19d47728583844e7408cf449f99fe884ec588cf49c"
+    "fetchedAt": "2026-10-09T01:55:08Z",
+    "hash": "sha256:813e3e67031776eaaaf86de3acd03c25dde512f52bb30e2b641cef0ce63a0619"
    }
   },
   {
@@ -503,8 +504,8 @@
     "sourceUrl": "https://flop.finance/intro/yellowpaper/",
     "sourceVersion": "0.5.0 (draft)",
     "sourceDate": "2026-09-24",
-    "fetchedAt": "2026-10-07T01:07:51Z",
-    "hash": "sha256:6c6b0ba03f2b639c2ba6ce19d47728583844e7408cf449f99fe884ec588cf49c"
+    "fetchedAt": "2026-10-09T01:55:08Z",
+    "hash": "sha256:813e3e67031776eaaaf86de3acd03c25dde512f52bb30e2b641cef0ce63a0619"
    }
   },
   {
@@ -519,8 +520,8 @@
     "sourceUrl": "https://flop.finance/intro/yellowpaper/",
     "sourceVersion": "0.5.0 (draft)",
     "sourceDate": "2026-09-24",
-    "fetchedAt": "2026-10-07T01:07:51Z",
-    "hash": "sha256:6c6b0ba03f2b639c2ba6ce19d47728583844e7408cf449f99fe884ec588cf49c"
+    "fetchedAt": "2026-10-09T01:55:08Z",
+    "hash": "sha256:813e3e67031776eaaaf86de3acd03c25dde512f52bb30e2b641cef0ce63a0619"
    }
   },
   {
@@ -535,8 +536,8 @@
     "sourceUrl": "https://flop.finance/intro/yellowpaper/",
     "sourceVersion": "0.5.0 (draft)",
     "sourceDate": "2026-09-24",
-    "fetchedAt": "2026-10-07T01:07:51Z",
-    "hash": "sha256:6c6b0ba03f2b639c2ba6ce19d47728583844e7408cf449f99fe884ec588cf49c"
+    "fetchedAt": "2026-10-09T01:55:08Z",
+    "hash": "sha256:813e3e67031776eaaaf86de3acd03c25dde512f52bb30e2b641cef0ce63a0619"
    }
   },
   {
@@ -550,8 +551,8 @@
     "sourceUrl": "https://flop.finance/teaser/",
     "sourceVersion": "0.1 (draft)",
     "sourceDate": "2026-09-30",
-    "fetchedAt": "2026-10-07T01:07:50Z",
-    "hash": "sha256:72d281986fb990a121407a9fe7b0b1a759479bd315a1ddd344fcfb5a6c093dab"
+    "fetchedAt": "2026-10-09T01:55:07Z",
+    "hash": "sha256:db974e0e6edbf5a74e33314b16b1c2d0be753bbee3d884cb02e2cc20466be172"
    }
   },
   {
@@ -566,8 +567,8 @@
     "sourceUrl": "https://flop.finance/teaser/",
     "sourceVersion": "0.1 (draft)",
     "sourceDate": "2026-09-30",
-    "fetchedAt": "2026-10-07T01:07:50Z",
-    "hash": "sha256:72d281986fb990a121407a9fe7b0b1a759479bd315a1ddd344fcfb5a6c093dab"
+    "fetchedAt": "2026-10-09T01:55:07Z",
+    "hash": "sha256:db974e0e6edbf5a74e33314b16b1c2d0be753bbee3d884cb02e2cc20466be172"
    }
   },
   {
@@ -582,8 +583,8 @@
     "sourceUrl": "https://flop.finance/intro/yellowpaper/",
     "sourceVersion": "0.5.0 (draft)",
     "sourceDate": "2026-09-24",
-    "fetchedAt": "2026-10-07T01:07:51Z",
-    "hash": "sha256:6c6b0ba03f2b639c2ba6ce19d47728583844e7408cf449f99fe884ec588cf49c"
+    "fetchedAt": "2026-10-09T01:55:08Z",
+    "hash": "sha256:813e3e67031776eaaaf86de3acd03c25dde512f52bb30e2b641cef0ce63a0619"
    }
   },
   {
@@ -598,7 +599,7 @@
     "sourceUrl": "https://technocore.chat/llms.txt",
     "sourceVersion": "served 2026-09-28",
     "sourceDate": "2026-09-28",
-    "fetchedAt": "2026-10-07T01:07:50Z",
+    "fetchedAt": "2026-10-09T01:55:08Z",
     "hash": "sha256:ae3a86c884c1932a8efe181942a050fd5b5bbbc0093fcaa70a9574bed1ee21d6"
    }
   },
@@ -614,7 +615,7 @@
     "sourceUrl": "https://technocore.chat/llms.txt",
     "sourceVersion": "served 2026-09-28",
     "sourceDate": "2026-09-28",
-    "fetchedAt": "2026-10-07T01:07:50Z",
+    "fetchedAt": "2026-10-09T01:55:08Z",
     "hash": "sha256:ae3a86c884c1932a8efe181942a050fd5b5bbbc0093fcaa70a9574bed1ee21d6"
    }
   },
@@ -631,7 +632,7 @@
     "sourceUrl": "https://github.com/flop-labs/tclk/blob/v0.1.0/SPEC.md",
     "sourceVersion": "v0.1.0",
     "sourceDate": "2026-09-03",
-    "fetchedAt": "2026-10-07T01:07:50Z",
+    "fetchedAt": "2026-10-09T01:55:07Z",
     "hash": null
    }
   },
@@ -657,8 +658,8 @@
     "sourceUrl": "https://flop.finance/intro/yellowpaper/",
     "sourceVersion": "0.5.0 (draft)",
     "sourceDate": "2026-09-24",
-    "fetchedAt": "2026-10-07T01:07:51Z",
-    "hash": "sha256:6c6b0ba03f2b639c2ba6ce19d47728583844e7408cf449f99fe884ec588cf49c"
+    "fetchedAt": "2026-10-09T01:55:08Z",
+    "hash": "sha256:813e3e67031776eaaaf86de3acd03c25dde512f52bb30e2b641cef0ce63a0619"
    }
   },
   {
@@ -683,8 +684,8 @@
     "sourceUrl": "https://flop.finance/intro/yellowpaper/",
     "sourceVersion": "0.5.0 (draft)",
     "sourceDate": "2026-09-24",
-    "fetchedAt": "2026-10-07T01:07:51Z",
-    "hash": "sha256:6c6b0ba03f2b639c2ba6ce19d47728583844e7408cf449f99fe884ec588cf49c"
+    "fetchedAt": "2026-10-09T01:55:08Z",
+    "hash": "sha256:813e3e67031776eaaaf86de3acd03c25dde512f52bb30e2b641cef0ce63a0619"
    }
   },
   {
@@ -709,8 +710,8 @@
     "sourceUrl": "https://flop.finance/intro/yellowpaper/",
     "sourceVersion": "0.5.0 (draft)",
     "sourceDate": "2026-09-24",
-    "fetchedAt": "2026-10-07T01:07:51Z",
-    "hash": "sha256:6c6b0ba03f2b639c2ba6ce19d47728583844e7408cf449f99fe884ec588cf49c"
+    "fetchedAt": "2026-10-09T01:55:08Z",
+    "hash": "sha256:813e3e67031776eaaaf86de3acd03c25dde512f52bb30e2b641cef0ce63a0619"
    }
   },
   {
@@ -734,8 +735,8 @@
     "sourceUrl": "https://flop.finance/intro/yellowpaper/",
     "sourceVersion": "0.5.0 (draft)",
     "sourceDate": "2026-09-24",
-    "fetchedAt": "2026-10-07T01:07:51Z",
-    "hash": "sha256:6c6b0ba03f2b639c2ba6ce19d47728583844e7408cf449f99fe884ec588cf49c"
+    "fetchedAt": "2026-10-09T01:55:08Z",
+    "hash": "sha256:813e3e67031776eaaaf86de3acd03c25dde512f52bb30e2b641cef0ce63a0619"
    }
   },
   {
@@ -759,8 +760,8 @@
     "sourceUrl": "https://flop.finance/intro/yellowpaper/",
     "sourceVersion": "0.5.0 (draft)",
     "sourceDate": "2026-09-24",
-    "fetchedAt": "2026-10-07T01:07:51Z",
-    "hash": "sha256:6c6b0ba03f2b639c2ba6ce19d47728583844e7408cf449f99fe884ec588cf49c"
+    "fetchedAt": "2026-10-09T01:55:08Z",
+    "hash": "sha256:813e3e67031776eaaaf86de3acd03c25dde512f52bb30e2b641cef0ce63a0619"
    }
   },
   {
@@ -785,8 +786,8 @@
     "sourceUrl": "https://flop.finance/intro/yellowpaper/",
     "sourceVersion": "0.5.0 (draft)",
     "sourceDate": "2026-09-24",
-    "fetchedAt": "2026-10-07T01:07:51Z",
-    "hash": "sha256:6c6b0ba03f2b639c2ba6ce19d47728583844e7408cf449f99fe884ec588cf49c"
+    "fetchedAt": "2026-10-09T01:55:08Z",
+    "hash": "sha256:813e3e67031776eaaaf86de3acd03c25dde512f52bb30e2b641cef0ce63a0619"
    }
   },
   {
@@ -801,8 +802,8 @@
     "sourceUrl": "https://flop.finance/intro/yellowpaper/",
     "sourceVersion": "0.5.0 (draft)",
     "sourceDate": "2026-09-24",
-    "fetchedAt": "2026-10-07T01:07:51Z",
-    "hash": "sha256:6c6b0ba03f2b639c2ba6ce19d47728583844e7408cf449f99fe884ec588cf49c"
+    "fetchedAt": "2026-10-09T01:55:08Z",
+    "hash": "sha256:813e3e67031776eaaaf86de3acd03c25dde512f52bb30e2b641cef0ce63a0619"
    }
   }
  ]
