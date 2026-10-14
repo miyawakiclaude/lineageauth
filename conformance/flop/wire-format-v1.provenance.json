@@ -1,18 +1,18 @@
 {
  "repository": "flop-labs/yellowpaper",
  "path": "evidence/wire-format-v1.json",
- "commit": "3c97bbc8d6ba68cf2ea003ab88bc154aafdf105e",
- "fetchedAt": "2026-09-28T00:51:02Z",
- "sha256": "sha256:cdc2c4143de790a5aa71195dbce19fb520c9c26a4c9f4a399dd23fa9946f6948",
- "bytes": 26596,
+ "commit": "b03378c0a6d5194d69e5be90968f46e8e6813cb8",
+ "fetchedAt": "2026-10-14T03:11:49Z",
+ "sha256": "sha256:53440d853f1e595f045ddc6365180e74d0ff366be534dbe823a4bf412e5011de",
+ "bytes": 27197,
  "copiedVerbatim": true,
  "note": "The Yellow Paper's public wire-format corpus (Appendix F, profile flop-wire-v1, status public-canonical), copied without modification so tests/test_flop_wire.py meets the same bytes every other implementation does.",
- "commitDate": "2026-09-24T17:21:10Z",
+ "commitDate": "2026-10-13T05:16:50Z",
  "previous": {
-  "commit": "cb3cbf97a346ff85aca6dba5e924434270ca672c",
-  "commitDate": "2026-09-11T04:35:48Z",
-  "sha256": "sha256:80d4a7e70f984342eb474ae5285a17a6b9348eca887e1689b15e641922051d93",
-  "bytes": 24213,
-  "note": "The corpus D-116 reproduced. Its wrong_path_orientation case flipped the duplicated odd node and so could not be refused under F.3 (flop-labs/yellowpaper#44); the 3c97bbc8 sync regenerated the corpus so that case flips a sibling that is not the duplicate, and #44 was closed."
+  "commit": "3c97bbc8d6ba68cf2ea003ab88bc154aafdf105e",
+  "commitDate": "2026-09-24T17:21:10Z",
+  "sha256": "sha256:cdc2c4143de790a5aa71195dbce19fb520c9c26a4c9f4a399dd23fa9946f6948",
+  "bytes": 26596,
+  "note": "The corpus D-121 pinned (the regeneration that closed flop-labs/yellowpaper#44). The b03378c0 sync wrote every u64 and u128 input as a canonical decimal string, added the h_ids_v1 family, and rebuilt two negative cases (duplicate_turn_index, legacy_leaf_current_channel) at turn index 0 with an empty Merkle path, the duplicate's g_n at 10 rather than u128::MAX; every positive vector still reproduced unchanged (D-125). The next sync, 70e691c7 (2026-10-13), left this file byte-identical."
  }
 }

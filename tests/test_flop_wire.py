@@ -3,13 +3,19 @@
 `conformance/flop/wire-format-v1.json` is `evidence/wire-format-v1.json` from
 `flop-labs/yellowpaper` at the commit recorded beside it, copied verbatim. The
 module under test was written from the appendix's text; this file is where it
-meets the corpus. Three vectors are sr25519 signatures, which this project
+meets the corpus. Four vectors are sr25519 signatures, which this project
 does not implement; they are checked for shape and said so.
+
+Integers wider than JSON carries exactly (every u64 and u128 input) are written
+in the corpus as canonical decimal strings, its schema's `decimal_u64` and
+`decimal_u128`. `num` reads them in that form only and fails the test on any
+other, so a corpus that changes how it writes a number is noticed, not coerced.
 """
 
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 
 import pytest
@@ -40,6 +46,36 @@ def hx(text: str) -> bytes:
     return bytes.fromhex(text)
 
 
+# Every field the corpus schema types `decimal_u64` or `decimal_u128`, and its width.
+DECIMAL_BITS = {
+    "nonce": 64,
+    "gn_weight": 64,
+    "latency_ms": 64,
+    "miner_recv_ms": 64,
+    "miner_done_ms": 64,
+    "agent_send_ms": 64,
+    "agent_recv_ms": 64,
+    "g_n": 128,
+    "aggregate_gn": 128,
+    "payable": 128,
+}
+_CANONICAL_DECIMAL = re.compile(r"0|[1-9][0-9]*")
+
+
+def dec(value: object, bits: int) -> int:
+    """A canonical unsigned decimal string that fits `bits`, as an int; anything else fails."""
+    if not isinstance(value, str) or not _CANONICAL_DECIMAL.fullmatch(value):
+        raise AssertionError(f"not a canonical decimal string: {value!r}")
+    number = int(value)
+    if number >= 1 << bits:
+        raise AssertionError(f"{value} does not fit u{bits}")
+    return number
+
+
+def num(table: dict, key: str) -> int:  # type: ignore[type-arg]
+    return dec(table[key], DECIMAL_BITS[key])
+
+
 class TestProvenance:
     def test_the_corpus_is_pinned_to_a_commit_and_a_hash(self) -> None:
         meta = json.loads(PROVENANCE.read_text(encoding="utf-8"))
@@ -52,6 +88,141 @@ class TestProvenance:
     def test_the_corpus_calls_itself_canonical(self, corpus: dict) -> None:  # type: ignore[type-arg]
         assert corpus["profile"] == "flop-wire-v1"
         assert corpus["status"] == "public-canonical"
+
+    def test_the_families_blocks_and_negative_cases_are_listed(self, corpus: dict) -> None:  # type: ignore[type-arg]
+        """A family, a compute-channel or direct-rail block, or a negative case that a
+        re-sync adds fails here, so none arrives silently. This forces the lists, and
+        what reads each entry, to be looked at again; it does not by itself prove a
+        test reads the new entry. Some listed entries are read by no test, among
+        them `$schema`, `generation` (upstream's commands), `domains`, the direct
+        rail's `expected`, and the receipt and validator signature negative cases."""
+        assert set(corpus) == {
+            "$schema",
+            "codec",
+            "compute_channel_v1",
+            "coverage",
+            "data_ref_v1",
+            "decode_policy_v1",
+            "direct_rail_v1",
+            "generation",
+            "h_ids_v1",
+            "negative_cases",
+            "profile",
+            "status",
+        }
+        assert set(corpus["compute_channel_v1"]) == {
+            "channel_id",
+            "domains",
+            "fcc4_transcript_blob_hex",
+            "fcc4_transcript_with_ack",
+            "leaf_inputs",
+            "leaf_versions",
+            "merkle",
+            "receipt",
+            "v3_leaf_signature",
+            "verified_turn_v3_scale_hex",
+        }
+        assert set(corpus["direct_rail_v1"]) == {
+            "expected",
+            "inputs",
+            "report_data_hex",
+            "report_data_preimage_hex",
+            "task_hash",
+            "validator_attestation_scale_hex",
+            "validator_attestation_signable_hex",
+            "validator_id_hex",
+            "validator_signature_hex",
+        }
+        assert [c["id"] for c in corpus["negative_cases"]] == [
+            "unknown_leaf_enum",
+            "unknown_retention_enum",
+            "truncated_fcc4",
+            "trailing_fcc4",
+            "unknown_fcc_version",
+            "invalid_agent_ack_signature",
+            "duplicate_turn_index",
+            "wrong_path_orientation",
+            "wrong_genesis_network",
+            "wrong_session",
+            "wrong_leaf_version",
+            "invalid_receipt_signature",
+            "invalid_validator_signature",
+            "legacy_leaf_current_channel",
+            "legacy_receipt_current_channel",
+        ]
+        assert [(c["appendix"], c["family"]) for c in corpus["coverage"]] == [
+            ("F.1", "decode_policy_v1/compute_channel_v1.channel_id"),
+            ("F.2/G.2", "direct_rail_v1"),
+            ("F.3/G.1 settle", "compute_channel_v1"),
+            ("F.3", "h_ids_v1"),
+            ("F.3/G.1 dispute", "compute_channel_v1"),
+            ("F.4/G.3", "data_ref_v1"),
+            ("F.5/G.1", "compute_channel_v1.leaf_versions.V3"),
+        ]
+
+
+class TestNumbers:
+    """The b03378c0 corpus writes every u64 and u128 as a canonical decimal string (D-125)."""
+
+    def test_every_wide_integer_is_a_canonical_decimal_string(self, corpus: dict) -> None:  # type: ignore[type-arg]
+        seen: set[str] = set()
+
+        def walk(node: object) -> None:
+            if isinstance(node, dict):
+                for key, value in node.items():
+                    if key in DECIMAL_BITS:
+                        dec(value, DECIMAL_BITS[key])
+                        seen.add(key)
+                    else:
+                        walk(value)
+            elif isinstance(node, list):
+                for item in node:
+                    walk(item)
+
+        walk(corpus)
+        assert seen == set(DECIMAL_BITS)
+
+    def test_the_reader_takes_the_canonical_form_at_both_widths(self) -> None:
+        assert dec("0", 64) == 0
+        assert dec(str((1 << 64) - 1), 64) == (1 << 64) - 1
+        assert dec(str((1 << 128) - 1), 128) == (1 << 128) - 1
+
+    @pytest.mark.parametrize(
+        "value",
+        [
+            "",
+            "01",
+            "00",
+            "-1",
+            "+1",
+            " 1",
+            "1 ",
+            "1" + chr(10),
+            chr(10) + "1",
+            chr(0xA0) + "1",
+            "1" + chr(0x200B),
+            "1_0",
+            "1.0",
+            "0x1",
+            chr(0x661),
+            chr(0xFF11),
+            chr(0xB9),
+            "1" + chr(0x661),
+            "1" + chr(0xFF10),
+            1,
+            True,
+            None,
+        ],
+    )
+    def test_the_reader_refuses_every_other_form(self, value: object) -> None:
+        with pytest.raises(AssertionError):
+            dec(value, 64)
+
+    def test_the_reader_refuses_a_value_wider_than_its_field(self) -> None:
+        with pytest.raises(AssertionError, match="does not fit"):
+            dec(str(1 << 64), 64)
+        with pytest.raises(AssertionError, match="does not fit"):
+            dec(str(1 << 128), 128)
 
 
 class TestCodec:
@@ -90,7 +261,7 @@ class TestIdentityPreimages:
             genesis_hash=hx(i["genesis_hash_hex"]),
             agent=hx(i["agent_account_id32_hex"]),
             miner=hx(i["miner_account_id32_hex"]),
-            nonce=i["nonce"],
+            nonce=num(i, "nonce"),
         )
         assert preimage.hex() == c["preimage_hex"]
         assert wire.blake2_256(preimage).hex() == c["hash_hex"]
@@ -101,7 +272,7 @@ class TestIdentityPreimages:
         preimage = wire.task_hash_preimage_v1(
             genesis_hash=hx(i["genesis_hash_hex"]),
             agent=hx(i["agent_account_id32_hex"]),
-            nonce=i["nonce"],
+            nonce=num(i, "nonce"),
             model_hash=hx(i["model_hash_hex"]),
             payload_hash=hx(i["payload_hash_hex"]),
             commit_hash=hx(i["commit_hash_hex"]),
@@ -121,8 +292,8 @@ class TestIdentityPreimages:
         i = r["inputs"]
         fields = dict(
             task_hash=hx(i["task_hash_hex"]),
-            gn_weight=i["gn_weight"],
-            latency_ms=i["latency_ms"],
+            gn_weight=num(i, "gn_weight"),
+            latency_ms=num(i, "latency_ms"),
             model_hash=hx(i["model_hash_hex"]),
             output_hash=hx(i["output_hash_hex"]),
             decode_policy_hash=hx(i["decode_policy_hash_hex"]),
@@ -140,8 +311,8 @@ class TestAttestation:
         i = r["inputs"]
         att = ValidatorAttestation(
             task_hash=hx(i["task_hash_hex"]),
-            gn_weight=i["gn_weight"],
-            latency_ms=i["latency_ms"],
+            gn_weight=num(i, "gn_weight"),
+            latency_ms=num(i, "latency_ms"),
             model_hash=hx(i["model_hash_hex"]),
             output_hash=hx(i["output_hash_hex"]),
             decode_policy_hash=hx(i["decode_policy_hash_hex"]),
@@ -164,13 +335,13 @@ def turn_from_corpus(corpus: dict) -> TurnFields:  # type: ignore[type-arg]
         turn_index=li["turn_index"],
         h_in=hx(li["h_in_hex"]),
         h_out=hx(li["h_out_hex"]),
-        g_n=int(li["g_n"]),
+        g_n=num(li, "g_n"),
         decode_policy_hash=hx(li["decode_policy_hash_hex"]),
         h_ids=hx(li["h_ids_hex"]),
         toploc_commitment_hash=hx(li["toploc_commitment_hash_hex"]),
-        miner_recv_ms=int(li["miner_recv_ms"]),
-        miner_done_ms=int(li["miner_done_ms"]),
-        latency_ms=li["latency_ms"],
+        miner_recv_ms=num(li, "miner_recv_ms"),
+        miner_done_ms=num(li, "miner_done_ms"),
+        latency_ms=num(li, "latency_ms"),
     )
 
 
@@ -211,8 +382,8 @@ class TestTranscript:
         message = wire.receipt_message_v1(
             channel_id=hx(i["channel_id_hex"]),
             final_root=hx(i["final_root_hex"]),
-            aggregate_gn=i["aggregate_gn"],
-            payable=i["payable"],
+            aggregate_gn=num(i, "aggregate_gn"),
+            payable=num(i, "payable"),
         )
         assert message.hex() == r["preimage_hex"]
 
@@ -224,8 +395,8 @@ class TestTranscript:
         message = wire.legacy_receipt_message(
             channel_id=hx(r["channel_id_hex"]),
             final_root=hx(r["final_root_hex"]),
-            aggregate_gn=r["aggregate_gn"],
-            payable=r["payable"],
+            aggregate_gn=num(r, "aggregate_gn"),
+            payable=num(r, "payable"),
         )
         assert len(message) == 96
         assert legacy["bytes_hex"].startswith(message.hex())
@@ -276,6 +447,55 @@ class TestTranscript:
         )
         blob = wire.encode_transcript_blob(channel_id, [entry])
         assert wire.decode_transcript_blob(blob) == (channel_id, [entry])
+
+
+class TestTokenIds:
+    """F.3 `h_ids` v1, new in the b03378c0 corpus (D-125): the billed token ids a V3 leaf binds."""
+
+    def test_every_h_ids_vector(self, corpus: dict) -> None:  # type: ignore[type-arg]
+        family = corpus["h_ids_v1"]
+        assert "not SCALE Compact" in family["encoding"]
+        assert {"endianness", "leaf_fixture"} <= {v["id"] for v in family["vectors"]}
+        for v in family["vectors"]:
+            preimage = wire.h_ids_preimage_v1(v["prompt_ids"], v["generated_ids"])
+            assert preimage.hex() == v["preimage_hex"], v["id"]
+            assert len(preimage) == 4 * (2 + len(v["prompt_ids"]) + len(v["generated_ids"]))
+            hashed = wire.h_ids_v1(v["prompt_ids"], v["generated_ids"])
+            assert hashed.hex() == v["hash_hex"], v["id"]
+
+    def test_the_leaf_fixture_is_the_h_ids_the_v3_leaf_binds(self, corpus: dict) -> None:  # type: ignore[type-arg]
+        fixture = next(v for v in corpus["h_ids_v1"]["vectors"] if v["id"] == "leaf_fixture")
+        assert fixture["hash_hex"] == corpus["compute_channel_v1"]["leaf_inputs"]["h_ids_hex"]
+        assert turn_from_corpus(corpus).h_ids == wire.h_ids_v1(
+            fixture["prompt_ids"], fixture["generated_ids"]
+        )
+
+    def test_counts_are_fixed_width_not_compact(self) -> None:
+        assert wire.h_ids_preimage_v1([7], []) == hx("01000000 07000000 00000000")
+        assert wire.h_ids_preimage_v1((), ()) == bytes(8)
+        assert wire.h_ids_preimage_v1([1], [2]) != wire.h_ids_preimage_v1([], [1, 2])
+
+    @pytest.mark.parametrize("bad", [-1, 1 << 32, True, "1", 1.0, None])
+    def test_a_token_id_that_is_not_a_u32_is_refused(self, bad: object) -> None:
+        with pytest.raises(WireError):
+            wire.h_ids_preimage_v1([bad], [])  # type: ignore[list-item]
+        with pytest.raises(WireError):
+            wire.h_ids_preimage_v1([], [0, bad])  # type: ignore[list-item]
+
+    @pytest.mark.parametrize("bad", [b"\x01\x02", "12", range(3), {1, 2}, None, 3])
+    def test_only_a_list_or_tuple_of_ids_is_taken(self, bad: object) -> None:
+        with pytest.raises(WireError, match="list of token ids"):
+            wire.h_ids_preimage_v1(bad, [])  # type: ignore[arg-type]
+        with pytest.raises(WireError, match="list of token ids"):
+            wire.h_ids_v1([], bad)  # type: ignore[arg-type]
+
+    def test_a_count_that_does_not_fit_u32_is_refused(self) -> None:
+        class Huge(list):  # type: ignore[type-arg]
+            def __len__(self) -> int:
+                return 1 << 32
+
+        with pytest.raises(WireError, match="prompt_ids count"):
+            wire.h_ids_preimage_v1(Huge(), [])
 
 
 class TestNegativeCases:
@@ -386,6 +606,7 @@ class TestNegativeCases:
             cc["receipt"]["signature_hex"],
             cc["v3_leaf_signature"]["signature_hex"],
             corpus["direct_rail_v1"]["validator_signature_hex"],
+            cc["fcc4_transcript_with_ack"]["agent_signature_hex"],
         ):
             assert len(bytes.fromhex(sig_hex)) == 64
         assert not hasattr(wire, "verify_sr25519")
@@ -404,25 +625,108 @@ class TestDataRef:
         assert len(encoded) == 34
 
 
-class TestTheRegeneratedCorpus:
-    """What the 3c97bbc8 sync added beyond the orientation fix (D-121)."""
+class TestTheAgentAck:
+    """`fcc4_transcript_with_ack`, added by the 3c97bbc8 sync (D-121).
 
-    def test_the_agent_ack_block_is_checked_for_shape_only(self, corpus: dict) -> None:  # type: ignore[type-arg]
-        """`fcc4_transcript_with_ack` is new. Its blob is a valid FCC4 container this
-        project decodes; its 84-byte ack preimage and 64-byte agent signature follow a
-        layout the published Appendix F text does not state, so neither is recomputed
-        here. Stated, not verified."""
+    D-121 checked its 84-byte ack preimage for shape only, recording the layout as
+    absent from the Appendix F text. The mirror at cb3cbf97, the commit D-116
+    met, did lack it, but 3c97bbc8 itself added F.3's "per-turn agent ack" row,
+    and D-121 did not re-read F.3 at that commit. The preimage is now written
+    from that row and reproduced (D-125). The 64-byte agent signature over it is
+    sr25519 and is still checked for shape only."""
+
+    def test_the_ack_preimage_reproduces_from_the_decoded_blob(self, corpus: dict) -> None:  # type: ignore[type-arg]
         block = corpus["compute_channel_v1"]["fcc4_transcript_with_ack"]
         assert block["expected"] == "accept"
-        channel_id, turns = wire.decode_transcript_blob(hx(block["blob_hex"]))
-        assert len(channel_id) == 32 and turns
-        assert len(hx(block["ack_preimage_hex"])) == 84
-        assert len(hx(block["agent_signature_hex"])) == 64
+        blob = hx(block["blob_hex"])
+        channel_id, turns = wire.decode_transcript_blob(blob)
+        assert len(turns) == 1
+        entry = turns[0]
+        assert entry.ack is not None
+        assert entry.ack.send_ms == num(block, "agent_send_ms")
+        assert entry.ack.receive_ms == num(block, "agent_recv_ms")
+        assert entry.ack.agent_sig == hx(block["agent_signature_hex"])
+        message = wire.turn_ack_message(
+            channel_id=channel_id,
+            turn_index=entry.turn.turn_index,
+            leaf_hash=wire.transcript_leaf(entry.leaf_version, channel_id, entry.turn),
+            send_ms=entry.ack.send_ms,
+            receive_ms=entry.ack.receive_ms,
+        )
+        assert len(message) == 84
+        assert message.hex() == block["ack_preimage_hex"]
+        assert wire.encode_transcript_blob(channel_id, turns) == blob
         assert len(hx(block["agent_public_key_hex"])) == 32
 
-    def test_the_new_negative_case_names_a_signature_this_project_cannot_check(
+    def test_every_field_is_in_order_and_little_endian(self) -> None:
+        """The corpus's ack pins the field order, but not the byte order of two
+        fields: its turn index is u32::MAX and its agent_recv_ms u64::MAX, the same
+        bytes either way round. Here every field has a value that is not."""
+        message = wire.turn_ack_message(
+            channel_id=bytes(range(32)),
+            turn_index=0x01020304,
+            leaf_hash=bytes(range(32, 64)),
+            send_ms=0x0102030405060708,
+            receive_ms=0x1112131415161718,
+        )
+        assert message == (
+            bytes(range(32))
+            + hx("04030201")
+            + bytes(range(32, 64))
+            + hx("0807060504030201")
+            + hx("1817161514131211")
+        )
+
+    @pytest.mark.parametrize(
+        "field, value",
+        [
+            ("channel_id", bytes(31)),
+            ("leaf_hash", bytes(33)),
+            ("turn_index", 1 << 32),
+            ("send_ms", 1 << 64),
+            ("receive_ms", -1),
+            ("send_ms", True),
+        ],
+    )
+    def test_a_field_of_the_wrong_size_is_refused(self, field: str, value: object) -> None:
+        args: dict[str, object] = dict(
+            channel_id=bytes(32), turn_index=0, leaf_hash=bytes(32), send_ms=0, receive_ms=0
+        )
+        args[field] = value
+        with pytest.raises(WireError):
+            wire.turn_ack_message(**args)  # type: ignore[arg-type]
+
+
+class TestTheRegeneratedCorpus:
+    """What the 3c97bbc8 sync added beyond the orientation fix and the ack (D-121)."""
+
+    def test_the_bad_ack_signature_differs_only_inside_the_signature(
         self,
         corpus: dict,  # type: ignore[type-arg]
     ) -> None:
+        """`invalid_agent_ack_signature` is the accepted ack blob with a byte of the
+        agent's signature flipped. Refusing it takes sr25519, which this project does
+        not implement, so the case is not decided here. What is checked: every byte
+        that differs lies inside the 64-byte signature, and the blob still decodes to
+        the same turn and the same ack preimage."""
         case = next(c for c in corpus["negative_cases"] if c["id"] == "invalid_agent_ack_signature")
         assert case["expected"].startswith("reject")
+        block = corpus["compute_channel_v1"]["fcc4_transcript_with_ack"]
+        good, bad = hx(block["blob_hex"]), hx(case["bytes_hex"])
+        assert len(good) == len(bad)
+        assert good[-64:] == hx(block["agent_signature_hex"])
+        differing = [i for i in range(len(good)) if good[i] != bad[i]]
+        assert differing and all(i >= len(good) - 64 for i in differing)
+        channel_id, turns = wire.decode_transcript_blob(bad)
+        (entry,) = turns
+        assert entry.ack is not None
+        assert entry.ack.agent_sig != hx(block["agent_signature_hex"])
+        assert turns[0].turn == wire.decode_transcript_blob(good)[1][0].turn
+        message = wire.turn_ack_message(
+            channel_id=channel_id,
+            turn_index=entry.turn.turn_index,
+            leaf_hash=wire.transcript_leaf(entry.leaf_version, channel_id, entry.turn),
+            send_ms=entry.ack.send_ms,
+            receive_ms=entry.ack.receive_ms,
+        )
+        assert message.hex() == block["ack_preimage_hex"]

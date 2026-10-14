@@ -16,9 +16,9 @@ recomputes is reproducible offline from this file, with no dependency beyond
 the standard library.
 
 What it deliberately does not do: sign or verify sr25519. Appendix F signs
-receipts, V3 leaves and validator attestations with sr25519 under the
-Substrate signing context, and this project carries no sr25519
-implementation. Signature bytes are carried through as opaque fields and the
+receipts, V3 leaves, per-turn agent acks and validator attestations with
+sr25519 under the Substrate signing context, and this project carries no
+sr25519 implementation. Signature bytes are carried through as opaque fields and the
 tests say which vectors are therefore checked only for shape.
 
 Fail closed throughout: negative or overflowing integers, non-minimal compact
@@ -422,6 +422,30 @@ def transcript_leaf(version: TranscriptLeafVersion, channel_id: bytes, turn: Tur
     return blake2_256(leaf_preimage(version, channel_id, turn))
 
 
+def _u32_ids(ids: list[int] | tuple[int, ...], name: str) -> bytes:
+    """`count:u32LE || id:u32LE...`: a fixed-width count, not SCALE Compact."""
+    if not isinstance(ids, list | tuple):
+        raise WireError(f"{name} must be a list of token ids")
+    return uint_le(len(ids), 4, f"{name} count") + b"".join(
+        uint_le(token, 4, f"{name}[{i}]") for i, token in enumerate(ids)
+    )
+
+
+def h_ids_preimage_v1(
+    prompt_ids: list[int] | tuple[int, ...], generated_ids: list[int] | tuple[int, ...]
+) -> bytes:
+    """`prompt_count:u32LE || prompt_ids:u32LE... || generated_count:u32LE
+    || generated_ids:u32LE...`. Both counts are fixed-width u32LE, not Compact."""
+    return _u32_ids(prompt_ids, "prompt_ids") + _u32_ids(generated_ids, "generated_ids")
+
+
+def h_ids_v1(
+    prompt_ids: list[int] | tuple[int, ...], generated_ids: list[int] | tuple[int, ...]
+) -> bytes:
+    """The billed token ids a V3 leaf binds: `blake2_256` of `h_ids_preimage_v1`."""
+    return blake2_256(h_ids_preimage_v1(prompt_ids, generated_ids))
+
+
 def merkle_node(left: bytes, right: bytes) -> bytes:
     """No prefix: the 64-byte preimage is length-disjoint from every leaf preimage."""
     return blake2_256(fixed(left, H256_LEN, "left") + fixed(right, H256_LEN, "right"))
@@ -612,6 +636,23 @@ class TurnAck:
     agent_sig: bytes
 
 
+def turn_ack_message(
+    *, channel_id: bytes, turn_index: int, leaf_hash: bytes, send_ms: int, receive_ms: int
+) -> bytes:
+    """`channel_id || turn_index:u32LE || leaf_hash || agent_send_ms:u64LE
+    || agent_recv_ms:u64LE` (84 B): what the agent's per-turn ack signs.
+
+    `send_ms` and `receive_ms` are `TurnAck`'s fields, in FCC4 order. The
+    signature over these bytes is sr25519 and is not checked here."""
+    return (
+        fixed(channel_id, H256_LEN, "channel_id")
+        + uint_le(turn_index, 4, "turn_index")
+        + fixed(leaf_hash, H256_LEN, "leaf_hash")
+        + uint_le(send_ms, 8, "send_ms")
+        + uint_le(receive_ms, 8, "receive_ms")
+    )
+
+
 @dataclass(frozen=True, slots=True)
 class TranscriptTurn:
     leaf_version: TranscriptLeafVersion
@@ -796,6 +837,8 @@ __all__ = [
     "decode_verified_turn",
     "encode_transcript_blob",
     "fixed",
+    "h_ids_preimage_v1",
+    "h_ids_v1",
     "leaf_fields_consistent",
     "leaf_preimage",
     "legacy_receipt_message",
@@ -810,6 +853,7 @@ __all__ = [
     "task_hash_preimage_v1",
     "task_hash_v1",
     "transcript_leaf",
+    "turn_ack_message",
     "uint_le",
     "verified_work_from_turns",
     "verify_turn_proof",

@@ -2952,7 +2952,9 @@ Git/GitHub writes require confirmation of active account + repository owner + re
   published Appendix F text this project was written from does not state the
   ack layout, and the signature is one this project cannot check; both are
   tested for shape and stated as not reproduced. When the text catches up,
-  the preimage is the next thing to write from it.
+  the preimage is the next thing to write from it. *(Corrected in D-125: the
+  `3c97bbc8` text already stated the ack layout in F.3; the preimage is now
+  reproduced.)*
 - **Security impact.** None. Nothing signs or sends; the corpus is test
   data and the module still recomputes bytes only. No external write beyond
   the push.
@@ -3135,4 +3137,67 @@ Git/GitHub writes require confirmation of active account + repository owner + re
   principal.
 - **Security impact.** None. No code changed. No external write beyond the
   push.
+
+## D-125: the Yellow Paper corpus at b03378c0; `h_ids` v1 and the agent ack preimage
+
+- **Date:** 2026-10-14
+- **Problem:** the yellowpaper mirror synced twice on 2026-10-13, `b03378c0`
+  (from flop-core@a1f3759e) and `70e691c7` (from flop-core@5e6e2427), both
+  still 0.5.0 (draft). The first regenerated `evidence/wire-format-v1.json`
+  (26,596 → 27,197 bytes, sha256 `cdc2c414…` → `53440d85…`); the second left
+  it byte-identical. Run unchanged against the new corpus, 11 tests failed:
+  the provenance pin, and ten that read a u64 or u128 input the corpus now
+  writes as a string: nine handed it to `uint_le`, which refuses a string, and
+  one compared a decoded turn with string-valued fields. The corpus now writes
+  every such input as a canonical decimal string (its schema's `decimal_u64` /
+  `decimal_u128`); seven of them (`nonce` and `latency_ms` twice each,
+  `gn_weight`, `aggregate_gn`, `payable`) had been JSON numbers. It also adds
+  an `h_ids_v1` family (coverage 6 → 7 entries) and rebuilds two negative
+  cases, `duplicate_turn_index` and `legacy_leaf_current_channel`, at turn
+  index 0 with an empty Merkle path, the duplicate's `g_n` at 10 rather than
+  `u128::MAX`.
+- **Decision:** the corpus copied verbatim at `b03378c0`, provenance updated
+  with the previous pin kept beside it. With the numbers read as integers and
+  nothing else changed, `flop/wire.py` reproduced every positive vector byte
+  for byte and refused both rebuilt negative cases, so no layout this project
+  implements moved. The tests now read a wide integer only as a canonical
+  decimal string (`num` / `dec` fail on any other form instead of coercing
+  it), check that every decimal-typed field in the corpus is in that form, and
+  list the corpus's families, compute-channel and direct-rail blocks, negative
+  cases and coverage block, so a re-sync that adds one fails until the lists
+  and what reads each entry are looked at again. (The 3c97bbc8 additions, a
+  block and a negative case, would have failed such a list.) `wire.py` gains
+  `h_ids_preimage_v1` / `h_ids_v1`, written from F.3's `h_ids` v1 row
+  (fixed-width u32LE counts, not `Compact`; u32LE ids; `blake2_256`), which
+  reproduce both vectors, the one the leaf fixture carries among them; and
+  `turn_ack_message`, the 84-byte per-turn agent ack preimage, written from
+  F.3's "per-turn agent ack" row, which reproduces the corpus's
+  `ack_preimage_hex` from the decoded blob; the corpus pins its field order,
+  and a synthetic case pins the byte order of every field, which the corpus's
+  values cannot for two of them (turn index `u32::MAX` and `agent_recv_ms`
+  `u64::MAX` read the same either way round). The negative case
+  `invalid_agent_ack_signature` is that blob with a signature byte flipped: it
+  is not decided here, since refusing it takes sr25519, but the test now
+  checks that every differing byte lies inside the signature and that the
+  preimage is unchanged.
+- **A correction to D-121.** D-121 checked the ack preimage for shape only,
+  recording its layout as absent from the Appendix F text. The mirror at
+  `cb3cbf97`, the commit D-116 met, did lack the row; `3c97bbc8`, the commit
+  D-121 pinned, had it in F.3, and D-121 did not re-read F.3 there. The
+  preimage could have been reproduced then. The agent's signature over it is
+  sr25519 and stays shape-only, now one of four such vectors.
+- **The Yellow Paper text.** The `h_ids` v1 row is in F.3 of the served page
+  at flop.finance/intro/yellowpaper/ as of 2026-10-14, and in the mirror from
+  `70e691c7`; `3c97bbc8` lacked it. The served page is not the mirror's new
+  text either: it still carries most of the lines `70e691c7` removed, and
+  `scripts/flop_sources.py check` saw no change on 2026-10-14. Checked against
+  the mirror's new text as a forecast, 12 of the registry's 13 Yellow Paper
+  quotations occur there; the 13th, "Draft - the normative specification of
+  the protocol...", is the served page's own heading, absent from the mirror
+  at both commits. No snapshot is taken here; the next one records the mirror
+  commit when the served page moves.
+- **Security impact.** None. The new functions build bytes and hash them;
+  nothing signs, verifies a signature or sends. The corpus is test data, and
+  its `_hex` values stay inside the pre-push scan's file-and-key-scoped mask.
+  No external write beyond the push.
 
