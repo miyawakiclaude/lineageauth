@@ -55,38 +55,92 @@ part of every `ExecutionPlan`, and an approval granted under one rule set is
 A rule whose `hash` is `null` cannot be checked and is reported as
 `UNVERIFIABLE` freshness — one such rule exists, below.
 
-## The rules, at snapshot 2026-10-09T01:55:07Z
+## The rules, at snapshot 2026-10-16T10:35:48Z
 
-The eighth snapshot. Between the seventh and this one, the testnet and airdrop
-pages changed their security-disclosure wording without a new printed date; a
-fetch at 2026-10-07T02:16Z still had the old wording and one at
-2026-10-09T00:07Z the new, which is as closely as the change can be dated. The
-testnet page made two changes: it adds a condition, that a vulnerability is
-reported privately to security@flop.finance (it named no channel before), and
-where it said responsible reports are rewarded from the ecosystem reserve it
-now says they "could be eligible for a reward from the ecosystem reserve". The
-airdrop page names no channel. It no longer lists security rewards among the
-reserve's growth programmes, adds that a responsibly reported vulnerability
-"could also be eligible for a reward from it; this is not a bug bounty
-programme", and its allocation table's reserve row now reads "possible rewards
-for responsibly reported vulnerabilities".
+The ninth snapshot. Six pages changed wording between the eighth and this one,
+none with a new printed date; a fetch at 2026-10-14T02:50Z still had the old
+wording and one at 2026-10-16T10:29Z the new, which is as closely as the
+change can be dated. Five of them share one change, the miner airdrop's
+unlock: after a quarter liquid at genesis, the rest now unlocks one $FLOP for
+each $FLOP the miner earns on mainnet, block rewards and inference fees alike,
+where block rewards did not count before (D-0527, superseding D-0517 item 1).
+The teaser, airdrop, miner and revenue pages say so, and the Yellow Paper's
+Miner grant now earns unlock credit from its minted miner-leg block rewards as
+well as its settled-session payouts; the revenue page's base case unlocks the
+whole 900M locked miner airdrop by month 8. Nothing in this tool relies on the
+miner unlock, so no rule was added for it. The sixth page, the whitepaper,
+changed only its HTLC text.
 
-The Yellow Paper changed in more than its paid-storage, capacity-reservation
-and rent rules (section 5.4 and their rows in Appendices E, F.7, G.4 and H.3).
-Its HTLC text now says that the shipped `htlc_burn_share_ppt` is zero and
-timeout resolution preserves the full locked principal, that a nonzero timeout
-burn is a proposal (D-0523) not yet ratified, and that the FLOP/native BTC,
-FLOP/native NEAR and FLOP/NEP-141-on-NEAR pairs are target-only, with no
-deployed chain-pair completion guarantee (sections 10.1 and 10.2, a new
-parameter row in Appendix A, E.48 and H.5). This tool's tclk verifier knows
-the `flop-htlc` rail; for it, H.5 marks the local HTLC mechanics LIVE and every
-implemented pair direction target-only, so cross-chain completion is still a
-target, not a guarantee. Appendix F adds that its corpus checks wire format
-only, not the money path, and H.4 marks reward liquidity on issue (R9.13)
-LIVE, with the agent and staker legs still accruing in pool accounts until
-E.40 ratifies their distribution. Its section 8, the airdrop, Agent grant and
-claim text, is as the seventh snapshot recorded, and every quotation from the
-Yellow Paper still verifies. Every other fetched source kept its wording; the
+The Yellow Paper also ratifies the 85/15 inference-fee split (D-0525, an
+executive ruling of 2026-10-14): every settled payable goes 85% to the miner
+and 15% to the validator pool, the 1% audit earmark now taken from the
+validator leg (R12.1a, Appendix A), and its implementation-status table marks
+the split's mechanics LIVE. The teaser's banner still calls the split
+unratified and says settlement pays the miner 99%, the revenue page still says
+settlement pays 99% today, and the whitepaper's banner still lists the split
+among the statements that differ from the Yellow Paper;
+`flop-inference-fee-split` now records the disagreement instead of the
+teaser's account alone, and `flop-teaser-unratified-figures` adds the
+ratification beside the banner's account. E.38's residual risk now says an
+agent paying a miner it controls gets about 85% of it back (it said 99%),
+still unlocking a further third of the spend with no runtime common-control
+rule against it; `flop-agent-grant-no-end-block` carries the new figure. The
+Yellow Paper's other changes include validator registration, rotation and
+backing caps, the TDX measurement path, transaction-fee notes, the HTLC state
+diagram, several Appendix H status rows (paid storage PARTIAL on development
+networks only, the non-TEE SOFT lane PARTIAL, the G_n unit taxonomy LIVE) and
+several open items. The whitepaper's HTLC text now calls exchange through
+HTLCs a conditional settlement target with every chain pair target-only, and
+no longer names USDT and BTC as launch pairs, in line with what the Yellow
+Paper said at the eighth snapshot.
+
+For an agent, the rules this registry quotes did not move: the agents' unlock
+terms on the airdrop page, the Yellow Paper's Agent grant (R8.7) and claim
+(R8.8) text, the testnet page and the agent intro page kept their wording, and
+every quotation still verifies. What moved for an agent is in the Yellow
+Paper's implementation status. Compute-channel refunds of escrow funded from
+locked principal now re-freeze up to the principal the channel drew, reverting
+the close if they cannot, where they used to return it as free balance
+(`flop-agent-unlock-yellowpaper`); the allocator's completed-job and
+active-day weights are removed, as R8.4 requires
+(`flop-agent-scoring-settled-spend`, whose consequence described the old
+weights until this snapshot); and recursive dispute bisection is LIVE on chain
+for complete power-of-two settled bundles, other bundles still using the
+single-turn `open_dispute`. The served Yellow Paper is now ahead of its GitHub
+mirror, whose latest commit (`70e691c7`, 2026-10-13) has neither D-0525 nor
+D-0527.
+
+At the eighth snapshot (2026-10-09), between the seventh and it, the testnet
+and airdrop pages changed their security-disclosure wording without a new
+printed date; a fetch at 2026-10-07T02:16Z still had the old wording and one
+at 2026-10-09T00:07Z the new, which is as closely as the change can be dated.
+The testnet page made two changes: it adds a condition, that a vulnerability
+is reported privately to security@flop.finance (it named no channel before),
+and where it said responsible reports are rewarded from the ecosystem reserve
+it now says they "could be eligible for a reward from the ecosystem reserve".
+The airdrop page names no channel. It no longer lists security rewards among
+the reserve's growth programmes, adds that a responsibly reported
+vulnerability "could also be eligible for a reward from it; this is not a bug
+bounty programme", and its allocation table's reserve row now reads "possible
+rewards for responsibly reported vulnerabilities".
+
+At the eighth snapshot the Yellow Paper had changed in more than its
+paid-storage, capacity-reservation and rent rules (section 5.4 and their rows
+in Appendices E, F.7, G.4 and H.3). Its HTLC text said that the shipped
+`htlc_burn_share_ppt` is zero and timeout resolution preserves the full locked
+principal, that a nonzero timeout burn is a proposal (D-0523) not yet
+ratified, and that the FLOP/native BTC, FLOP/native NEAR and
+FLOP/NEP-141-on-NEAR pairs are target-only, with no deployed chain-pair
+completion guarantee (sections 10.1 and 10.2, a new parameter row in Appendix
+A, E.48 and H.5). This tool's tclk verifier knows the `flop-htlc` rail; for
+it, H.5 marked the local HTLC mechanics LIVE and every implemented pair
+direction target-only, so cross-chain completion was still a target, not a
+guarantee. Appendix F added that its corpus checks wire format only, not the
+money path, and H.4 marked reward liquidity on issue (R9.13) LIVE, with the
+agent and staker legs still accruing in pool accounts until E.40 ratifies
+their distribution. Its section 8, the airdrop, Agent grant and claim text,
+was then as the seventh snapshot recorded, and every quotation from the Yellow
+Paper verified. Every other fetched source had kept its wording; the
 `flop-labs` organisation listing is checked for its HTTP status only, so its
 wording was not compared.
 
@@ -163,7 +217,7 @@ instead of being handed yo... |
 <!-- flop-rules-table:end -->
 
 The `formula` for `flop-agent-unlock-ratio`, restored at the seventh snapshot
-(D-123) and unchanged at the eighth:
+(D-123) and unchanged at the eighth and ninth:
 
 ```json
 {
@@ -175,6 +229,18 @@ The `formula` for `flop-agent-unlock-ratio`, restored at the seventh snapshot
   "expression": "unlocked = floor(lockedSpendInSettledSessions / spentPerUnlocked) * unlockedPerRatio"
 }
 ```
+
+What changed at the ninth snapshot: no rule was added or re-quoted, and all 38
+quotations verify against the new bodies. Five consequences changed. Three
+follow the Yellow Paper's new figures: `flop-inference-fee-split` (the Yellow
+Paper ratifies the split; the teaser and revenue pages still say settlement
+pays the miner 99%), `flop-teaser-unratified-figures` (the banner is
+unchanged, and the ratification is now beside it) and
+`flop-agent-grant-no-end-block` (about 85% back, not 99%). Two follow its
+implementation-status table: `flop-agent-scoring-settled-spend` (the
+allocator's completed-job and active-day weights are removed) and
+`flop-agent-unlock-yellowpaper` (refunds of locked-funded escrow re-freeze).
+The other 40 rules keep their statements and consequences.
 
 What changed at the eighth snapshot: only `flop-security-disclosure`, re-quoted
 with the new wording. The other 37 quotations verify against the same text as

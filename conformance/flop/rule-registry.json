@@ -1,7 +1,7 @@
 {
  "_meta": {
   "purpose": "Every FLOP economic rule this tool relies on, with the official text it came from. Nothing here is a business rule the code may assume; the code reads this file.",
-  "generatedAt": "2026-10-09T01:55:07Z",
+  "generatedAt": "2026-10-16T10:35:48Z",
   "statusVocabulary": [
    "official-final",
    "official-draft",
@@ -11,8 +11,8 @@
   "unknownStatement": "UNKNOWN_FROM_OFFICIAL_SPEC",
   "note": "A rule whose recorded hash no longer matches the current snapshot of its source is stale. A stale rule is reported as RULE UPDATED and is never silently treated as current.",
   "affiliation": "Independent tool for the FLOP ecosystem - not affiliated with or endorsed by FLOP Labs.",
-  "previousGeneratedAt": "2026-10-07T01:07:50Z",
-  "revisionNote": "Re-verified 2026-10-09 against the eighth snapshot: every quotation was checked to occur in the fetched body it cites under quotation_key folding (dashes and quotes folded to ASCII, whitespace ignored). The testnet and airdrop pages were revised between 2026-10-07T02:16Z and 2026-10-09T00:07Z (the last fetch with the old wording and the first with the new) without a new printed date. The testnet page made two changes to its security-disclosure rule: it adds a condition, that the report is sent privately to security@flop.finance (it named no channel before), and where it said responsible reports are rewarded from the ecosystem reserve it now says they could be eligible for a reward from it; so flop-security-disclosure is re-quoted. The airdrop page no longer lists security rewards among the reserve's growth programmes, adds that a responsibly reported vulnerability could also be eligible for a reward from the reserve and that this is not a bug bounty programme, and its allocation table's reserve row now reads possible rewards for responsibly reported vulnerabilities. The Yellow Paper changed in more than paid storage. Paid storage: the paid-storage, capacity-reservation and rent rules of section 5.4 and their rows in Appendices E, F.7, G.4 and H.3. HTLC: the shipped htlc_burn_share_ppt is zero and timeout resolution preserves the full locked principal, a nonzero timeout burn is a proposal (D-0523) not yet ratified, and the FLOP/native BTC, FLOP/native NEAR and FLOP/NEP-141-on-NEAR pairs are target-only with no deployed completion guarantee (sections 10.1 and 10.2, a new htlc_burn_share_ppt = 0 ppt row in Appendix A, E.48 and H.5). Appendix F adds that its corpus checks wire format only, not the money path, and Appendix H.4 marks reward liquidity on issue (R9.13) LIVE, with the agent and staker legs still accruing in pool accounts until E.40 ratifies their distribution. Its section 8 (airdrop, Agent grant R8.7, claim R8.8) did not change. The other 37 quotations still occur unchanged in their sources; the other 44 rules keep their statements and consequences.",
+  "previousGeneratedAt": "2026-10-09T01:55:07Z",
+  "revisionNote": "Re-verified 2026-10-16 against the ninth snapshot: every quotation was checked to occur in the fetched body it cites under quotation_key folding (dashes and quotes folded to ASCII, whitespace ignored), and all 38 did. Six pages changed wording between 2026-10-14T02:50Z and 2026-10-16T10:29Z (the last fetch with the old wording and the first with the new) without a new printed date. The miner airdrop now unlocks against block rewards as well as inference fees: after a quarter liquid at genesis, the rest unlocks one FLOP for each FLOP the miner earns on mainnet, block rewards and inference fees alike (D-0527, superseding D-0517 item 1), on the teaser, airdrop, miner and revenue pages and in the Yellow Paper's Miner grant text, and the revenue page's base case now unlocks the whole 900M locked miner airdrop by month 8. The Yellow Paper ratifies the 85/15 inference-fee split (D-0525, an executive ruling of 2026-10-14) in R12.1a and Appendix A, the 1% audit earmark now taken from the 15% validator leg, while the teaser's banner still calls the split unratified and the revenue page still says settlement pays the miner 99% until the validator fee leg lands; flop-inference-fee-split now says so, and flop-teaser-unratified-figures adds the ratification beside the banner's account. The Yellow Paper's E.38 residual risk now says an agent paying a miner it controls gets about 85% back, not 99%, and flop-agent-grant-no-end-block says so. The Yellow Paper's implementation-status table (Appendix H) moved for agents too: compute-channel refunds of locked-funded escrow now re-freeze it instead of returning free balance (flop-agent-unlock-yellowpaper), and the allocator's completed-job and active-day weights are removed as R8.4 requires (flop-agent-scoring-settled-spend, whose consequence still described the old weights). The whitepaper's HTLC text now calls exchange through HTLCs a conditional settlement target with every chain pair target-only, and no longer names USDT and BTC launch pairs. The agents' unlock terms, the Agent grant (R8.7) and claim (R8.8) text, and the testnet and agent pages kept their wording; no rule was added or re-quoted, and five consequences were rewritten.",
   "snapshotHistory": [
    "2026-09-03T04:25:46Z",
    "2026-09-08T03:40:53Z",
@@ -21,7 +21,8 @@
    "2026-09-28T00:48:21Z",
    "2026-10-05T02:04:55Z",
    "2026-10-07T01:07:50Z",
-   "2026-10-09T01:55:07Z"
+   "2026-10-09T01:55:07Z",
+   "2026-10-16T10:35:48Z"
   ]
  },
  "rules": [
@@ -36,8 +37,8 @@
     "sourceUrl": "https://flop.finance/teaser/",
     "sourceVersion": "0.1 (draft)",
     "sourceDate": "2026-09-30",
-    "fetchedAt": "2026-10-09T01:55:07Z",
-    "hash": "sha256:db974e0e6edbf5a74e33314b16b1c2d0be753bbee3d884cb02e2cc20466be172"
+    "fetchedAt": "2026-10-16T10:35:48Z",
+    "hash": "sha256:8db3bed80e7fa61ea804cd9bc7b4faf786ace7e276814e1c9193826ed8730a22"
    }
   },
   {
@@ -51,8 +52,8 @@
     "sourceUrl": "https://flop.finance/teaser/",
     "sourceVersion": "0.1 (draft)",
     "sourceDate": "2026-09-30",
-    "fetchedAt": "2026-10-09T01:55:07Z",
-    "hash": "sha256:db974e0e6edbf5a74e33314b16b1c2d0be753bbee3d884cb02e2cc20466be172"
+    "fetchedAt": "2026-10-16T10:35:48Z",
+    "hash": "sha256:8db3bed80e7fa61ea804cd9bc7b4faf786ace7e276814e1c9193826ed8730a22"
    }
   },
   {
@@ -61,14 +62,14 @@
    "statementIsQuotation": true,
    "status": "official-draft",
    "effectiveNetworkPhase": "any",
-   "consequence": "The banner now counts the 4.4bn genesis pool as ratified by D-0440, and the table below it and the Yellow Paper both say 4,400,000,000 (flop-genesis-supply-parameter). Only the fee split remains unratified by the teaser's own account.",
+   "consequence": "The banner now counts the 4.4bn genesis pool as ratified by D-0440, and the table below it and the Yellow Paper both say 4,400,000,000 (flop-genesis-supply-parameter). By the teaser's own account only the fee split remains unratified, but since the ninth snapshot the Yellow Paper ratifies it (D-0525, 2026-10-14): on that figure the banner trails the parameters of record (flop-inference-fee-split).",
    "source": {
     "sourceId": "flop-finance-teaser",
     "sourceUrl": "https://flop.finance/teaser/",
     "sourceVersion": "0.1 (draft)",
     "sourceDate": "2026-09-30",
-    "fetchedAt": "2026-10-09T01:55:07Z",
-    "hash": "sha256:db974e0e6edbf5a74e33314b16b1c2d0be753bbee3d884cb02e2cc20466be172"
+    "fetchedAt": "2026-10-16T10:35:48Z",
+    "hash": "sha256:8db3bed80e7fa61ea804cd9bc7b4faf786ace7e276814e1c9193826ed8730a22"
    }
   },
   {
@@ -83,8 +84,8 @@
     "sourceUrl": "https://flop.finance/teaser/",
     "sourceVersion": "0.1 (draft)",
     "sourceDate": "2026-09-30",
-    "fetchedAt": "2026-10-09T01:55:07Z",
-    "hash": "sha256:db974e0e6edbf5a74e33314b16b1c2d0be753bbee3d884cb02e2cc20466be172"
+    "fetchedAt": "2026-10-16T10:35:48Z",
+    "hash": "sha256:8db3bed80e7fa61ea804cd9bc7b4faf786ace7e276814e1c9193826ed8730a22"
    }
   },
   {
@@ -99,8 +100,8 @@
     "sourceUrl": "https://flop.finance/intro/yellowpaper/",
     "sourceVersion": "0.5.0 (draft)",
     "sourceDate": "2026-09-24",
-    "fetchedAt": "2026-10-09T01:55:08Z",
-    "hash": "sha256:813e3e67031776eaaaf86de3acd03c25dde512f52bb30e2b641cef0ce63a0619"
+    "fetchedAt": "2026-10-16T10:35:49Z",
+    "hash": "sha256:b84ecb2f0b466e6e84540e6d727a7146a92d23fea8163500c3aac61866ec428b"
    }
   },
   {
@@ -115,8 +116,8 @@
     "sourceUrl": "https://flop.finance/intro/yellowpaper/",
     "sourceVersion": "0.5.0 (draft)",
     "sourceDate": "2026-09-24",
-    "fetchedAt": "2026-10-09T01:55:08Z",
-    "hash": "sha256:813e3e67031776eaaaf86de3acd03c25dde512f52bb30e2b641cef0ce63a0619"
+    "fetchedAt": "2026-10-16T10:35:49Z",
+    "hash": "sha256:b84ecb2f0b466e6e84540e6d727a7146a92d23fea8163500c3aac61866ec428b"
    }
   },
   {
@@ -131,8 +132,8 @@
     "sourceUrl": "https://flop.finance/teaser/",
     "sourceVersion": "0.1 (draft)",
     "sourceDate": "2026-09-30",
-    "fetchedAt": "2026-10-09T01:55:07Z",
-    "hash": "sha256:db974e0e6edbf5a74e33314b16b1c2d0be753bbee3d884cb02e2cc20466be172"
+    "fetchedAt": "2026-10-16T10:35:48Z",
+    "hash": "sha256:8db3bed80e7fa61ea804cd9bc7b4faf786ace7e276814e1c9193826ed8730a22"
    }
   },
   {
@@ -146,8 +147,8 @@
     "sourceUrl": "https://flop.finance/teaser/",
     "sourceVersion": "0.1 (draft)",
     "sourceDate": "2026-09-30",
-    "fetchedAt": "2026-10-09T01:55:07Z",
-    "hash": "sha256:db974e0e6edbf5a74e33314b16b1c2d0be753bbee3d884cb02e2cc20466be172"
+    "fetchedAt": "2026-10-16T10:35:48Z",
+    "hash": "sha256:8db3bed80e7fa61ea804cd9bc7b4faf786ace7e276814e1c9193826ed8730a22"
    }
   },
   {
@@ -156,14 +157,14 @@
    "statementIsQuotation": true,
    "status": "official-draft",
    "effectiveNetworkPhase": "genesis",
-   "consequence": "A scoring rule of the draft, not an unlock rule: agent scoring derives from settled compute-channel spend, and a faucet grant, a held balance, a job count or active days create nothing by themselves. The conversion score's caps and aggregation remain open in E.38, the Yellow Paper's status matrix marks the allocation implementation PARTIAL (its allocator still weights completed jobs and active days), and the teaser says the agent airdrop is based largely on inference spend along with various prizes. This tool's receipts record the spend a response states about itself, unverified; nothing here observes or verifies settled on-chain channel spend (docs/FLOP_INFERENCE_EVIDENCE.md).",
+   "consequence": "A scoring rule of the draft, not an unlock rule: agent scoring derives from settled compute-channel spend, and a faucet grant, a held balance, a job count or active days create nothing by themselves. The conversion score's caps and aggregation remain open in E.38, the Yellow Paper's status matrix marks the allocation implementation PARTIAL (cohort pools are enforced, and since the ninth snapshot it records the completed-job and active-day weights as removed, as R8.4 requires), and the teaser says the agent airdrop is based largely on inference spend along with various prizes. This tool's receipts record the spend a response states about itself, unverified; nothing here observes or verifies settled on-chain channel spend (docs/FLOP_INFERENCE_EVIDENCE.md).",
    "source": {
     "sourceId": "flop-finance-yellowpaper",
     "sourceUrl": "https://flop.finance/intro/yellowpaper/",
     "sourceVersion": "0.5.0 (draft)",
     "sourceDate": "2026-09-24",
-    "fetchedAt": "2026-10-09T01:55:08Z",
-    "hash": "sha256:813e3e67031776eaaaf86de3acd03c25dde512f52bb30e2b641cef0ce63a0619"
+    "fetchedAt": "2026-10-16T10:35:49Z",
+    "hash": "sha256:b84ecb2f0b466e6e84540e6d727a7146a92d23fea8163500c3aac61866ec428b"
    }
   },
   {
@@ -178,8 +179,8 @@
     "sourceUrl": "https://flop.finance/testnet/",
     "sourceVersion": "Draft",
     "sourceDate": "2026-10-05",
-    "fetchedAt": "2026-10-09T01:55:09Z",
-    "hash": "sha256:222438a45f27883e45a77a9fbf1602d8f39b775ba5cbbcc84b91d6ebe722e4fb"
+    "fetchedAt": "2026-10-16T10:35:50Z",
+    "hash": "sha256:d066c090abc5683db8fb040bdc784dd11fe6c7a204f47d9edf2550d867dd41ae"
    }
   },
   {
@@ -194,8 +195,8 @@
     "sourceUrl": "https://flop.finance/testnet/",
     "sourceVersion": "Draft",
     "sourceDate": "2026-10-05",
-    "fetchedAt": "2026-10-09T01:55:09Z",
-    "hash": "sha256:222438a45f27883e45a77a9fbf1602d8f39b775ba5cbbcc84b91d6ebe722e4fb"
+    "fetchedAt": "2026-10-16T10:35:50Z",
+    "hash": "sha256:d066c090abc5683db8fb040bdc784dd11fe6c7a204f47d9edf2550d867dd41ae"
    }
   },
   {
@@ -210,8 +211,8 @@
     "sourceUrl": "https://flop.finance/testnet/",
     "sourceVersion": "Draft",
     "sourceDate": "2026-10-05",
-    "fetchedAt": "2026-10-09T01:55:09Z",
-    "hash": "sha256:222438a45f27883e45a77a9fbf1602d8f39b775ba5cbbcc84b91d6ebe722e4fb"
+    "fetchedAt": "2026-10-16T10:35:50Z",
+    "hash": "sha256:d066c090abc5683db8fb040bdc784dd11fe6c7a204f47d9edf2550d867dd41ae"
    }
   },
   {
@@ -226,8 +227,8 @@
     "sourceUrl": "https://flop.finance/airdrop/",
     "sourceVersion": "Draft",
     "sourceDate": "2026-10-05",
-    "fetchedAt": "2026-10-09T01:55:09Z",
-    "hash": "sha256:892ff4c598c808ce108e31ced89868b714c74550055ac15adf57f1643c5f101c"
+    "fetchedAt": "2026-10-16T10:35:51Z",
+    "hash": "sha256:aa56ad27dac9d5f920154945cd3e10ac10f6628c4ef3974077f784e1eb01609f"
    }
   },
   {
@@ -242,8 +243,8 @@
     "sourceUrl": "https://flop.finance/testnet/",
     "sourceVersion": "Draft",
     "sourceDate": "2026-10-05",
-    "fetchedAt": "2026-10-09T01:55:09Z",
-    "hash": "sha256:222438a45f27883e45a77a9fbf1602d8f39b775ba5cbbcc84b91d6ebe722e4fb"
+    "fetchedAt": "2026-10-16T10:35:50Z",
+    "hash": "sha256:d066c090abc5683db8fb040bdc784dd11fe6c7a204f47d9edf2550d867dd41ae"
    }
   },
   {
@@ -258,8 +259,8 @@
     "sourceUrl": "https://flop.finance/testnet/",
     "sourceVersion": "Draft",
     "sourceDate": "2026-10-05",
-    "fetchedAt": "2026-10-09T01:55:09Z",
-    "hash": "sha256:222438a45f27883e45a77a9fbf1602d8f39b775ba5cbbcc84b91d6ebe722e4fb"
+    "fetchedAt": "2026-10-16T10:35:50Z",
+    "hash": "sha256:d066c090abc5683db8fb040bdc784dd11fe6c7a204f47d9edf2550d867dd41ae"
    }
   },
   {
@@ -274,8 +275,8 @@
     "sourceUrl": "https://flop.finance/testnet/",
     "sourceVersion": "Draft",
     "sourceDate": "2026-10-05",
-    "fetchedAt": "2026-10-09T01:55:09Z",
-    "hash": "sha256:222438a45f27883e45a77a9fbf1602d8f39b775ba5cbbcc84b91d6ebe722e4fb"
+    "fetchedAt": "2026-10-16T10:35:50Z",
+    "hash": "sha256:d066c090abc5683db8fb040bdc784dd11fe6c7a204f47d9edf2550d867dd41ae"
    }
   },
   {
@@ -290,8 +291,8 @@
     "sourceUrl": "https://flop.finance/testnet/",
     "sourceVersion": "Draft",
     "sourceDate": "2026-10-05",
-    "fetchedAt": "2026-10-09T01:55:09Z",
-    "hash": "sha256:222438a45f27883e45a77a9fbf1602d8f39b775ba5cbbcc84b91d6ebe722e4fb"
+    "fetchedAt": "2026-10-16T10:35:50Z",
+    "hash": "sha256:d066c090abc5683db8fb040bdc784dd11fe6c7a204f47d9edf2550d867dd41ae"
    }
   },
   {
@@ -306,8 +307,8 @@
     "sourceUrl": "https://flop.finance/testnet/",
     "sourceVersion": "Draft",
     "sourceDate": "2026-10-05",
-    "fetchedAt": "2026-10-09T01:55:09Z",
-    "hash": "sha256:222438a45f27883e45a77a9fbf1602d8f39b775ba5cbbcc84b91d6ebe722e4fb"
+    "fetchedAt": "2026-10-16T10:35:50Z",
+    "hash": "sha256:d066c090abc5683db8fb040bdc784dd11fe6c7a204f47d9edf2550d867dd41ae"
    }
   },
   {
@@ -322,8 +323,8 @@
     "sourceUrl": "https://flop.finance/testnet/",
     "sourceVersion": "Draft",
     "sourceDate": "2026-10-05",
-    "fetchedAt": "2026-10-09T01:55:09Z",
-    "hash": "sha256:222438a45f27883e45a77a9fbf1602d8f39b775ba5cbbcc84b91d6ebe722e4fb"
+    "fetchedAt": "2026-10-16T10:35:50Z",
+    "hash": "sha256:d066c090abc5683db8fb040bdc784dd11fe6c7a204f47d9edf2550d867dd41ae"
    }
   },
   {
@@ -337,8 +338,8 @@
     "sourceUrl": "https://flop.finance/airdrop/",
     "sourceVersion": "Draft",
     "sourceDate": "2026-10-05",
-    "fetchedAt": "2026-10-09T01:55:09Z",
-    "hash": "sha256:892ff4c598c808ce108e31ced89868b714c74550055ac15adf57f1643c5f101c"
+    "fetchedAt": "2026-10-16T10:35:51Z",
+    "hash": "sha256:aa56ad27dac9d5f920154945cd3e10ac10f6628c4ef3974077f784e1eb01609f"
    },
    "consequence": "The airdrop page (2026-10-05) and the Yellow Paper's normative Agent grant rule both say a locked agent balance unlocks one FLOP for every three of it spent in settled sessions, with no end date; the revenue page and the whitepaper's glossary give the same figure. The teaser and the agent intro page still say the schedule is not set (flop-teaser-agent-release-unset, flop-agent-unlock-ratio-intro); the airdrop page says it follows the Yellow Paper, which is the definitive specification, so this rule carries the formula. Still a draft.",
    "formula": {
@@ -363,8 +364,8 @@
     "sourceUrl": "https://flop.finance/intro/agent/",
     "sourceVersion": "Draft whitepaper",
     "sourceDate": "2026-10-05",
-    "fetchedAt": "2026-10-09T01:55:08Z",
-    "hash": "sha256:e7ef06c29b1a01f4892df60b41a8328998049cdae15e3441c95ed2cf167a8923"
+    "fetchedAt": "2026-10-16T10:35:49Z",
+    "hash": "sha256:9868c13f5e069ad3a48294697fe0922922b62887843f2b264cf48fa75f892ee0"
    }
   },
   {
@@ -379,8 +380,8 @@
     "sourceUrl": "https://flop.finance/teaser/",
     "sourceVersion": "0.1 (draft)",
     "sourceDate": "2026-09-30",
-    "fetchedAt": "2026-10-09T01:55:07Z",
-    "hash": "sha256:db974e0e6edbf5a74e33314b16b1c2d0be753bbee3d884cb02e2cc20466be172"
+    "fetchedAt": "2026-10-16T10:35:48Z",
+    "hash": "sha256:8db3bed80e7fa61ea804cd9bc7b4faf786ace7e276814e1c9193826ed8730a22"
    }
   },
   {
@@ -389,14 +390,14 @@
    "statementIsQuotation": true,
    "status": "official-draft",
    "effectiveNetworkPhase": "mainnet",
-   "consequence": "The normative form of the 3:1 rule: only the payable of a settled session counts, and only once its settlement block is finalized, its dispute window has passed and every fraud dispute raised against the session in that window has resolved with none upheld. Spend through agent_transfer, refunds and penalties does not count. Whether a fraud verdict upheld after the window reverses the credit is still open (E.38, following E.44), and the Yellow Paper's status matrix marks R8.7 and R8.8 PARTIAL: the runtime has no Agent spend credit or spend cap yet.",
+   "consequence": "The normative form of the 3:1 rule: only the payable of a settled session counts, and only once its settlement block is finalized, its dispute window has passed and every fraud dispute raised against the session in that window has resolved with none upheld. Spend through agent_transfer, refunds and penalties does not count. Whether a fraud verdict upheld after the window reverses the credit is still open (E.38, following E.44), and the Yellow Paper's status matrix marks R8.7 and R8.8 PARTIAL: the runtime has no Agent spend credit or spend cap yet. Since the ninth snapshot the same matrix says compute-channel refunds re-freeze up to the locked principal a channel drew, reverting the close if they cannot, where refunds of locked-funded escrow used to return free balance; R8.8's payable-first draw is not applied to them.",
    "source": {
     "sourceId": "flop-finance-yellowpaper",
     "sourceUrl": "https://flop.finance/intro/yellowpaper/",
     "sourceVersion": "0.5.0 (draft)",
     "sourceDate": "2026-09-24",
-    "fetchedAt": "2026-10-09T01:55:08Z",
-    "hash": "sha256:813e3e67031776eaaaf86de3acd03c25dde512f52bb30e2b641cef0ce63a0619"
+    "fetchedAt": "2026-10-16T10:35:49Z",
+    "hash": "sha256:b84ecb2f0b466e6e84540e6d727a7146a92d23fea8163500c3aac61866ec428b"
    }
   },
   {
@@ -405,14 +406,14 @@
    "statementIsQuotation": true,
    "status": "official-draft",
    "effectiveNetworkPhase": "mainnet",
-   "consequence": "Nothing of an agent's airdrop is liquid at genesis, and there is no date by which it must be spent; under R8.7 principal neither spent nor unlocked stays frozen. What finally becomes of Miner and Agent principal that never unlocks is still open in E.38, which also records a residual risk: an agent can pay a miner it controls from locked principal, get about 99% back as that miner's payout and unlock a further third of the spend, and no runtime common-control rule prevents it (E.49).",
+   "consequence": "Nothing of an agent's airdrop is liquid at genesis, and there is no date by which it must be spent; under R8.7 principal neither spent nor unlocked stays frozen. What finally becomes of Miner and Agent principal that never unlocks is still open in E.38, which also records a residual risk: an agent can pay a miner it controls from locked principal, get about 85% back as that miner's payout (about 99% in its text before D-0525 ratified the 85/15 split) and unlock a further third of the spend, and no runtime common-control rule prevents it (E.49).",
    "source": {
     "sourceId": "flop-finance-yellowpaper",
     "sourceUrl": "https://flop.finance/intro/yellowpaper/",
     "sourceVersion": "0.5.0 (draft)",
     "sourceDate": "2026-09-24",
-    "fetchedAt": "2026-10-09T01:55:08Z",
-    "hash": "sha256:813e3e67031776eaaaf86de3acd03c25dde512f52bb30e2b641cef0ce63a0619"
+    "fetchedAt": "2026-10-16T10:35:49Z",
+    "hash": "sha256:b84ecb2f0b466e6e84540e6d727a7146a92d23fea8163500c3aac61866ec428b"
    }
   },
   {
@@ -426,8 +427,8 @@
     "sourceUrl": "https://flop.finance/teaser/",
     "sourceVersion": "0.1 (draft)",
     "sourceDate": "2026-09-30",
-    "fetchedAt": "2026-10-09T01:55:07Z",
-    "hash": "sha256:db974e0e6edbf5a74e33314b16b1c2d0be753bbee3d884cb02e2cc20466be172"
+    "fetchedAt": "2026-10-16T10:35:48Z",
+    "hash": "sha256:8db3bed80e7fa61ea804cd9bc7b4faf786ace7e276814e1c9193826ed8730a22"
    }
   },
   {
@@ -442,8 +443,8 @@
     "sourceUrl": "https://flop.finance/intro/yellowpaper/",
     "sourceVersion": "0.5.0 (draft)",
     "sourceDate": "2026-09-24",
-    "fetchedAt": "2026-10-09T01:55:08Z",
-    "hash": "sha256:813e3e67031776eaaaf86de3acd03c25dde512f52bb30e2b641cef0ce63a0619"
+    "fetchedAt": "2026-10-16T10:35:49Z",
+    "hash": "sha256:b84ecb2f0b466e6e84540e6d727a7146a92d23fea8163500c3aac61866ec428b"
    }
   },
   {
@@ -457,8 +458,8 @@
     "sourceUrl": "https://flop.finance/teaser/",
     "sourceVersion": "0.1 (draft)",
     "sourceDate": "2026-09-30",
-    "fetchedAt": "2026-10-09T01:55:07Z",
-    "hash": "sha256:db974e0e6edbf5a74e33314b16b1c2d0be753bbee3d884cb02e2cc20466be172"
+    "fetchedAt": "2026-10-16T10:35:48Z",
+    "hash": "sha256:8db3bed80e7fa61ea804cd9bc7b4faf786ace7e276814e1c9193826ed8730a22"
    }
   },
   {
@@ -473,8 +474,8 @@
     "sourceUrl": "https://flop.finance/intro/yellowpaper/",
     "sourceVersion": "0.5.0 (draft)",
     "sourceDate": "2026-09-24",
-    "fetchedAt": "2026-10-09T01:55:08Z",
-    "hash": "sha256:813e3e67031776eaaaf86de3acd03c25dde512f52bb30e2b641cef0ce63a0619"
+    "fetchedAt": "2026-10-16T10:35:49Z",
+    "hash": "sha256:b84ecb2f0b466e6e84540e6d727a7146a92d23fea8163500c3aac61866ec428b"
    }
   },
   {
@@ -489,8 +490,8 @@
     "sourceUrl": "https://flop.finance/intro/yellowpaper/",
     "sourceVersion": "0.5.0 (draft)",
     "sourceDate": "2026-09-24",
-    "fetchedAt": "2026-10-09T01:55:08Z",
-    "hash": "sha256:813e3e67031776eaaaf86de3acd03c25dde512f52bb30e2b641cef0ce63a0619"
+    "fetchedAt": "2026-10-16T10:35:49Z",
+    "hash": "sha256:b84ecb2f0b466e6e84540e6d727a7146a92d23fea8163500c3aac61866ec428b"
    }
   },
   {
@@ -504,8 +505,8 @@
     "sourceUrl": "https://flop.finance/intro/yellowpaper/",
     "sourceVersion": "0.5.0 (draft)",
     "sourceDate": "2026-09-24",
-    "fetchedAt": "2026-10-09T01:55:08Z",
-    "hash": "sha256:813e3e67031776eaaaf86de3acd03c25dde512f52bb30e2b641cef0ce63a0619"
+    "fetchedAt": "2026-10-16T10:35:49Z",
+    "hash": "sha256:b84ecb2f0b466e6e84540e6d727a7146a92d23fea8163500c3aac61866ec428b"
    }
   },
   {
@@ -520,8 +521,8 @@
     "sourceUrl": "https://flop.finance/intro/yellowpaper/",
     "sourceVersion": "0.5.0 (draft)",
     "sourceDate": "2026-09-24",
-    "fetchedAt": "2026-10-09T01:55:08Z",
-    "hash": "sha256:813e3e67031776eaaaf86de3acd03c25dde512f52bb30e2b641cef0ce63a0619"
+    "fetchedAt": "2026-10-16T10:35:49Z",
+    "hash": "sha256:b84ecb2f0b466e6e84540e6d727a7146a92d23fea8163500c3aac61866ec428b"
    }
   },
   {
@@ -536,8 +537,8 @@
     "sourceUrl": "https://flop.finance/intro/yellowpaper/",
     "sourceVersion": "0.5.0 (draft)",
     "sourceDate": "2026-09-24",
-    "fetchedAt": "2026-10-09T01:55:08Z",
-    "hash": "sha256:813e3e67031776eaaaf86de3acd03c25dde512f52bb30e2b641cef0ce63a0619"
+    "fetchedAt": "2026-10-16T10:35:49Z",
+    "hash": "sha256:b84ecb2f0b466e6e84540e6d727a7146a92d23fea8163500c3aac61866ec428b"
    }
   },
   {
@@ -551,8 +552,8 @@
     "sourceUrl": "https://flop.finance/teaser/",
     "sourceVersion": "0.1 (draft)",
     "sourceDate": "2026-09-30",
-    "fetchedAt": "2026-10-09T01:55:07Z",
-    "hash": "sha256:db974e0e6edbf5a74e33314b16b1c2d0be753bbee3d884cb02e2cc20466be172"
+    "fetchedAt": "2026-10-16T10:35:48Z",
+    "hash": "sha256:8db3bed80e7fa61ea804cd9bc7b4faf786ace7e276814e1c9193826ed8730a22"
    }
   },
   {
@@ -561,14 +562,14 @@
    "statementIsQuotation": true,
    "status": "official-draft",
    "effectiveNetworkPhase": "mainnet",
-   "consequence": "Not the parameters of record: the teaser's banner says settlement pays the miner 99%, with 1% to the audit pool, until the validator fee leg lands (flop-teaser-unratified-figures).",
+   "consequence": "The Yellow Paper, which carries the parameters of record, ratifies this split: 85% of every settled payable to the miner and 15% to the validator pool, the 1% audit earmark taken from the validator leg (D-0525, an executive ruling of 2026-10-14), and its implementation-status table marks the split's mechanics LIVE. The teaser's own banner still calls the split unratified, with settlement paying the miner 99% and 1% to the audit pool until the validator fee leg lands (flop-teaser-unratified-figures), and the revenue page still says settlement pays 99% today; at this snapshot the official pages disagree on what settlement pays now.",
    "source": {
     "sourceId": "flop-finance-teaser",
     "sourceUrl": "https://flop.finance/teaser/",
     "sourceVersion": "0.1 (draft)",
     "sourceDate": "2026-09-30",
-    "fetchedAt": "2026-10-09T01:55:07Z",
-    "hash": "sha256:db974e0e6edbf5a74e33314b16b1c2d0be753bbee3d884cb02e2cc20466be172"
+    "fetchedAt": "2026-10-16T10:35:48Z",
+    "hash": "sha256:8db3bed80e7fa61ea804cd9bc7b4faf786ace7e276814e1c9193826ed8730a22"
    }
   },
   {
@@ -583,8 +584,8 @@
     "sourceUrl": "https://flop.finance/intro/yellowpaper/",
     "sourceVersion": "0.5.0 (draft)",
     "sourceDate": "2026-09-24",
-    "fetchedAt": "2026-10-09T01:55:08Z",
-    "hash": "sha256:813e3e67031776eaaaf86de3acd03c25dde512f52bb30e2b641cef0ce63a0619"
+    "fetchedAt": "2026-10-16T10:35:49Z",
+    "hash": "sha256:b84ecb2f0b466e6e84540e6d727a7146a92d23fea8163500c3aac61866ec428b"
    }
   },
   {
@@ -599,7 +600,7 @@
     "sourceUrl": "https://technocore.chat/llms.txt",
     "sourceVersion": "served 2026-09-28",
     "sourceDate": "2026-09-28",
-    "fetchedAt": "2026-10-09T01:55:08Z",
+    "fetchedAt": "2026-10-16T10:35:48Z",
     "hash": "sha256:ae3a86c884c1932a8efe181942a050fd5b5bbbc0093fcaa70a9574bed1ee21d6"
    }
   },
@@ -615,7 +616,7 @@
     "sourceUrl": "https://technocore.chat/llms.txt",
     "sourceVersion": "served 2026-09-28",
     "sourceDate": "2026-09-28",
-    "fetchedAt": "2026-10-09T01:55:08Z",
+    "fetchedAt": "2026-10-16T10:35:48Z",
     "hash": "sha256:ae3a86c884c1932a8efe181942a050fd5b5bbbc0093fcaa70a9574bed1ee21d6"
    }
   },
@@ -632,7 +633,7 @@
     "sourceUrl": "https://github.com/flop-labs/tclk/blob/v0.1.0/SPEC.md",
     "sourceVersion": "v0.1.0",
     "sourceDate": "2026-09-03",
-    "fetchedAt": "2026-10-09T01:55:07Z",
+    "fetchedAt": "2026-10-16T10:35:48Z",
     "hash": null
    }
   },
@@ -658,8 +659,8 @@
     "sourceUrl": "https://flop.finance/intro/yellowpaper/",
     "sourceVersion": "0.5.0 (draft)",
     "sourceDate": "2026-09-24",
-    "fetchedAt": "2026-10-09T01:55:08Z",
-    "hash": "sha256:813e3e67031776eaaaf86de3acd03c25dde512f52bb30e2b641cef0ce63a0619"
+    "fetchedAt": "2026-10-16T10:35:49Z",
+    "hash": "sha256:b84ecb2f0b466e6e84540e6d727a7146a92d23fea8163500c3aac61866ec428b"
    }
   },
   {
@@ -684,8 +685,8 @@
     "sourceUrl": "https://flop.finance/intro/yellowpaper/",
     "sourceVersion": "0.5.0 (draft)",
     "sourceDate": "2026-09-24",
-    "fetchedAt": "2026-10-09T01:55:08Z",
-    "hash": "sha256:813e3e67031776eaaaf86de3acd03c25dde512f52bb30e2b641cef0ce63a0619"
+    "fetchedAt": "2026-10-16T10:35:49Z",
+    "hash": "sha256:b84ecb2f0b466e6e84540e6d727a7146a92d23fea8163500c3aac61866ec428b"
    }
   },
   {
@@ -710,8 +711,8 @@
     "sourceUrl": "https://flop.finance/intro/yellowpaper/",
     "sourceVersion": "0.5.0 (draft)",
     "sourceDate": "2026-09-24",
-    "fetchedAt": "2026-10-09T01:55:08Z",
-    "hash": "sha256:813e3e67031776eaaaf86de3acd03c25dde512f52bb30e2b641cef0ce63a0619"
+    "fetchedAt": "2026-10-16T10:35:49Z",
+    "hash": "sha256:b84ecb2f0b466e6e84540e6d727a7146a92d23fea8163500c3aac61866ec428b"
    }
   },
   {
@@ -735,8 +736,8 @@
     "sourceUrl": "https://flop.finance/intro/yellowpaper/",
     "sourceVersion": "0.5.0 (draft)",
     "sourceDate": "2026-09-24",
-    "fetchedAt": "2026-10-09T01:55:08Z",
-    "hash": "sha256:813e3e67031776eaaaf86de3acd03c25dde512f52bb30e2b641cef0ce63a0619"
+    "fetchedAt": "2026-10-16T10:35:49Z",
+    "hash": "sha256:b84ecb2f0b466e6e84540e6d727a7146a92d23fea8163500c3aac61866ec428b"
    }
   },
   {
@@ -760,8 +761,8 @@
     "sourceUrl": "https://flop.finance/intro/yellowpaper/",
     "sourceVersion": "0.5.0 (draft)",
     "sourceDate": "2026-09-24",
-    "fetchedAt": "2026-10-09T01:55:08Z",
-    "hash": "sha256:813e3e67031776eaaaf86de3acd03c25dde512f52bb30e2b641cef0ce63a0619"
+    "fetchedAt": "2026-10-16T10:35:49Z",
+    "hash": "sha256:b84ecb2f0b466e6e84540e6d727a7146a92d23fea8163500c3aac61866ec428b"
    }
   },
   {
@@ -786,8 +787,8 @@
     "sourceUrl": "https://flop.finance/intro/yellowpaper/",
     "sourceVersion": "0.5.0 (draft)",
     "sourceDate": "2026-09-24",
-    "fetchedAt": "2026-10-09T01:55:08Z",
-    "hash": "sha256:813e3e67031776eaaaf86de3acd03c25dde512f52bb30e2b641cef0ce63a0619"
+    "fetchedAt": "2026-10-16T10:35:49Z",
+    "hash": "sha256:b84ecb2f0b466e6e84540e6d727a7146a92d23fea8163500c3aac61866ec428b"
    }
   },
   {
@@ -802,8 +803,8 @@
     "sourceUrl": "https://flop.finance/intro/yellowpaper/",
     "sourceVersion": "0.5.0 (draft)",
     "sourceDate": "2026-09-24",
-    "fetchedAt": "2026-10-09T01:55:08Z",
-    "hash": "sha256:813e3e67031776eaaaf86de3acd03c25dde512f52bb30e2b641cef0ce63a0619"
+    "fetchedAt": "2026-10-16T10:35:49Z",
+    "hash": "sha256:b84ecb2f0b466e6e84540e6d727a7146a92d23fea8163500c3aac61866ec428b"
    }
   }
  ]

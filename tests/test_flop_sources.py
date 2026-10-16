@@ -128,16 +128,18 @@ class TestLookalikesAreLouderThanUnknowns:
 class TestTheRecordedSnapshot:
     def test_it_loads_and_records_when_it_was_taken(self) -> None:
         snapshot = load_snapshot()
-        assert snapshot.fetched_at == "2026-10-09T01:55:07Z"
+        assert snapshot.fetched_at == "2026-10-16T10:35:48Z"
         assert len(snapshot.snapshots) >= 15
 
     def test_the_wording_is_hashed_beside_the_bytes(self) -> None:
         """A page rebuilt without a word changing moves its byte hash and not its text
         hash (D-117). Every fetched body carries both, every history entry says which
-        moved. At the eighth snapshot (D-124) only three pages changed wording: the
-        testnet and airdrop pages (the security-disclosure terms, revised without a new
-        printed date) and the Yellow Paper (its paid-storage rules, its HTLC text, an
-        Appendix F note and R9.13's status; section 8 unchanged); nothing was added."""
+        moved. At the ninth snapshot (D-126) six pages changed wording, none with a new
+        printed date: the teaser, airdrop, miner and revenue pages and the Yellow Paper
+        (the miner airdrop now unlocks against block rewards as well as inference fees,
+        D-0527; the Yellow Paper also ratifies the 85/15 fee split, D-0525) and the
+        whitepaper (its HTLC text). The testnet and agent pages kept their wording, and
+        nothing was added."""
         document = json.loads(OFFICIAL_SOURCES_FILE.read_text(encoding="utf-8"))
         for entry in document["sources"]:
             if entry["sha256"] is not None:
@@ -152,8 +154,17 @@ class TestTheRecordedSnapshot:
         assert [item["id"] for item in history.values() if item["change"] == "added"] == []
         changed = sorted(item["id"] for item in history.values() if item["text"] == "changed")
         assert changed == sorted(
-            ["flop-finance-yellowpaper", "flop-finance-testnet", "flop-finance-airdrop"]
+            [
+                "flop-finance-teaser",
+                "flop-finance-airdrop",
+                "flop-finance-intro-miner",
+                "flop-finance-intro-revenue",
+                "flop-finance-whitepaper",
+                "flop-finance-yellowpaper",
+            ]
         )
+        assert history["flop-finance-testnet"]["text"] == "unchanged"
+        assert history["flop-finance-intro-agent"]["text"] == "unchanged"
 
     def test_every_source_is_itself_official(self) -> None:
         for entry in load_snapshot().snapshots:

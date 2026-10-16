@@ -3201,3 +3201,62 @@ Git/GitHub writes require confirmation of active account + repository owner + re
   its `_hex` values stay inside the pre-push scan's file-and-key-scoped mask.
   No external write beyond the push.
 
+## D-126: ninth official-source snapshot; the miner unlock counts block rewards
+
+- **Date:** 2026-10-16
+- **Problem:** `check` reported wording changes on six pages and no quotation
+  missing. The teaser, airdrop, miner, revenue and whitepaper pages and the
+  Yellow Paper were revised between 2026-10-14T02:50Z and 2026-10-16T10:29Z
+  (the last fetch with the old wording and the first with the new), none with
+  a new printed date. On five of them the miner airdrop now unlocks against
+  both the block rewards and the inference fees the miner earns on mainnet,
+  where block rewards did not count (D-0527, superseding D-0517 item 1); the
+  revenue page's base case unlocks the whole 900M locked miner airdrop by
+  month 8. The Yellow Paper ratifies the 85/15 inference-fee split (D-0525, an
+  executive ruling of 2026-10-14), the 1% audit earmark now taken from the 15%
+  validator leg, and marks its mechanics LIVE, while the teaser's banner still
+  calls the split unratified and the revenue page still says settlement pays
+  the miner 99%. E.38's residual risk now puts what an agent paying a miner it
+  controls gets back at about 85%, not 99%. The Yellow Paper's
+  implementation-status table (Appendix H) now says compute-channel refunds of
+  locked-funded escrow re-freeze instead of returning free balance, that the
+  allocator's completed-job and active-day weights are removed, and that
+  recursive dispute bisection is LIVE on chain for complete power-of-two
+  settled bundles. The whitepaper's HTLC text now treats exchange through
+  HTLCs as a conditional target with every chain pair target-only. Two
+  consequences carried figures the Yellow Paper no longer gives (the fee split
+  as unratified, 99% back), one still described the allocator's old weights,
+  and two lacked what the new text adds.
+- **Decision:** the ninth snapshot, taken by `scripts/flop_sources.py
+  snapshot`. All 38 quotations verify; no rule is added or re-quoted. Five
+  consequences are rewritten: `flop-inference-fee-split` (the Yellow Paper
+  ratifies the split; the teaser and revenue pages still say settlement pays
+  99%, so the official pages disagree on what settlement pays now),
+  `flop-teaser-unratified-figures` (the banner's own account is unchanged; the
+  ratification is recorded beside it), `flop-agent-grant-no-end-block` (about
+  85% back), `flop-agent-scoring-settled-spend` (the allocator's old weights
+  are removed) and `flop-agent-unlock-yellowpaper` (refunds of locked-funded
+  escrow re-freeze). The other 40 rules keep their statements and
+  consequences. The notes and hints of the six pages record the revision; the
+  Yellow Paper's note names the mirror's latest commit, `70e691c7`, and says
+  the served page is ahead of it (the mirror has neither D-0525 nor D-0527);
+  the organisation listing records codescape (created 2026-09-27) and that
+  both Technocore contest repositories are archived. No rule is added for the
+  miner unlock, which nothing in this tool relies on.
+- **What it means for the user:** the rules an agent earns and unlocks by did
+  not move: the agents' unlock (3 of locked balance spent in settled sessions
+  unlocks 1), the Agent grant and the claim text, and the testnet and agent
+  pages are as they were. The implementation under them moved a little: a
+  refund of escrow paid from the locked airdrop now goes back into the lock
+  instead of becoming free balance, the allocator no longer weights completed
+  jobs or active days, and a dispute over a complete power-of-two settled
+  bundle can now be bisected on chain. On the other side of a session, under
+  the Yellow Paper a miner the agent pays keeps 85% of the payable and 15%
+  goes to validators (the teaser and revenue pages still say 99% to the
+  miner), and the airdropped miners unlock far faster; the revenue page's
+  base-case scenario, which it says is not a forecast, puts about 9.6B $FLOP
+  in circulation at day 730 rather than 8.8B. Paying a miner the user controls
+  still earns nothing under the testnet page's independent-demand rule.
+- **Security impact:** None. No code changed. No external write beyond the
+  push.
+
